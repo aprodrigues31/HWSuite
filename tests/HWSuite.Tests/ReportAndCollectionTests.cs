@@ -64,6 +64,48 @@ public class ReportAndCollectionTests
     }
 
     [Fact]
+    public void Firmware_identity_overrides_cpuid_root_partition_inside_a_vm()
+    {
+        // GitHub's Windows runner: Hyper-V guest with nested virtualization, so CPUID says "root".
+        var inv = new InventoryCollector(
+        [
+            new StubProvider("Runner", true, i =>
+            {
+                i.System = new SystemInfo { Manufacturer = "Microsoft Corporation", Product = "Virtual Machine" };
+                i.Processors.Add(new ProcessorInfo { HypervisorPresent = true, HypervisorRootPartition = true, HypervisorVendor = "Microsoft Hyper-V" });
+            }),
+        ]).Collect();
+
+        Assert.True(inv.Processors[0].HypervisorRootPartition == false);
+    }
+
+    [Fact]
+    public void Physical_firmware_keeps_the_vbs_host_verdict()
+    {
+        var inv = new InventoryCollector(
+        [
+            new StubProvider("Desktop", true, i =>
+            {
+                i.System = new SystemInfo { Manufacturer = "ASUS" };
+                i.Motherboard = new MotherboardInfo { Product = "TUF GAMING B550M-PLUS" };
+                i.Bios = new BiosInfo { Vendor = "American Megatrends Inc.", Version = "3645" };
+                i.Processors.Add(new ProcessorInfo { HypervisorPresent = true, HypervisorRootPartition = true });
+            }),
+        ]).Collect();
+
+        Assert.True(inv.Processors[0].HypervisorRootPartition == true);
+    }
+
+    [Theory]
+    [InlineData("VMware, Inc.", "VMware Virtual Platform", "VMware")]
+    [InlineData("QEMU", "Standard PC (Q35 + ICH9, 2009)", "QEMU")]
+    [InlineData("innotek GmbH", "VirtualBox", "VirtualBox")]
+    [InlineData("Amazon EC2", "m7i.large", "Amazon EC2")]
+    [InlineData("Dell Inc.", "OptiPlex 7010", null)]
+    public void Detects_virtual_machines_from_firmware(string manufacturer, string product, string? expected) =>
+        Assert.Equal(expected, VirtualMachineDetector.FromFirmware(new SystemInfo { Manufacturer = manufacturer, Product = product }, null));
+
+    [Fact]
     public void Dates_are_rendered_in_the_report_language()
     {
         var inv = Sample();
