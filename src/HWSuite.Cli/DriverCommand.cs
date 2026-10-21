@@ -171,7 +171,8 @@ internal static class DriverCommand
         var processPath = Environment.ProcessPath ?? "hwsuite.exe";
         if (Path.GetFileNameWithoutExtension(processPath).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
         {
-            var dll = typeof(DriverCommand).Assembly.Location;
+            // Development only ("dotnet hwsuite.dll"); the published single-file exe takes the branch below.
+            var dll = Path.Combine(AppContext.BaseDirectory, "hwsuite.dll");
             return (processPath, $"{Quote(dll)} {arguments}");
         }
 
