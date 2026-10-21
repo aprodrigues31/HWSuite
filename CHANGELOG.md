@@ -8,6 +8,13 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- Fase 2b: aplicativo de desktop `HWSuite.Gui` (WinUI 3, autocontido, sem instalação):
+  - **Sensores:** lista ao vivo agrupada por dispositivo com valor, mínimo e máximo, atualizada a cada segundo, e gráfico dos últimos 5 minutos do sensor selecionado.
+  - **Hardware:** o inventário completo (mesmo conteúdo do `hwsuite report`) e botão para salvar o relatório HTML em Documentos\HWSuite.
+  - Barra de aviso que oferece **reabrir como administrador** ou **instalar o driver PawnIO** com um clique, e reinicia os sensores após a instalação.
+- Biblioteca `HWSuite.Hosting`, compartilhada pela linha de comando e pelo aplicativo.
+
 ## [0.3.0] - 2026-10-21
 
 ### Adicionado

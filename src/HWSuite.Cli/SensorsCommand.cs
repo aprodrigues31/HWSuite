@@ -5,6 +5,8 @@ using HWSuite.Core.Localization;
 using HWSuite.Core.Sensors;
 using HWSuite.Providers.Windows;
 
+using HWSuite.Hosting;
+
 namespace HWSuite.Cli;
 
 /// <summary>"hwsuite sensors": one snapshot, a refreshing table (--watch) or a CSV log (--log).</summary>

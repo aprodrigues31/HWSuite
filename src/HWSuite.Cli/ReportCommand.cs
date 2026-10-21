@@ -4,6 +4,8 @@ using HWSuite.Core.Localization;
 using HWSuite.Core.Model;
 using HWSuite.Core.Reporting;
 
+using HWSuite.Hosting;
+
 namespace HWSuite.Cli;
 
 internal static class ReportCommand

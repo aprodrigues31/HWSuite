@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.InventoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Padding="20,12,20,16" RowSpacing="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="StatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+            <Button x:Name="SaveButton" Grid.Column="1" VerticalAlignment="Top" Click="SaveButton_Click" IsEnabled="False" Style="{StaticResource AccentButtonStyle}" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel x:Name="Sections" Padding="0,0,12,12" Spacing="12" />
+        </ScrollViewer>
+    </Grid>
+</Page>

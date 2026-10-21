@@ -4,7 +4,7 @@ using HWSuite.Providers.Lhm;
 using HWSuite.Providers.Common;
 using HWSuite.Providers.Windows;
 
-namespace HWSuite.Cli;
+namespace HWSuite.Hosting;
 
 /// <summary>
 /// Provider order matters: firmware first (sockets, slots), then CPUID refines the processor,

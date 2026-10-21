@@ -117,6 +117,37 @@ jobs:
           if ($out -notlike "hwsuite ${{ steps.version.outputs.version }} (build $env:BuildNumber*") { throw "Unexpected version: $out" }
           (Get-Item artifacts/publish/hwsuite.exe).VersionInfo | Format-List FileVersion, ProductVersion
 
+      - name: Desktop app (WinUI 3) - publish
+        run: dotnet publish src/HWSuite.Gui -c Release -r win-x64 -p:Platform=x64 -o artifacts/gui
+
+      - name: Desktop app - startup smoke test
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path artifacts/gui/HWSuite.Gui.exe
+          $started = Get-Date
+          $app = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 20
+          if ($app.HasExited) {
+            Write-Host "HWSuite.Gui exited early with code $($app.ExitCode)"
+            Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $started } -ErrorAction SilentlyContinue |
+              Where-Object { $_.Message -match 'HWSuite' } | Select-Object -First 5 | Format-List TimeCreated, ProviderName, Message
+            exit 1
+          }
+          Write-Host "HWSuite.Gui running after 20 s (pid $($app.Id), memory $([math]::Round($app.WorkingSet64 / 1MB)) MB)"
+          Stop-Process -Id $app.Id -Force
+          "### Aplicativo (WinUI 3)`n- Iniciou e continuou rodando por 20 s no runner" | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
+      - name: Desktop app - package
+        shell: pwsh
+        run: Compress-Archive -Path artifacts/gui/* -DestinationPath "artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip"
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: hwsuite-gui-${{ steps.version.outputs.label }}-win-x64
+          path: artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip
+          if-no-files-found: warn
+
       - uses: actions/upload-artifact@v5
         if: always()
         with:

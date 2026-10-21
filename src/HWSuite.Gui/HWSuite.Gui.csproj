@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>HWSuite.Gui</RootNamespace>
+    <AssemblyName>HWSuite.Gui</AssemblyName>
+    <Description>HWSuite desktop app (WinUI 3): hardware inventory and live sensors.</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <UseWinUI>true</UseWinUI>
+    <!-- Unpackaged and self-contained: runs from a folder without installing .NET or the Windows App Runtime. -->
+    <WindowsPackageType>None</WindowsPackageType>
+    <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+    <SelfContained>true</SelfContained>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- Trimming breaks WinUI's WinRT/XAML metadata at runtime. -->
+    <PublishTrimmed>false</PublishTrimmed>
+    <!-- XAML-generated code is outside our control: analyzer findings are warnings here, not errors. -->
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-minimum</AnalysisLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
+    <ProjectReference Include="..\HWSuite.Providers.Windows\HWSuite.Providers.Windows.csproj" />
+    <ProjectReference Include="..\HWSuite.Hosting\HWSuite.Hosting.csproj" />
+  </ItemGroup>
+</Project>

@@ -142,6 +142,23 @@ public class SensorTests
     }
 
     [Fact]
+    public void History_keeps_the_latest_values_aligned()
+    {
+        var history = new SensorHistory(capacity: 3);
+        foreach (var v in new double?[] { 40, 41, null, 43 })
+        {
+            history.Add(Snapshot(Cpu("Tctl", SensorKind.Temperature, v)));
+        }
+
+        var values = history.Get("/amdcpu/0/Temperature/Tctl");
+        Assert.Equal(3, values.Count);
+        Assert.Equal(41.0, values[0]);
+        Assert.True(double.IsNaN(values[1])); // gap kept so the timeline stays aligned
+        Assert.Equal(43.0, values[2]);
+        Assert.Empty(history.Get("unknown"));
+    }
+
+    [Fact]
     public void Empty_snapshot_says_so()
     {
         using var text = new StringWriter(CultureInfo.InvariantCulture);

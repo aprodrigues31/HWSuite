@@ -20,6 +20,10 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 Tudo funciona **sem privilégio de administrador**. O que um provedor não conseguir ler aparece na seção *Diagnóstico* do relatório, sem interromper o resto.
 
+## Aplicativo de desktop
+
+O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor selecionado, e o inventário completo do hardware. Não precisa instalar: baixe o artefato `hwsuite-gui-<versão>-win-x64`, extraia a pasta e execute. Se faltarem privilégio de administrador ou o driver PawnIO, uma barra no topo oferece resolver com um clique.
+
 ## Uso
 
 ```text
@@ -90,7 +94,9 @@ src/
   HWSuite.Providers.Common     CPUID (x86/x64) e SMBIOS via sysfs no Linux (apoio ao desenvolvimento)
   HWSuite.Providers.Windows    SMBIOS do firmware, Windows, DXGI, IOCTLs de disco, detecção de admin/PawnIO
   HWSuite.Providers.Lhm        Sensores em tempo real via LibreHardwareMonitorLib (MPL-2.0)
+  HWSuite.Hosting              Montagem dos provedores, compartilhada pelos front-ends
   HWSuite.Cli                  Linha de comando "hwsuite"
+  HWSuite.Gui                  Aplicativo de desktop (WinUI 3)
 tests/
   HWSuite.Tests                xUnit com dumps de registradores e tabelas montadas byte a byte
 ```
