@@ -7,6 +7,9 @@ namespace HWSuite.Core.Model;
 public sealed class HardwareInventory
 {
     public string SchemaVersion { get; set; } = "1.0";
+
+    /// <summary>HWSuite version that produced this inventory, e.g. "0.2.0 (build 12, a3b8c29)".</summary>
+    public string? ToolVersion { get; set; }
     public DateTimeOffset CollectedAt { get; set; } = DateTimeOffset.Now;
     public string? MachineName { get; set; }
     public OperatingSystemInfo? OperatingSystem { get; set; }

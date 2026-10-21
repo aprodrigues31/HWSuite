@@ -49,6 +49,11 @@ public sealed class TextReportWriter : IReportWriter
         }
 
         output.WriteLine($"{strings["report.generated"]}: {inventory.CollectedAt.ToString("g", strings.Culture)}");
+        if (inventory.ToolVersion is not null)
+        {
+            output.WriteLine($"{strings["report.tool"]}: HWSuite {inventory.ToolVersion}");
+        }
+
 
         foreach (var section in sections)
         {
@@ -137,7 +142,7 @@ public sealed class HtmlReportWriter : IReportWriter
             output.WriteLine("</section>");
         }
 
-        output.WriteLine($"<footer>HWSuite · schema {E(inventory.SchemaVersion)}</footer>");
+        output.WriteLine($"<footer>HWSuite {E(inventory.ToolVersion)} · schema {E(inventory.SchemaVersion)}</footer>");
         output.WriteLine("</main></body></html>");
     }
 }

@@ -60,6 +60,7 @@ public sealed class InventoryCollector
         {
             CollectedAt = _time.GetLocalNow(),
             MachineName = Environment.MachineName,
+            ToolVersion = BuildInfo.Current.Display,
         };
 
         foreach (var provider in _providers)

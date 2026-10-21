@@ -3,25 +3,44 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Picked up by MSBuild as $(BuildNumber): stamped into the file version and --version.
+  BuildNumber: ${{ github.run_number }}
+
 jobs:
   build-test:
     name: Build, test and sample report (Windows)
     runs-on: windows-latest
-    env:
-      DOTNET_NOLOGO: true
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      label: ${{ steps.version.outputs.label }}
     steps:
       - uses: actions/checkout@v5
 
       - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
+
+      - name: Version
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $version = @($props.Project.PropertyGroup.VersionPrefix | Where-Object { $_ })[0]
+          $label = "$version-build.$env:BuildNumber"
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "label=$label" >> $env:GITHUB_OUTPUT
+          "## HWSuite $label (commit $("$env:GITHUB_SHA".Substring(0, 7)))" >> $env:GITHUB_STEP_SUMMARY
+          Write-Host "HWSuite $label"
 
       - name: Restore
         run: dotnet restore HWSuite.slnx
@@ -43,7 +62,7 @@ jobs:
           }
           Get-Content artifacts/reports/runner.txt
           # Also show the text report on the run page (job summary).
-          "## Relatório de exemplo (runner Windows)`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          "### Relatório de exemplo (runner Windows)`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           Get-Content artifacts/reports/runner.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           exit 0
@@ -51,12 +70,65 @@ jobs:
       - name: Publish single-file executable (win-x64)
         run: dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/publish
 
+      - name: Check the published version
+        shell: pwsh
+        run: |
+          $out = & artifacts/publish/hwsuite.exe --version
+          Write-Host $out
+          if ($out -notlike "hwsuite ${{ steps.version.outputs.version }} (build $env:BuildNumber*") { throw "Unexpected version: $out" }
+          (Get-Item artifacts/publish/hwsuite.exe).VersionInfo | Format-List FileVersion, ProductVersion
+
       - uses: actions/upload-artifact@v5
         if: always()
         with:
-          name: hwsuite-win-x64
+          name: hwsuite-${{ steps.version.outputs.label }}-win-x64
           path: |
             artifacts/publish/hwsuite.exe
             artifacts/reports/
             artifacts/test-results/
           if-no-files-found: warn
+
+  release:
+    name: GitHub Release (tag v*)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build-test
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Tag must match VersionPrefix
+        shell: pwsh
+        run: |
+          if ("${{ github.ref_name }}" -ne "v${{ needs.build-test.outputs.version }}") {
+            throw "Tag ${{ github.ref_name }} does not match VersionPrefix ${{ needs.build-test.outputs.version }} in Directory.Build.props"
+          }
+
+      - name: Publish and package
+        shell: pwsh
+        run: |
+          dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o release
+          Copy-Item README.md, LICENSE, CHANGELOG.md release/
+          Compress-Archive -Path release/hwsuite.exe, release/README.md, release/LICENSE, release/CHANGELOG.md -DestinationPath "hwsuite-${{ needs.build-test.outputs.version }}-win-x64.zip"
+
+      - name: Release notes from CHANGELOG
+        shell: pwsh
+        run: |
+          $version = "${{ needs.build-test.outputs.version }}"
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## \[$([regex]::Escape($version))\]").LineNumber
+          if (-not $start) { throw "CHANGELOG.md has no section for $version" }
+          $rest = $lines[$start..($lines.Count - 1)]
+          $end = ($rest | Select-String -Pattern '^## \[' | Select-Object -First 1).LineNumber
+          $notes = if ($end) { $rest[0..($end - 2)] } else { $rest }
+          $notes | Set-Content -Encoding utf8 notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" "hwsuite-${{ needs.build-test.outputs.version }}-win-x64.zip" --title "HWSuite ${{ needs.build-test.outputs.version }}" --notes-file notes.md

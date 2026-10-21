@@ -1,6 +1,6 @@
-using System.Reflection;
 using System.Text;
 using HWSuite.Cli;
+using HWSuite.Core;
 using HWSuite.Core.Collection;
 using HWSuite.Core.Localization;
 using HWSuite.Core.Model;
@@ -32,8 +32,7 @@ if (options.ShowHelp)
 
 if (options.ShowVersion)
 {
-    var version = typeof(Program).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "0.0.0";
-    Console.WriteLine($"hwsuite {version.Split('+')[0]}");
+    Console.WriteLine($"hwsuite {BuildInfo.Current.Display}");
     return 0;
 }
 

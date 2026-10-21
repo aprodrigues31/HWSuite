@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text.Json;
 using HWSuite.Cli;
+using HWSuite.Core;
 using HWSuite.Core.Collection;
 using HWSuite.Core.Localization;
 using HWSuite.Core.Model;
@@ -104,6 +105,31 @@ public class ReportAndCollectionTests
     [InlineData("Dell Inc.", "OptiPlex 7010", null)]
     public void Detects_virtual_machines_from_firmware(string manufacturer, string product, string? expected) =>
         Assert.Equal(expected, VirtualMachineDetector.FromFirmware(new SystemInfo { Manufacturer = manufacturer, Product = product }, null));
+
+    [Theory]
+    [InlineData("0.2.0+build.12.a3b8c29f5e1d2c3b4a59687766554433221100ff", "0.2.0", 12, "a3b8c29", "0.2.0 (build 12, a3b8c29)")]
+    [InlineData("0.2.0+build.0.a3b8c29", "0.2.0", 0, "a3b8c29", "0.2.0 (a3b8c29)")]
+    [InlineData("0.1.0+a3b8c29f5e", "0.1.0", null, "a3b8c29", "0.1.0 (a3b8c29)")]
+    [InlineData("0.2.0", "0.2.0", null, null, "0.2.0")]
+    public void Parses_build_information(string informational, string version, int? build, string? commit, string display)
+    {
+        var info = BuildInfo.Parse(informational);
+
+        Assert.Equal((version, build, commit), (info.Version, info.Build, info.Commit));
+        Assert.Equal(display, info.Display);
+    }
+
+    [Fact]
+    public void Reports_carry_the_tool_version()
+    {
+        var inv = Sample();
+        inv.ToolVersion = "0.2.0 (build 12, a3b8c29)";
+
+        Assert.Contains("Ferramenta: HWSuite 0.2.0 (build 12, a3b8c29)", Render(new TextReportWriter(), inv, "pt-BR"), StringComparison.Ordinal);
+        Assert.Contains("HWSuite 0.2.0 (build 12, a3b8c29) · schema", Render(new HtmlReportWriter(), inv, "en"), StringComparison.Ordinal);
+        using var json = JsonDocument.Parse(Render(new JsonReportWriter(), inv, "en"));
+        Assert.Equal("0.2.0 (build 12, a3b8c29)", json.RootElement.GetProperty("toolVersion").GetString());
+    }
 
     [Fact]
     public void Dates_are_rendered_in_the_report_language()

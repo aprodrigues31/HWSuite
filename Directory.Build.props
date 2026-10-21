@@ -7,7 +7,16 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AnalysisLevel>latest-recommended</AnalysisLevel>
     <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-    <Version>0.1.0</Version>
+    <!--
+      Versioning: bump VersionPrefix (SemVer) in this file when releasing and record the change in
+      CHANGELOG.md. CI passes BuildNumber (GitHub Actions run number); local builds use 0.
+      Result: hwsuite 0.2.0, file version 0.2.0.<build>, informational 0.2.0+build.<build>.<commit>.
+    -->
+    <VersionPrefix>0.2.0</VersionPrefix>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
+    <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
+    <FileVersion>$(VersionPrefix).$(BuildNumber)</FileVersion>
+    <InformationalVersion>$(VersionPrefix)+build.$(BuildNumber)</InformationalVersion>
     <Authors>HWSuite contributors</Authors>
     <Product>HWSuite</Product>
     <Copyright>HWSuite contributors</Copyright>

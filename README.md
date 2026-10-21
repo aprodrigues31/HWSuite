@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: fase 1 (MVP de inventário).** Identifica o hardware sem instalar nenhum driver e gera relatórios em texto, HTML e JSON pela linha de comando. Sensores em tempo real, interface gráfica e o driver PawnIO chegam na fase 2.
+> **Status: versão 0.2.0, fase 1 (MVP de inventário).** Identifica o hardware sem instalar nenhum driver e gera relatórios em texto, HTML e JSON pela linha de comando. Sensores em tempo real, interface gráfica e o driver PawnIO chegam na fase 2.
 
 ## O que a fase 1 já faz
 
@@ -34,7 +34,8 @@ Código de saída: `0` sucesso, `2` argumento inválido, `3` relatório gerado m
 
 ## Como obter
 
-- **Executável pronto:** cada build do GitHub Actions publica `hwsuite.exe` (win-x64, autocontido, não precisa instalar .NET) no artefato `hwsuite-win-x64`, junto com relatórios de exemplo gerados no runner Windows.
+- **Versões estáveis:** em [Releases](https://github.com/aprodrigues31/HWSuite/releases), um `.zip` por versão com `hwsuite.exe` (win-x64, autocontido, não precisa instalar .NET).
+- **Builds de desenvolvimento:** cada execução do GitHub Actions publica o artefato `hwsuite-<versão>-build.<N>-win-x64`, com o executável e relatórios de exemplo gerados no runner Windows.
 - **Compilar:** requer o SDK do .NET 10.
 
 ```powershell
@@ -42,6 +43,23 @@ dotnet build HWSuite.slnx -c Release
 dotnet test HWSuite.slnx
 dotnet run --project src/HWSuite.Cli -- report --format html --out pc.html
 ```
+
+## Versões
+
+Cada executável sabe exatamente de onde veio:
+
+```text
+> hwsuite --version
+hwsuite 0.2.0 (build 5, a3b8c29)
+```
+
+- **0.2.0**: versão SemVer, definida em `Directory.Build.props` (`VersionPrefix`).
+- **build 5**: número da execução do GitHub Actions que gerou o arquivo.
+- **a3b8c29**: commit do código compilado.
+
+A mesma identificação aparece nas propriedades do arquivo no Windows (versão `0.2.0.5`), no cabeçalho dos relatórios e no campo `toolVersion` do JSON. O que mudou em cada versão está no [CHANGELOG](CHANGELOG.md).
+
+Para lançar uma versão: atualize `VersionPrefix` e o `CHANGELOG.md`, faça o commit e crie a tag `v<versão>` (ex.: `v0.2.0`). O CI confere se a tag bate com a versão e publica o release com as notas do changelog.
 
 ## Estrutura
 
