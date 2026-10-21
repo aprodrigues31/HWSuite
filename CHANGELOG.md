@@ -20,6 +20,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Avisos de administrador/driver saem junto com a tabela de sensores (antes iam só para a saída de erro e se perdiam ao redirecionar para arquivo).
 - Sensores sem nenhuma leitura deixam de aparecer na tabela.
 
+### Corrigido
+- Perguntas de confirmação (instalar driver, reabrir como administrador) saem na tela mesmo quando a saída é redirecionada para arquivo; antes iam para dentro do arquivo e o comando parecia travado.
+
 ## [0.2.0] - 2026-10-21
 
 ### Adicionado

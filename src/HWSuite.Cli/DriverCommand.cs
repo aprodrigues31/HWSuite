@@ -106,7 +106,10 @@ internal static class DriverCommand
         return result.Succeeded ? 0 : 1;
     }
 
-    /// <summary>Asks a yes/no question; null when there is no interactive console to ask on.</summary>
+    /// <summary>
+    /// Asks a yes/no question; null when there is no interactive console to ask on. The prompt goes
+    /// to the error stream so it stays visible when the output is redirected to a file.
+    /// </summary>
     internal static bool? Confirm(string prompt)
     {
         if (Console.IsInputRedirected)
@@ -114,8 +117,15 @@ internal static class DriverCommand
             return null;
         }
 
-        Console.Write(prompt);
-        return IsYes(Console.ReadLine());
+        Console.Error.Write(prompt);
+        Console.Error.Flush();
+        var answer = Console.ReadLine();
+        if (Console.IsOutputRedirected)
+        {
+            Console.Error.WriteLine();
+        }
+
+        return IsYes(answer);
     }
 
     internal static bool IsYes(string? answer) =>

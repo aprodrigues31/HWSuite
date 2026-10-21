@@ -18,7 +18,7 @@ internal static class Elevation
     /// <summary>Runs <paramref name="arguments"/> elevated; returns the child's exit code, or 4 if UAC was declined.</summary>
     public static int Run(string arguments, Strings s, TextWriter output, bool capture)
     {
-        output.WriteLine(s["driver.elevating"]);
+        Console.Error.WriteLine(s["driver.elevating"]);
         var resultPath = capture ? Path.Combine(Path.GetTempPath(), $"hwsuite-{Guid.NewGuid():N}.txt") : null;
         var language = s.Culture.Name.Length > 0 ? s.Culture.Name : CultureInfo.CurrentUICulture.Name;
         var full = $"{arguments} --lang {language}" + (resultPath is null ? "" : $" --result {Quote(resultPath)}");
