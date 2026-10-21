@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: 0.3.0 lançada (inventário + sensores em tempo real na linha de comando); interface gráfica em desenvolvimento.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
+> **Status: 0.4.0 lançada — inventário e sensores em tempo real, na linha de comando e no aplicativo de desktop.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
 
 ## O que a fase 1 já faz
 
@@ -22,7 +22,7 @@ Tudo funciona **sem privilégio de administrador**. O que um provedor não conse
 
 ## Aplicativo de desktop
 
-O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor selecionado, e o inventário completo do hardware. Não precisa instalar: baixe o artefato `hwsuite-gui-<versão>-win-x64`, extraia a pasta e execute. Se faltarem privilégio de administrador ou o driver PawnIO, uma barra no topo oferece resolver com um clique.
+O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor selecionado, e o inventário completo do hardware. Não precisa instalar: baixe `hwsuite-gui-<versão>-win-x64.zip` em [Releases](https://github.com/aprodrigues31/HWSuite/releases), extraia a pasta inteira e execute o `HWSuite.Gui.exe`. Se faltarem privilégio de administrador ou o driver PawnIO, uma barra no topo oferece resolver com um clique.
 
 ## Uso
 
@@ -59,7 +59,7 @@ Código de saída: `0` sucesso, `2` argumento inválido, `3` relatório gerado m
 
 ## Como obter
 
-- **Versões estáveis:** em [Releases](https://github.com/aprodrigues31/HWSuite/releases), um `.zip` por versão com `hwsuite.exe` (win-x64, autocontido, não precisa instalar .NET).
+- **Versões estáveis:** em [Releases](https://github.com/aprodrigues31/HWSuite/releases), dois `.zip` por versão: `hwsuite-<versão>-win-x64.zip` com a linha de comando `hwsuite.exe` e `hwsuite-gui-<versão>-win-x64.zip` com o aplicativo (win-x64, autocontidos, não precisam de .NET instalado).
 - **Builds de desenvolvimento:** cada execução do GitHub Actions publica o artefato `hwsuite-<versão>-build.<N>-win-x64`, com o executável e relatórios de exemplo gerados no runner Windows.
 - **Compilar:** requer o SDK do .NET 10.
 
@@ -106,7 +106,7 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 ## Roadmap
 
 1. **Inventário sem driver** — esta versão.
-2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0). A seguir: interface gráfica com árvore de sensores e gráficos, alertas e ícone na bandeja.
+2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0); ✅ aplicativo de desktop com sensores, gráfico e inventário (0.4.0). A seguir (0.5.0): ícone na bandeja, alertas e configurações.
 3. **Detalhe:** SPD/XMP/EXPO, temperatura dos módulos, teste de carga PCIe, baterias e nobreaks, S.M.A.R.T. de SATA.
 4. **Paridade:** banco de dados de GPUs, backup do BIOS de vídeo, detecção de GPU falsificada, benchmark, fontes/AIOs, NPU.
 

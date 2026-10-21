@@ -8,12 +8,15 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.4.0] - 2026-10-21
+
 ### Adicionado
 - Fase 2b: aplicativo de desktop `HWSuite.Gui` (WinUI 3, autocontido, sem instalação):
   - **Sensores:** lista ao vivo agrupada por dispositivo com valor, mínimo e máximo, atualizada a cada segundo, e gráfico dos últimos 5 minutos do sensor selecionado.
   - **Hardware:** o inventário completo (mesmo conteúdo do `hwsuite report`) e botão para salvar o relatório HTML em Documentos\HWSuite.
   - Barra de aviso que oferece **reabrir como administrador** ou **instalar o driver PawnIO** com um clique, e reinicia os sensores após a instalação.
 - Biblioteca `HWSuite.Hosting`, compartilhada pela linha de comando e pelo aplicativo.
+- O release passa a ter dois pacotes: `hwsuite-<versão>-win-x64.zip` (linha de comando) e `hwsuite-gui-<versão>-win-x64.zip` (aplicativo).
 
 ## [0.3.0] - 2026-10-21
 
@@ -57,7 +60,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.3.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.4.0
 [0.3.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.2.0
 [0.1.0]: https://github.com/aprodrigues31/HWSuite/commit/1d2d84c

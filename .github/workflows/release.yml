@@ -61,6 +61,20 @@ jobs:
           Copy-Item README.md, LICENSE, CHANGELOG.md release/
           Compress-Archive -Path release/hwsuite.exe, release/README.md, release/LICENSE, release/CHANGELOG.md -DestinationPath "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip"
 
+      - name: Publish and package the desktop app
+        shell: pwsh
+        run: |
+          dotnet publish src/HWSuite.Gui -c Release -r win-x64 -p:Platform=x64 -o gui
+          $file = (Get-Item gui/HWSuite.Gui.exe).VersionInfo.ProductVersion
+          Write-Host "HWSuite.Gui $file"
+          if ($file -notlike "${{ steps.version.outputs.version }}*") { throw "Unexpected app version: $file" }
+          $app = Start-Process -FilePath (Resolve-Path gui/HWSuite.Gui.exe) -PassThru
+          Start-Sleep -Seconds 15
+          if ($app.HasExited) { throw "HWSuite.Gui exited early with code $($app.ExitCode)" }
+          Stop-Process -Id $app.Id -Force
+          Copy-Item LICENSE, CHANGELOG.md gui/
+          Compress-Archive -Path gui/* -DestinationPath "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip"
+
       - name: Release notes from CHANGELOG
         shell: pwsh
         run: |
@@ -76,4 +90,4 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
+        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
