@@ -7,6 +7,9 @@
     <InvariantGlobalization>false</InvariantGlobalization>
   </PropertyGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="HWSuite.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
     <ProjectReference Include="..\HWSuite.Providers.Common\HWSuite.Providers.Common.csproj" />
     <ProjectReference Include="..\HWSuite.Providers.Windows\HWSuite.Providers.Windows.csproj" />
