@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.3.0] - 2026-10-21
+
 ### Adicionado
 - Fase 2a: comando `hwsuite sensors` com os sensores em tempo real via LibreHardwareMonitorLib 0.9.6 — temperaturas, tensões, ventoinhas, consumo, clocks e utilização de CPU, placa-mãe (Super I/O), memória, GPUs NVIDIA/AMD/Intel, discos, fontes e baterias, com valores mínimo e máximo.
 - `hwsuite sensors --watch` atualiza a tabela continuamente; `--log arquivo.csv` grava as leituras em CSV; `--interval` e `--duration` controlam a amostragem.
@@ -48,6 +50,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.2.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.2.0
 [0.1.0]: https://github.com/aprodrigues31/HWSuite/commit/1d2d84c
