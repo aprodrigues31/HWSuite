@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>HWSuite.Cli</RootNamespace>
+    <AssemblyName>hwsuite</AssemblyName>
+    <Description>HWSuite command line: hardware inventory reports without a user interface.</Description>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
+    <ProjectReference Include="..\HWSuite.Providers.Common\HWSuite.Providers.Common.csproj" />
+    <ProjectReference Include="..\HWSuite.Providers.Windows\HWSuite.Providers.Windows.csproj" />
+  </ItemGroup>
+</Project>

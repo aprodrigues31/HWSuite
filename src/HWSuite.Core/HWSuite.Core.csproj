@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>HWSuite.Core</RootNamespace>
+    <Description>Hardware model, collection pipeline, decoders (CPUID, SMBIOS, storage) and report writers.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="HWSuite.Tests" />
+  </ItemGroup>
+</Project>

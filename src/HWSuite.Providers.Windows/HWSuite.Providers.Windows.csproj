@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>HWSuite.Providers.Windows</RootNamespace>
+    <Description>Windows providers: SMBIOS firmware table, OS info, DXGI adapters, storage IOCTLs. No kernel driver required.</Description>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="HWSuite.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
+  </ItemGroup>
+</Project>

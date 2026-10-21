@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>HWSuite.Providers.Common</RootNamespace>
+    <Description>Cross-platform providers: CPUID (x86/x64) and SMBIOS from Linux sysfs (development aid).</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
+  </ItemGroup>
+</Project>
