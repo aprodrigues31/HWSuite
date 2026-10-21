@@ -8,6 +8,15 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- Fase 2c no aplicativo de desktop:
+  - **Área de notificação:** ícone com a temperatura da CPU e da GPU na dica; fechar a janela mantém o monitoramento rodando (configurável); menu com Abrir e Sair.
+  - **Alertas:** notificação do Windows quando um sensor passa do limite. Começa com CPU acima de 90 °C, GPU acima de 95 °C e discos acima de 70 °C; o botão **Criar alerta** na página Sensores vigia o sensor selecionado. Só dispara após 3 leituras seguidas e só volta ao normal com 3 °C de folga, para não repetir avisos.
+  - **Configurações:** intervalo de atualização (1 a 60 s), tema claro/escuro/do Windows, fechar para a bandeja, limites dos alertas, gravação contínua de log CSV em Documentos\HWSuite\logs e **iniciar com o Windows** (tarefa agendada que abre minimizado e como administrador, sem pedir UAC a cada logon).
+  - Valores além do limite aparecem em vermelho na lista de sensores.
+  - Instância única: abrir o app de novo traz a janela que já está rodando.
+  - Ícone próprio do aplicativo.
+
 ## [0.4.0] - 2026-10-21
 
 ### Adicionado

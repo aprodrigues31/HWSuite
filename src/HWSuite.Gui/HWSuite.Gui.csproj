@@ -7,6 +7,7 @@
     <AssemblyName>HWSuite.Gui</AssemblyName>
     <Description>HWSuite desktop app (WinUI 3): hardware inventory and live sensors.</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\HWSuite.ico</ApplicationIcon>
     <Platforms>x64</Platforms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <UseWinUI>true</UseWinUI>
@@ -24,6 +25,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.28000.2526" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Loaded at run time for the window and the notification-area icon. -->
+    <Content Remove="Assets\HWSuite.ico" />
+    <Content Include="Assets\HWSuite.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />

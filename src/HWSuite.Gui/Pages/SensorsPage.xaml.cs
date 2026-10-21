@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using HWSuite.Core.Alerts;
 using HWSuite.Core.Sensors;
 using HWSuite.Gui.ViewModels;
 using Microsoft.UI.Xaml;
@@ -10,7 +11,7 @@ using Windows.Foundation;
 
 namespace HWSuite.Gui.Pages;
 
-/// <summary>Live sensors grouped by device, with a 5-minute chart of the selected sensor.</summary>
+/// <summary>Live sensors grouped by device, with a chart of the selected sensor's recent history.</summary>
 public sealed partial class SensorsPage : Page
 {
     private readonly ObservableCollection<SensorGroup> _groups = [];
@@ -30,6 +31,7 @@ public sealed partial class SensorsPage : Page
         HeaderMin.Text = s["sensors.min"];
         HeaderMax.Text = s["sensors.max"];
         ChartTitle.Text = s["app.chartHint"];
+        AlertButtonText.Text = s["app.createAlert"];
         GroupedSensors.Source = _groups;
     }
 
@@ -51,7 +53,15 @@ public sealed partial class SensorsPage : Page
         base.OnNavigatedFrom(e);
     }
 
-    private void OnUpdated(object? sender, SensorSnapshot snapshot) => DispatcherQueue.TryEnqueue(() => Apply(snapshot));
+    private void OnUpdated(object? sender, SensorSnapshot snapshot)
+    {
+        if (App.MainWindow is { IsShown: false })
+        {
+            return; // hidden in the tray: nothing to draw; the next update after showing catches up
+        }
+
+        DispatcherQueue.TryEnqueue(() => Apply(snapshot));
+    }
 
     private void OnFailed(object? sender, Exception error) =>
         DispatcherQueue.TryEnqueue(() => StatusText.Text = App.Text.Format("app.sensorsFailed", error.Message));
@@ -61,6 +71,9 @@ public sealed partial class SensorsPage : Page
         var s = App.Text;
         var c = s.Culture;
         var shown = 0;
+        IReadOnlyList<AlertRule> rules = App.Settings.Current.AlertsEnabled ? App.Settings.Rules : [];
+        var normal = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"];
+        var critical = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"];
 
         foreach (var r in snapshot.Readings)
         {
@@ -71,7 +84,7 @@ public sealed partial class SensorsPage : Page
 
             if (!_items.TryGetValue(r.Id, out var item))
             {
-                item = new SensorItem(r.Id, r.Name, r.Kind, s[$"sensorKind.{r.Kind}"]);
+                item = new SensorItem(r, s[$"sensorKind.{r.Kind}"]);
                 _items[r.Id] = item;
                 GroupFor(r).Add(item);
             }
@@ -79,6 +92,8 @@ public sealed partial class SensorsPage : Page
             item.ValueText = SensorFormat.Format(r.Value, r.Kind, c);
             item.MinText = SensorFormat.Format(r.Min, r.Kind, c);
             item.MaxText = SensorFormat.Format(r.Max, r.Kind, c);
+            item.Reading = r;
+            item.ValueBrush = AlertEvaluator.IsBeyond(r, rules) ? critical : normal;
             shown++;
         }
 
@@ -111,7 +126,45 @@ public sealed partial class SensorsPage : Page
     private void SensorList_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         _selected = SensorList.SelectedItem as SensorItem;
+        AlertButton.IsEnabled = _selected is not null;
         DrawChart();
+    }
+
+    /// <summary>
+    /// Adds a rule for the selected sensor with a starting limit the user adjusts in Settings:
+    /// fans alert below half their current speed, everything else above the current value plus a margin.
+    /// </summary>
+    private void AlertButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_selected is not { Reading: var reading })
+        {
+            return;
+        }
+
+        var value = reading.Value is { } v && double.IsFinite(v) ? v : 0;
+        var below = reading.Kind == SensorKind.Fan;
+        var threshold = reading.Kind switch
+        {
+            SensorKind.Fan => Math.Round(value * 0.5),
+            SensorKind.Temperature => Math.Ceiling(value + 10),
+            _ => Math.Ceiling(Math.Abs(value) * 1.2 * 100) / 100,
+        };
+
+        var rule = new AlertRule
+        {
+            Label = $"{reading.Name} ({reading.Hardware})",
+            Target = new AlertTarget { SensorId = reading.Id },
+            Threshold = threshold,
+            Direction = below ? AlertDirection.Below : AlertDirection.Above,
+        };
+        App.Settings.UpdateRules(rules => [.. rules.Where(r => r.Target.SensorId != reading.Id), rule]);
+
+        var s = App.Text;
+        AlertBar.Message = s.Format("app.alertCreated", rule.Label,
+            s[below ? "settings.alertBelow" : "settings.alertAbove"],
+            SensorFormat.Format(threshold, reading.Kind, s.Culture));
+
+        AlertBar.IsOpen = true;
     }
 
     private void ChartCanvas_SizeChanged(object sender, SizeChangedEventArgs e) => DrawChart();

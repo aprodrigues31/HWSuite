@@ -1,0 +1,229 @@
+using System.Diagnostics;
+using HWSuite.Core.Alerts;
+using HWSuite.Core.Sensors;
+using HWSuite.Core.Settings;
+using HWSuite.Gui.Services;
+using HWSuite.Providers.Windows;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+
+namespace HWSuite.Gui.Pages;
+
+/// <summary>Interval, theme, tray and startup behavior, alert limits and CSV logging. Every change is saved immediately.</summary>
+public sealed partial class SettingsPage : Page
+{
+    private static readonly AppTheme[] Themes = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
+    private bool _loading;
+
+    public SettingsPage()
+    {
+        InitializeComponent();
+        var s = App.Text;
+        PageTitle.Text = s["app.nav.settings"];
+        GeneralTitle.Text = s["settings.general"];
+        IntervalBox.Header = s["settings.interval"];
+        IntervalBox.Minimum = AppSettings.MinInterval;
+        IntervalBox.Maximum = AppSettings.MaxInterval;
+        ThemeChoice.Header = s["settings.theme"];
+        foreach (var theme in Themes)
+        {
+            ThemeChoice.Items.Add(s[$"settings.theme.{theme.ToString().ToLowerInvariant()}"]);
+        }
+
+        CloseToTraySwitch.Header = s["settings.closeToTray"];
+        StartupSwitch.Header = s["settings.startWithWindows"];
+        AlertsTitle.Text = s["settings.alerts"];
+        AlertsSwitch.Header = s["settings.alertsEnabled"];
+        AlertsHint.Text = s["settings.alertsHint"];
+        RestoreButton.Content = s["settings.alertsRestore"];
+        LogTitle.Text = s["settings.logging"];
+        LogSwitch.Header = s["settings.logEnabled"];
+        OpenFolderButton.Content = s["settings.openFolder"];
+
+        Load();
+    }
+
+    private void Load()
+    {
+        _loading = true;
+        var settings = App.Settings.Current;
+        IntervalBox.Value = settings.IntervalSeconds;
+        ThemeChoice.SelectedIndex = Array.IndexOf(Themes, settings.Theme);
+        CloseToTraySwitch.IsOn = settings.CloseToTray;
+        AlertsSwitch.IsOn = settings.AlertsEnabled;
+        LogSwitch.IsOn = settings.LogEnabled;
+        LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
+
+        // The task is the source of truth (it may have been removed in Task Scheduler).
+        var elevated = App.Monitor.Access.IsElevated;
+        StartupSwitch.IsOn = StartupTask.IsRegistered();
+        StartupSwitch.IsEnabled = elevated;
+        StartupHint.Text = App.Text["settings.startWithWindowsNeedsAdmin"];
+        StartupHint.Visibility = elevated ? Visibility.Collapsed : Visibility.Visible;
+
+        BuildRules();
+        _loading = false;
+    }
+
+    private void IntervalBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (_loading || double.IsNaN(args.NewValue))
+        {
+            return;
+        }
+
+        App.Settings.Update(s => s with { IntervalSeconds = (int)Math.Round(args.NewValue) });
+    }
+
+    private void ThemeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading && ThemeChoice.SelectedIndex >= 0)
+        {
+            var theme = Themes[ThemeChoice.SelectedIndex];
+            App.Settings.Update(s => s with { Theme = theme });
+        }
+    }
+
+    private void CloseToTraySwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            App.Settings.Update(s => s with { CloseToTray = CloseToTraySwitch.IsOn });
+        }
+    }
+
+    private async void StartupSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        var enable = StartupSwitch.IsOn;
+        var exe = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "HWSuite.Gui.exe");
+        StartupSwitch.IsEnabled = false;
+        var error = await Task.Run(() => enable ? StartupTask.Register(exe) : StartupTask.Unregister());
+        StartupSwitch.IsEnabled = true;
+
+        if (error is not null)
+        {
+            StartupHint.Text = App.Text.Format("settings.startWithWindowsFailed", error);
+            StartupHint.Visibility = Visibility.Visible;
+            _loading = true;
+            StartupSwitch.IsOn = !enable;
+            _loading = false;
+            return;
+        }
+
+        StartupHint.Visibility = Visibility.Collapsed;
+        App.Settings.Update(s => s with { StartWithWindows = enable });
+    }
+
+    private void AlertsSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            App.Settings.Update(s => s with { AlertsEnabled = AlertsSwitch.IsOn });
+        }
+    }
+
+    private void LogSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            App.Settings.Update(s => s with { LogEnabled = LogSwitch.IsOn });
+        }
+    }
+
+    private void OpenFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        var folder = App.Settings.LogFolder;
+        Directory.CreateDirectory(folder);
+        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true })?.Dispose();
+    }
+
+    private void RestoreButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Update(s => s with { Alerts = null });
+        BuildRules();
+    }
+
+    /// <summary>One row per rule: on/off, name, direction, editable limit with unit, remove.</summary>
+    private void BuildRules()
+    {
+        RulesPanel.Children.Clear();
+        var s = App.Text;
+        foreach (var rule in App.Settings.Rules)
+        {
+            var kind = rule.Target.Kind ?? KindOf(rule);
+            var unit = SensorFormat.Unit(kind);
+
+            var row = new Grid { ColumnSpacing = 12 };
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(150) });
+            row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+
+            var enabled = new CheckBox { IsChecked = rule.Enabled, MinWidth = 0, VerticalAlignment = VerticalAlignment.Center };
+            enabled.Click += (_, _) => Replace(rule.Id, r => r with { Enabled = enabled.IsChecked == true });
+
+            var label = new TextBlock { Text = rule.Label, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis };
+            Grid.SetColumn(label, 1);
+
+            var direction = new TextBlock
+            {
+                Text = s[rule.Direction == AlertDirection.Above ? "settings.alertAbove" : "settings.alertBelow"],
+                VerticalAlignment = VerticalAlignment.Center,
+                Foreground = (Microsoft.UI.Xaml.Media.Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            };
+            Grid.SetColumn(direction, 2);
+
+            var limit = new NumberBox
+            {
+                Value = rule.Threshold,
+                SpinButtonPlacementMode = NumberBoxSpinButtonPlacementMode.Compact,
+                SmallChange = kind is SensorKind.Fan or SensorKind.Clock ? 50 : 1,
+                PlaceholderText = unit,
+            };
+            if (unit.Length > 0)
+            {
+                ToolTipService.SetToolTip(limit, unit);
+            }
+
+            limit.ValueChanged += (_, args) =>
+            {
+                if (!double.IsNaN(args.NewValue))
+                {
+                    Replace(rule.Id, r => r with { Threshold = args.NewValue });
+                }
+            };
+            Grid.SetColumn(limit, 3);
+
+            var unitText = new TextBlock { Text = unit, VerticalAlignment = VerticalAlignment.Center, MinWidth = 28 };
+            var remove = new Button { Content = new FontIcon { Glyph = "", FontSize = 14 } };
+            ToolTipService.SetToolTip(remove, s["settings.alertRemove"]);
+            remove.Click += (_, _) =>
+            {
+                App.Settings.UpdateRules(rules => rules.Where(r => r.Id != rule.Id));
+                BuildRules();
+            };
+            var tail = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { unitText, remove } };
+            Grid.SetColumn(tail, 4);
+
+            row.Children.Add(enabled);
+            row.Children.Add(label);
+            row.Children.Add(direction);
+            row.Children.Add(limit);
+            row.Children.Add(tail);
+            RulesPanel.Children.Add(row);
+        }
+    }
+
+    private static void Replace(string id, Func<AlertRule, AlertRule> change) =>
+        App.Settings.UpdateRules(rules => rules.Select(r => r.Id == id ? change(r) : r));
+
+    /// <summary>Unit for single-sensor rules, taken from the live reading of that sensor.</summary>
+    private static SensorKind KindOf(AlertRule rule) =>
+        App.Monitor.Latest?.Readings.FirstOrDefault(r => r.Id == rule.Target.SensorId)?.Kind ?? SensorKind.Other;
+}

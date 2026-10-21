@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Page.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Padding" Value="16,14" />
+            <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+            <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="8" />
+        </Style>
+    </Page.Resources>
+
+    <ScrollViewer>
+        <StackPanel Padding="20,12,20,24" Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+            <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+
+            <TextBlock x:Name="GeneralTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="14">
+                    <NumberBox
+                        x:Name="IntervalBox"
+                        HorizontalAlignment="Left"
+                        MinWidth="240"
+                        SmallChange="1"
+                        SpinButtonPlacementMode="Inline"
+                        ValueChanged="IntervalBox_ValueChanged" />
+                    <RadioButtons x:Name="ThemeChoice" SelectionChanged="ThemeChoice_SelectionChanged" />
+                    <ToggleSwitch x:Name="CloseToTraySwitch" Toggled="CloseToTraySwitch_Toggled" />
+                    <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="StartupSwitch" Toggled="StartupSwitch_Toggled" />
+                        <TextBlock x:Name="StartupHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="AlertsTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <ToggleSwitch x:Name="AlertsSwitch" Toggled="AlertsSwitch_Toggled" />
+                    <TextBlock x:Name="AlertsHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                    <StackPanel x:Name="RulesPanel" Spacing="8" />
+                    <Button x:Name="RestoreButton" Click="RestoreButton_Click" />
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="LogTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="10">
+                    <ToggleSwitch x:Name="LogSwitch" Toggled="LogSwitch_Toggled" />
+                    <TextBlock x:Name="LogFolderText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    <Button x:Name="OpenFolderButton" Click="OpenFolderButton_Click" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

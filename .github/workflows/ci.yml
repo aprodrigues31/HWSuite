@@ -125,17 +125,35 @@ jobs:
         run: |
           $exe = Resolve-Path artifacts/gui/HWSuite.Gui.exe
           $started = Get-Date
-          $app = Start-Process -FilePath $exe -PassThru
-          Start-Sleep -Seconds 20
-          if ($app.HasExited) {
-            Write-Host "HWSuite.Gui exited early with code $($app.ExitCode)"
+          $notes = New-Object System.Collections.Generic.List[string]
+          function Fail($why) {
+            Write-Host $why
             Get-WinEvent -FilterHashtable @{ LogName = 'Application'; StartTime = $started } -ErrorAction SilentlyContinue |
               Where-Object { $_.Message -match 'HWSuite' } | Select-Object -First 5 | Format-List TimeCreated, ProviderName, Message
+            Get-Process HWSuite.Gui -ErrorAction SilentlyContinue | Stop-Process -Force
             exit 1
           }
-          Write-Host "HWSuite.Gui running after 20 s (pid $($app.Id), memory $([math]::Round($app.WorkingSet64 / 1MB)) MB)"
+
+          # 1. Starts minimized (as the logon task does) and keeps running.
+          $app = Start-Process -FilePath $exe -ArgumentList '--minimized' -PassThru
+          Start-Sleep -Seconds 20
+          if ($app.HasExited) { Fail "HWSuite.Gui exited early with code $($app.ExitCode)" }
+          $app.Refresh()
+          $notes.Add("Iniciou com --minimized e continuou rodando por 20 s (memória $([math]::Round($app.WorkingSet64 / 1MB)) MB)")
+          $notes.Add("Janela visível ao iniciar minimizado: $(if ($app.MainWindowHandle -ne 0) { 'sim (sem área de notificação no runner)' } else { 'não (ficou na bandeja)' })")
+
+          # 2. A second launch hands over to the running copy and exits.
+          $second = Start-Process -FilePath $exe -PassThru
+          if (-not $second.WaitForExit(15000)) { $second.Kill(); Fail "Second instance did not exit" }
+          $notes.Add("Segunda instância encerrou e sinalizou a primeira (código $($second.ExitCode))")
+          Start-Sleep -Seconds 3
+          $app.Refresh()
+          if ($app.HasExited) { Fail "First instance exited after the second launch" }
+          $notes.Add("Janela visível após o sinal: $(if ($app.MainWindowHandle -ne 0) { 'sim' } else { 'não' })")
+
           Stop-Process -Id $app.Id -Force
-          "### Aplicativo (WinUI 3)`n- Iniciou e continuou rodando por 20 s no runner" | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          $notes | ForEach-Object { Write-Host $_ }
+          "### Aplicativo (WinUI 3)`n" + (($notes | ForEach-Object { "- $_" }) -join "`n") | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
 
       - name: Desktop app - package
         shell: pwsh

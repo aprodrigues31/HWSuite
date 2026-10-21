@@ -16,6 +16,7 @@ internal static class Elevation
             {
                 UseShellExecute = true,
                 Verb = "runas",
+                Arguments = App.RelaunchArgument,
                 WorkingDirectory = AppContext.BaseDirectory,
             });
             return process is not null;

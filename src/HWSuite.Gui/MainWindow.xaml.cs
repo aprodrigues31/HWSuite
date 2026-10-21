@@ -1,7 +1,9 @@
 using HWSuite.Core;
+using HWSuite.Core.Settings;
 using HWSuite.Gui.Pages;
 using HWSuite.Gui.Services;
 using HWSuite.Providers.Windows;
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Graphics;
@@ -11,6 +13,8 @@ namespace HWSuite.Gui;
 public sealed partial class MainWindow : Window
 {
     private bool _installing;
+    private bool _allowClose;
+    private bool _toldAboutTray;
 
     public MainWindow()
     {
@@ -18,20 +22,70 @@ public sealed partial class MainWindow : Window
         var s = App.Text;
         Title = $"HWSuite {BuildInfo.Current.Display}";
         AppWindow.Resize(new SizeInt32(1180, 820));
+        if (File.Exists(App.IconPath))
+        {
+            AppWindow.SetIcon(App.IconPath);
+        }
+
+        AppWindow.Closing += AppWindow_Closing;
 
         NavSensors.Content = s["app.nav.sensors"];
         NavInventory.Content = s["app.nav.inventory"];
+        NavSettings.Content = s["app.nav.settings"];
         NavAbout.Content = s["app.nav.about"];
         Nav.SelectedItem = NavSensors;
 
+        ApplyTheme(App.Settings.Current.Theme);
+        App.Settings.Changed += (_, settings) => ApplyTheme(settings.Theme);
         UpdateAccessBar(App.Monitor.Access);
     }
+
+    /// <summary>True while the window is on screen; pages skip UI work while it sits in the tray.</summary>
+    public bool IsShown => AppWindow.IsVisible;
+
+    /// <summary>Lets the next Close() really close (exit from the tray menu, elevation relaunch).</summary>
+    public void AllowClose() => _allowClose = true;
+
+    public void ShowFromTray()
+    {
+        AppWindow.Show();
+        if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
+        {
+            presenter.Restore();
+        }
+
+        Activate();
+    }
+
+    private void AppWindow_Closing(AppWindow sender, AppWindowClosingEventArgs args)
+    {
+        if (_allowClose || !App.Settings.Current.CloseToTray || App.Tray is not { IsAdded: true } tray)
+        {
+            return;
+        }
+
+        args.Cancel = true;
+        sender.Hide();
+        if (!_toldAboutTray)
+        {
+            _toldAboutTray = true;
+            tray.Notify("HWSuite", App.Text["app.tray.stillRunning"], warning: false);
+        }
+    }
+
+    private void ApplyTheme(AppTheme theme) => Root.RequestedTheme = theme switch
+    {
+        AppTheme.Light => ElementTheme.Light,
+        AppTheme.Dark => ElementTheme.Dark,
+        _ => ElementTheme.Default,
+    };
 
     private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         var page = ((args.SelectedItem as NavigationViewItem)?.Tag as string) switch
         {
             "inventory" => typeof(InventoryPage),
+            "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),
             _ => typeof(SensorsPage),
         };
@@ -77,7 +131,7 @@ public sealed partial class MainWindow : Window
         {
             if (Elevation.RelaunchElevated())
             {
-                Close(); // the elevated copy takes over
+                App.Quit(); // the elevated copy takes over
             }
 
             return;
