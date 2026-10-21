@@ -50,6 +50,38 @@ public class ReportAndCollectionTests
         Assert.Contains("shared by 2 threads", en);
     }
 
+    [Theory]
+    [InlineData(true, "Máquina física com Hyper-V ativo")]
+    [InlineData(false, "Máquina virtual (Microsoft Hyper-V)")]
+    public void Virtualization_row_separates_vbs_hosts_from_virtual_machines(bool root, string expected)
+    {
+        var inv = Sample();
+        inv.Processors[0].HypervisorPresent = true;
+        inv.Processors[0].HypervisorVendor = "Microsoft Hyper-V";
+        inv.Processors[0].HypervisorRootPartition = root;
+
+        Assert.Contains(expected, Render(new TextReportWriter(), inv, "pt-BR"), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Dates_are_rendered_in_the_report_language()
+    {
+        var inv = Sample();
+        inv.Bios = new BiosInfo { ReleaseDate = DateText.Normalize("09/10/2026") };
+
+        Assert.Equal("2026-09-10", inv.Bios.ReleaseDate);
+        Assert.Contains("10/09/2026", Render(new TextReportWriter(), inv, "pt-BR"), StringComparison.Ordinal);
+        Assert.Contains("9/10/2026", Render(new TextReportWriter(), inv, "en-US"), StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("10-18-2026", "2026-10-18")] // display driver registry format
+    [InlineData("12/31/99", "1999-12-31")]
+    [InlineData("2026-01-05", "2026-01-05")]
+    [InlineData("not a date", "not a date")]
+    public void Normalizes_firmware_and_driver_dates(string raw, string expected) =>
+        Assert.Equal(expected, DateText.Normalize(raw));
+
     [Fact]
     public void Html_report_encodes_values()
     {

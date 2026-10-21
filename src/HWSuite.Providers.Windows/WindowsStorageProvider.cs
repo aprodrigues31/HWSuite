@@ -21,10 +21,13 @@ public sealed class WindowsStorageProvider : IInventoryProvider
     private const int StorageDeviceSeekPenaltyProperty = 7;
     private const int StorageDeviceProtocolSpecificProperty = 50;
     private const int ProtocolTypeNvme = 3;
+    private const int NvmeDataTypeIdentify = 1;
     private const int NvmeDataTypeLogPage = 2;
+    private const int NvmeIdentifyCnsController = 1;
     private const int NvmeLogPageHealthInfo = 2;
     private const int ProtocolSpecificDataSize = 40;
     private const int NvmeLogSize = 512;
+    private const int NvmeIdentifySize = 4096;
     private const int BusTypeNvme = 17;
 
     public string Name => "Storage";
@@ -96,7 +99,23 @@ public sealed class WindowsStorageProvider : IInventoryProvider
         if (descriptor.BusTypeCode == BusTypeNvme)
         {
             disk.MediaType ??= "SSD";
-            disk.Health = ReadNvmeHealth(handle);
+
+            // Windows reports an EUI-64/NGUID-derived id as "serial"; the controller has the real one.
+            var identify = QueryNvme(handle, NvmeDataTypeIdentify, NvmeIdentifyCnsController, NvmeIdentifySize, minLength: 72);
+            if (identify is not null)
+            {
+                var (serial, model, firmware) = StorageDecoders.ParseNvmeIdentifyController(identify);
+                disk.SerialNumber = serial ?? disk.SerialNumber;
+                disk.Model ??= model;
+                disk.Firmware ??= firmware;
+            }
+            else if (StorageDecoders.LooksLikeWindowsNvmeIdentifier(disk.SerialNumber))
+            {
+                disk.SerialNumber = null; // better no serial than a misleading one
+            }
+
+            var health = QueryNvme(handle, NvmeDataTypeLogPage, NvmeLogPageHealthInfo, NvmeLogSize, minLength: 176);
+            disk.Health = health is null ? null : StorageDecoders.ParseNvmeHealthLog(health);
             if (disk.Health is null)
             {
                 context.Info(string.Create(CultureInfo.InvariantCulture, $"PhysicalDrive{index}: NVMe health log not available through the inbox driver"));
@@ -114,20 +133,24 @@ public sealed class WindowsStorageProvider : IInventoryProvider
         return query;
     }
 
+    /// <summary>
+    /// IOCTL_STORAGE_QUERY_PROPERTY with StorageDeviceProtocolSpecificProperty, as documented for
+    /// the Windows inbox NVMe driver. Returns the protocol payload (Identify data or a log page).
+    /// </summary>
     [SupportedOSPlatform("windows")]
-    private static DiskHealth? ReadNvmeHealth(SafeFileHandle handle)
+    private static byte[]? QueryNvme(SafeFileHandle handle, int dataType, int requestValue, int length, int minLength)
     {
-        // STORAGE_PROPERTY_QUERY header (8) + STORAGE_PROTOCOL_SPECIFIC_DATA (40) + log page (512).
-        var buffer = new byte[8 + ProtocolSpecificDataSize + NvmeLogSize];
+        // STORAGE_PROPERTY_QUERY header (8) + STORAGE_PROTOCOL_SPECIFIC_DATA (40) + payload.
+        var buffer = new byte[8 + ProtocolSpecificDataSize + length];
         var span = buffer.AsSpan();
         BinaryPrimitives.WriteInt32LittleEndian(span, StorageDeviceProtocolSpecificProperty);
         BinaryPrimitives.WriteInt32LittleEndian(span[4..], 0); // PropertyStandardQuery
         var protocol = span[8..];
         BinaryPrimitives.WriteInt32LittleEndian(protocol, ProtocolTypeNvme);
-        BinaryPrimitives.WriteInt32LittleEndian(protocol[4..], NvmeDataTypeLogPage);
-        BinaryPrimitives.WriteInt32LittleEndian(protocol[8..], NvmeLogPageHealthInfo);
+        BinaryPrimitives.WriteInt32LittleEndian(protocol[4..], dataType);
+        BinaryPrimitives.WriteInt32LittleEndian(protocol[8..], requestValue);
         BinaryPrimitives.WriteInt32LittleEndian(protocol[16..], ProtocolSpecificDataSize); // ProtocolDataOffset
-        BinaryPrimitives.WriteInt32LittleEndian(protocol[20..], NvmeLogSize); // ProtocolDataLength
+        BinaryPrimitives.WriteInt32LittleEndian(protocol[20..], length); // ProtocolDataLength
 
         var output = Native.Ioctl(handle, Native.IoctlStorageQueryProperty, buffer, buffer.Length);
         if (output is null || output.Length < 8 + ProtocolSpecificDataSize)
@@ -139,11 +162,11 @@ public sealed class WindowsStorageProvider : IInventoryProvider
         var dataOffset = BinaryPrimitives.ReadInt32LittleEndian(output.AsSpan(8 + 16));
         var dataLength = BinaryPrimitives.ReadInt32LittleEndian(output.AsSpan(8 + 20));
         var start = 8 + dataOffset;
-        if (dataLength < 176 || start + dataLength > output.Length)
+        if (dataLength < minLength || start < 0 || start + dataLength > output.Length)
         {
             return null;
         }
 
-        return StorageDecoders.ParseNvmeHealthLog(output.AsSpan(start, dataLength));
+        return output[start..(start + dataLength)];
     }
 }

@@ -40,7 +40,12 @@ public sealed class DxgiGpuProvider : IInventoryProvider
         {
             if (registry.FirstOrDefault(r => r.Matches(gpu)) is { } entry)
             {
-                gpu.DriverDate = entry.DriverDate;
+                gpu.DriverDate = DateText.Normalize(entry.DriverDate);
+                if (entry.MemorySizeBytes is > 0 and var exact && exact >= (gpu.DedicatedMemoryBytes ?? 0))
+                {
+                    gpu.DedicatedMemoryBytes = exact; // DXGI subtracts reserved memory; the driver reports the board size
+                }
+
                 gpu.BiosVersion = entry.BiosString;
                 gpu.DriverVersion ??= entry.DriverVersion;
             }
@@ -142,7 +147,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
     internal static string FormatDriverVersion(long value) => string.Create(CultureInfo.InvariantCulture,
         $"{(value >> 48) & 0xFFFF}.{(value >> 32) & 0xFFFF}.{(value >> 16) & 0xFFFF}.{value & 0xFFFF}");
 
-    private sealed record DisplayClassEntry(PciHardwareId? Id, string? DriverVersion, string? DriverDate, string? BiosString)
+    private sealed record DisplayClassEntry(PciHardwareId? Id, string? DriverVersion, string? DriverDate, string? BiosString, long? MemorySizeBytes)
     {
         public bool Matches(GpuInfo gpu) =>
             Id is not null
@@ -172,11 +177,22 @@ public sealed class DxgiGpuProvider : IInventoryProvider
                 PciIds.Parse(key.GetValue("MatchingDeviceId") as string),
                 key.GetValue("DriverVersion") as string,
                 key.GetValue("DriverDate") as string,
-                RegistryText(key.GetValue("HardwareInformation.BiosString"))));
+                RegistryText(key.GetValue("HardwareInformation.BiosString")),
+                RegistryNumber(key.GetValue("HardwareInformation.qwMemorySize")) ?? RegistryNumber(key.GetValue("HardwareInformation.MemorySize"))));
         }
 
         return entries;
     }
+
+    /// <summary>Memory size may be REG_QWORD, REG_DWORD or REG_BINARY depending on the driver.</summary>
+    private static long? RegistryNumber(object? value) => value switch
+    {
+        long l => l,
+        int i => unchecked((uint)i),
+        byte[] { Length: >= 8 } b => BitConverter.ToInt64(b, 0),
+        byte[] { Length: >= 4 } b => BitConverter.ToUInt32(b, 0),
+        _ => null,
+    };
 
     /// <summary>Display drivers store some strings as REG_BINARY UTF-16.</summary>
     private static string? RegistryText(object? value)

@@ -132,7 +132,7 @@ public class SmbiosTests
 
         Assert.Equal("American Megatrends Inc.", inv.Bios!.Vendor);
         Assert.Equal("1.40", inv.Bios.Version);
-        Assert.Equal("05/12/2025", inv.Bios.ReleaseDate);
+        Assert.Equal("2025-05-12", inv.Bios.ReleaseDate); // US order normalized to ISO
         Assert.Equal("3.4", inv.Bios.SmbiosVersion);
 
         Assert.Equal("Positivo", inv.System!.Manufacturer);

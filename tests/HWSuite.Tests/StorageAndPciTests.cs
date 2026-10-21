@@ -51,6 +51,36 @@ public class StorageAndPciTests
     }
 
     [Fact]
+    public void Parses_nvme_identify_controller_strings()
+    {
+        var identify = new byte[4096];
+        Encoding.ASCII.GetBytes("23140K800123        ").CopyTo(identify, 4);
+        Encoding.ASCII.GetBytes("WD Green SN350 1TB".PadRight(40)).CopyTo(identify, 24);
+        Encoding.ASCII.GetBytes("33006000").CopyTo(identify, 64);
+
+        var (serial, model, firmware) = StorageDecoders.ParseNvmeIdentifyController(identify);
+
+        Assert.Equal("23140K800123", serial);
+        Assert.Equal("WD Green SN350 1TB", model);
+        Assert.Equal("33006000", firmware);
+    }
+
+    [Theory]
+    [InlineData("E823_8FA6_BF53_0001_001B_448B_4D44_4D9D.", "E823_8FA6_BF53_0001_001B_448B_4D44_4D9D")]
+    [InlineData("0000000000000000", null)]
+    [InlineData("0000_0000_0000_0000.", null)]
+    [InlineData("  S7KHNJ0X123456A ", "S7KHNJ0X123456A")]
+    public void Cleans_serial_numbers(string raw, string? expected) =>
+        Assert.Equal(expected, StorageDecoders.CleanSerial(raw));
+
+    [Fact]
+    public void Recognizes_the_windows_nvme_identifier_form()
+    {
+        Assert.True(StorageDecoders.LooksLikeWindowsNvmeIdentifier("E823_8FA6_BF53_0001_001B_448B_4D44_4D9D"));
+        Assert.False(StorageDecoders.LooksLikeWindowsNvmeIdentifier("23140K800123"));
+    }
+
+    [Fact]
     public void Parses_disk_size_from_geometry_ex()
     {
         var geometry = new byte[32];

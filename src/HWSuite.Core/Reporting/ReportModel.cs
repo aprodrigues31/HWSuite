@@ -69,7 +69,7 @@ public static class ReportModel
             Section("section.bios", Group(null,
                 (s["field.vendor"], bios.Vendor),
                 (s["field.version"], bios.Version),
-                (s["field.releaseDate"], bios.ReleaseDate),
+                (s["field.releaseDate"], DateText.Display(bios.ReleaseDate, c)),
                 (s["field.smbios"], bios.SmbiosVersion)));
         }
 
@@ -82,12 +82,12 @@ public static class ReportModel
                 (s["field.name"], cpu.Name),
                 (s["field.vendor"], cpu.Vendor),
                 (s["field.socket"], cpu.Socket),
-                (s["field.familyModelStepping"], Join(c, " / ", cpu.Family, Hex(cpu.Model), cpu.Stepping)),
+                (s["field.familyModelStepping"], Join(c, " / ", Hex(cpu.Family), Hex(cpu.Model), Hex(cpu.Stepping))),
                 (s["field.signature"], cpu.Signature),
                 (s["field.coresThreads"], Join(c, " / ", cpu.Cores, cpu.Threads)),
                 (s["field.clocks"], Join(c, " / ", Mhz(cpu.BusClockMhz), Mhz(cpu.MaxClockMhz), Mhz(cpu.CurrentClockMhz))),
                 (s["field.instructions"], cpu.InstructionSets.Count > 0 ? string.Join(", ", cpu.InstructionSets) : null),
-                (s["field.hypervisor"], cpu.HypervisorPresent == true ? s["value.yes"] : null)));
+                (s["field.virtualization"], VirtualizationText(cpu, s))));
 
             if (cpu.Caches.Count > 0)
             {
@@ -123,7 +123,7 @@ public static class ReportModel
             (s["field.pciId"], g.PciVendorId is null ? null : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
-            (s["field.driver"], Join(c, " / ", g.DriverVersion, g.DriverDate)),
+            (s["field.driver"], Join(c, " / ", g.DriverVersion, DateText.Display(g.DriverDate, c))),
             (s["field.vbios"], g.BiosVersion)))]);
 
         Section("section.disks", [.. inv.Disks.Select(d => Group($"#{d.Index} {d.Model}".Trim(),
@@ -182,6 +182,15 @@ public static class ReportModel
 
         return present.All(string.IsNullOrWhiteSpace) ? null : string.Join(separator, present.Select(p => p ?? "—"));
     }
+
+    /// <summary>The CPUID hypervisor bit is also set on physical PCs running Windows with VBS.</summary>
+    private static string? VirtualizationText(ProcessorInfo cpu, Strings s) => cpu switch
+    {
+        { HypervisorPresent: not true } => null,
+        { HypervisorRootPartition: true } => s["value.vbsHost"],
+        { HypervisorVendor: { } vendor } => s.Format("value.virtualMachineOf", vendor),
+        _ => s["value.virtualMachine"],
+    };
 
     private static string? Hex(int? value) => value is { } v ? string.Create(CultureInfo.InvariantCulture, $"0x{v:X}") : null;
 

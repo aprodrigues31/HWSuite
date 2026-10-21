@@ -42,7 +42,7 @@ public static class SmbiosDecoder
 
         inventory.Bios.Vendor = Clean(bios, 0x04);
         inventory.Bios.Version = Clean(bios, 0x05);
-        inventory.Bios.ReleaseDate = Clean(bios, 0x08);
+        inventory.Bios.ReleaseDate = DateText.Normalize(Clean(bios, 0x08));
     }
 
     private static void DecodeSystem(SmbiosTable table, HardwareInventory inventory)
@@ -274,6 +274,7 @@ public static class SmbiosDecoder
         "Unknown", "Not Specified", "Not Applicable", "To Be Filled By O.E.M.", "To be filled by O.E.M.", "Default string",
         "None", "N/A", "0000000000000000", "System Product Name", "System manufacturer", "System Version",
         "System Serial Number", "Base Board Serial Number", "Type2 - Board Serial Number", "123456789", "O.E.M.",
+        "SKU", "Default", "Chassis Serial Number", "Not Present", "Undefined",
     ];
 
     private static string? CleanPlaceholder(string? value) =>

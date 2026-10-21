@@ -76,6 +76,15 @@ public sealed class ProcessorInfo
     public int? MaxClockMhz { get; set; }
     public int? CurrentClockMhz { get; set; }
     public bool? HypervisorPresent { get; set; }
+
+    /// <summary>Hypervisor name, e.g. "Microsoft Hyper-V", "VMware".</summary>
+    public string? HypervisorVendor { get; set; }
+
+    /// <summary>
+    /// True: the physical machine runs Windows on top of Hyper-V (VBS, memory integrity, WSL2).
+    /// False with <see cref="HypervisorPresent"/>: this is a virtual machine.
+    /// </summary>
+    public bool? HypervisorRootPartition { get; set; }
     public List<string> InstructionSets { get; } = [];
     public List<CacheInfo> Caches { get; } = [];
 }

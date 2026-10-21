@@ -27,6 +27,15 @@ public sealed class CpuidResult
     public int Stepping { get; init; }
     public uint Signature { get; init; }
     public bool HypervisorPresent { get; init; }
+
+    /// <summary>Vendor signature from leaf 4000_0000h, e.g. "Microsoft Hv", "KVMKVMKVM".</summary>
+    public string? HypervisorVendor { get; init; }
+
+    /// <summary>
+    /// True when the code runs in the Hyper-V root partition: the physical machine itself, with
+    /// Hyper-V enabled for VBS / memory integrity, WSL2 or Hyper-V. Not a virtual machine.
+    /// </summary>
+    public bool HypervisorRootPartition { get; init; }
     public IReadOnlyList<string> InstructionSets { get; init; } = [];
     public IReadOnlyList<CacheInfo> Caches { get; init; } = [];
 }
@@ -48,6 +57,7 @@ public static class CpuidDecoder
         var leaf7 = maxLeaf >= 7 ? cpuid.Read(7) : default;
         var leaf7Sub1 = maxLeaf >= 7 && leaf7.Eax >= 1 ? cpuid.Read(7, 1) : default;
         var ext1 = maxExtended >= 0x8000_0001 ? cpuid.Read(0x8000_0001) : default;
+        var (hypervisorVendor, rootPartition) = Bit(leaf1.Ecx, 31) ? DecodeHypervisor(cpuid) : (null, false);
 
         return new CpuidResult
         {
@@ -58,6 +68,8 @@ public static class CpuidDecoder
             Stepping = stepping,
             Signature = leaf1.Eax,
             HypervisorPresent = Bit(leaf1.Ecx, 31),
+            HypervisorVendor = hypervisorVendor,
+            HypervisorRootPartition = rootPartition,
             InstructionSets = DecodeInstructionSets(leaf1, leaf7, leaf7Sub1, ext1),
             Caches = DecodeCaches(cpuid, vendor, maxLeaf, maxExtended, ext1),
         };
@@ -81,6 +93,8 @@ public static class CpuidDecoder
         cpu.Stepping = result.Stepping;
         cpu.Signature = string.Create(CultureInfo.InvariantCulture, $"0x{result.Signature:X8}");
         cpu.HypervisorPresent = result.HypervisorPresent;
+        cpu.HypervisorVendor = HypervisorDisplayName(result.HypervisorVendor);
+        cpu.HypervisorRootPartition = result.HypervisorPresent ? result.HypervisorRootPartition : null;
         cpu.InstructionSets.Clear();
         cpu.InstructionSets.AddRange(result.InstructionSets);
         cpu.Caches.Clear();
@@ -108,6 +122,37 @@ public static class CpuidDecoder
         "CentaurHauls" or "  Shanghai  " => "Zhaoxin",
         "" => null,
         _ => vendor,
+    };
+
+    /// <summary>
+    /// Leaf 4000_0000h: max hypervisor leaf in EAX, vendor in EBX/ECX/EDX. For Hyper-V,
+    /// leaf 4000_0003h EBX bit 0 (CreatePartitions) is only granted to the root partition.
+    /// </summary>
+    private static (string? Vendor, bool RootPartition) DecodeHypervisor(ICpuidReader cpuid)
+    {
+        var hv = cpuid.Read(0x4000_0000);
+        var vendor = RegistersToAscii(hv.Ebx, hv.Ecx, hv.Edx);
+        if (vendor.Length == 0)
+        {
+            return (null, false);
+        }
+
+        var root = vendor == "Microsoft Hv" && hv.Eax >= 0x4000_0003 && Bit(cpuid.Read(0x4000_0003).Ebx, 0);
+        return (vendor, root);
+    }
+
+    internal static string? HypervisorDisplayName(string? vendor) => vendor?.Trim() switch
+    {
+        null => null,
+        "Microsoft Hv" => "Microsoft Hyper-V",
+        "KVMKVMKVM" => "KVM",
+        "VMwareVMware" => "VMware",
+        "VBoxVBoxVBox" => "VirtualBox",
+        "XenVMMXenVMM" => "Xen",
+        "TCGTCGTCGTCG" => "QEMU",
+        "prl hyperv" => "Parallels",
+        "ACRNACRNACRN" => "ACRN",
+        var other => other,
     };
 
     private static List<string> DecodeInstructionSets(CpuidRegisters l1, CpuidRegisters l7, CpuidRegisters l7s1, CpuidRegisters e1)

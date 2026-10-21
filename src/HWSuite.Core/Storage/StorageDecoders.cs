@@ -39,10 +39,49 @@ public static class StorageDecoders
             Vendor: StringAt(data, 12),
             Product: StringAt(data, 16),
             Revision: StringAt(data, 20),
-            SerialNumber: StringAt(data, 24),
+            SerialNumber: CleanSerial(StringAt(data, 24)),
             BusTypeCode: (int)BinaryPrimitives.ReadUInt32LittleEndian(data[28..]),
             Removable: data[10] != 0);
     }
+
+    /// <summary>
+    /// NVMe Identify Controller data structure (CNS 01h, 4096 bytes): serial number at 4..23,
+    /// model number at 24..63, firmware revision at 64..71, all space-padded ASCII.
+    /// </summary>
+    public static (string? Serial, string? Model, string? Firmware) ParseNvmeIdentifyController(ReadOnlySpan<byte> identify)
+    {
+        if (identify.Length < 72)
+        {
+            throw new FormatException("NVMe Identify Controller data is shorter than 72 bytes.");
+        }
+
+        static string? Field(ReadOnlySpan<byte> bytes)
+        {
+            var text = Encoding.ASCII.GetString(bytes).Replace('\0', ' ').Trim();
+            return text.Length == 0 ? null : text;
+        }
+
+        return (CleanSerial(Field(identify[4..24])), Field(identify[24..64]), Field(identify[64..72]));
+    }
+
+    /// <summary>
+    /// Drops placeholder serials (all zeros, blanks) and the trailing period Windows appends to
+    /// identifiers it formats from NVMe EUI-64 / NGUID values.
+    /// </summary>
+    public static string? CleanSerial(string? serial)
+    {
+        var text = serial?.Trim().TrimEnd('.').Trim();
+        if (string.IsNullOrEmpty(text) || text.All(ch => ch is '0' or '_' or '-' or ' ' or '.'))
+        {
+            return null;
+        }
+
+        return text;
+    }
+
+    /// <summary>True for the "XXXX_XXXX_..." form Windows reports instead of the NVMe serial.</summary>
+    public static bool LooksLikeWindowsNvmeIdentifier(string? serial) =>
+        serial is { Length: >= 19 } && serial[4] == '_' && serial[9] == '_';
 
     /// <summary>DISK_GEOMETRY_EX: DISK_GEOMETRY (24 bytes) followed by DiskSize (LARGE_INTEGER).</summary>
     public static long? ParseDiskSize(ReadOnlySpan<byte> geometryEx) =>

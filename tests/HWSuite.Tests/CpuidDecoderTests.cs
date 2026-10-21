@@ -113,6 +113,43 @@ public class CpuidDecoderTests
     }
 
     [Theory]
+    [InlineData(1u, true, "Microsoft Hyper-V")] // physical PC, Windows with VBS: root partition
+    [InlineData(0u, false, "Microsoft Hyper-V")] // Hyper-V guest (e.g. GitHub runner)
+    public void Hyper_v_root_partition_is_not_reported_as_a_virtual_machine(uint createPartitions, bool root, string vendor)
+    {
+        var hv = Encoding.ASCII.GetBytes("Microsoft Hv");
+        var cpu = new FakeCpuid()
+            .Vendor("AuthenticAMD", 0x10)
+            .Set(1, 0, eax: 0x00A20F12, ecx: Bits(31))
+            .Set(0x4000_0000, 0, 0x4000_000B, BitConverter.ToUInt32(hv, 0), BitConverter.ToUInt32(hv, 4), BitConverter.ToUInt32(hv, 8))
+            .Set(0x4000_0003, 0, ebx: createPartitions);
+
+        var processor = new ProcessorInfo();
+        CpuidDecoder.Apply(CpuidDecoder.Decode(cpu), processor);
+
+        Assert.True(processor.HypervisorPresent == true);
+        Assert.Equal(root, processor.HypervisorRootPartition);
+        Assert.Equal(vendor, processor.HypervisorVendor);
+    }
+
+    [Fact]
+    public void Other_hypervisors_are_named_and_never_root()
+    {
+        var kvm = Encoding.ASCII.GetBytes("KVMKVMKVM\0\0\0");
+        var cpu = new FakeCpuid()
+            .Vendor("GenuineIntel", 0x10)
+            .Set(1, 0, ecx: Bits(31))
+            .Set(0x4000_0000, 0, 0x4000_0001, BitConverter.ToUInt32(kvm, 0), BitConverter.ToUInt32(kvm, 4), BitConverter.ToUInt32(kvm, 8))
+            .Set(0x4000_0003, 0, ebx: 1);
+
+        var result = CpuidDecoder.Decode(cpu);
+
+        Assert.Equal("KVMKVMKVM", result.HypervisorVendor);
+        Assert.False(result.HypervisorRootPartition);
+        Assert.Equal("KVM", CpuidDecoder.HypervisorDisplayName(result.HypervisorVendor));
+    }
+
+    [Theory]
     [InlineData(0x000306C3u, 6, 0x3C, 3)] // Haswell: extended model applies to family 6
     [InlineData(0x00000F43u, 15, 4, 3)] // Pentium 4: family F with zero extended family
     [InlineData(0x00000533u, 5, 3, 3)] // Pentium MMX: no extended fields
