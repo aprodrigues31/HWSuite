@@ -49,6 +49,17 @@ public class DriverTests
     public void Driver_results_report_success(DriverOutcome outcome, bool succeeded) =>
         Assert.Equal(succeeded, new DriverResult(outcome).Succeeded);
 
+    [Theory]
+    [InlineData(@"\??\C:\Program Files\PawnIO\PawnIO.sys", @"C:\Program Files\PawnIO\PawnIO.sys")]
+    [InlineData(@"\SystemRoot\System32\drivers\PawnIO.sys", @"C:\Windows\System32\drivers\PawnIO.sys")]
+    [InlineData(@"System32\drivers\PawnIO.sys", @"C:\Windows\System32\drivers\PawnIO.sys")]
+    [InlineData("", null)]
+    public void Resolves_service_image_paths(string imagePath, string? expected)
+    {
+        var resolved = AccessStatus.ResolveDriverPath(imagePath, @"C:\Windows");
+        Assert.Equal(expected?.Replace('\\', Path.DirectorySeparatorChar), resolved?.Replace('\\', Path.DirectorySeparatorChar));
+    }
+
     [Fact]
     public void Self_invocation_reuses_the_running_program()
     {

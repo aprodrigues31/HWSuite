@@ -70,7 +70,7 @@ public static partial class PawnIoInstaller
         if (FindWinget() is { } winget)
         {
             progress(DriverStep.UsingWinget, winget);
-            var code = Run(winget, $"install --id {WingetId} --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity");
+            var code = Run(winget, $"install --id {WingetId} --exact --source winget --silent --accept-package-agreements --accept-source-agreements --disable-interactivity");
             if (AccessStatus.Detect().PawnIoInstalled)
             {
                 return new DriverResult(DriverOutcome.Installed, "winget");
@@ -107,10 +107,13 @@ public static partial class PawnIoInstaller
         }
 
         progress(DriverStep.Uninstalling, winget);
-        var code = Run(winget, $"uninstall --id {WingetId} --exact --silent --disable-interactivity");
-        return AccessStatus.Detect().PawnIoInstalled
-            ? new DriverResult(DriverOutcome.InstallerFailed, $"winget {FormatExitCode(code)}")
-            : new DriverResult(DriverOutcome.Uninstalled);
+        var code = Run(winget, $"uninstall --id {WingetId} --exact --source winget --silent --disable-interactivity");
+        if (code == 0 || !AccessStatus.Detect().PawnIoInstalled)
+        {
+            return new DriverResult(DriverOutcome.Uninstalled);
+        }
+
+        return new DriverResult(DriverOutcome.InstallerFailed, $"winget {FormatExitCode(code)}");
     }
 
     /// <summary>
