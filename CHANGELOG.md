@@ -12,7 +12,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ### Adicionado
 - Versão rastreável: `hwsuite --version`, propriedades do `.exe` (FileVersion `0.2.0.<build>`), cabeçalho dos relatórios e campo `toolVersion` no JSON.
-- Artefato do CI nomeado com a versão (`hwsuite-0.2.0-build.N-win-x64`) e release no GitHub ao criar uma tag `v*`.
+- Artefato do CI nomeado com a versão (`hwsuite-0.2.0-build.N-win-x64`) e workflow **Release** que cria a tag e publica o release no GitHub.
 - NVMe: número de série, modelo e firmware lidos do Identify Controller.
 - Virtualização: distingue máquina física com Hyper-V/VBS ativo de máquina virtual, com o nome do hipervisor.
 

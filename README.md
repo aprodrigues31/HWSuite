@@ -59,7 +59,7 @@ hwsuite 0.2.0 (build 5, a3b8c29)
 
 A mesma identificação aparece nas propriedades do arquivo no Windows (versão `0.2.0.5`), no cabeçalho dos relatórios e no campo `toolVersion` do JSON. O que mudou em cada versão está no [CHANGELOG](CHANGELOG.md).
 
-Para lançar uma versão: atualize `VersionPrefix` e o `CHANGELOG.md`, faça o commit e crie a tag `v<versão>` (ex.: `v0.2.0`). O CI confere se a tag bate com a versão e publica o release com as notas do changelog.
+Para lançar uma versão: atualize `VersionPrefix` e o `CHANGELOG.md`, faça o commit e rode o workflow **Release** na aba Actions ("Run workflow" em `main`). Ele compila, testa, cria a tag `v<versão>` e publica o release com o `.zip` e as notas do changelog. Também dispara se alguém enviar a tag `v<versão>` manualmente.
 
 ## Estrutura
 

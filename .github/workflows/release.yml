@@ -1,0 +1,79 @@
+name: Release
+
+# Publishes a GitHub Release for the version in Directory.Build.props.
+# Run it from the Actions tab ("Run workflow") on main; GitHub creates the tag v<version>
+# on the selected commit. Pushing a tag v* by hand also works.
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+  # Releases are identified by version + commit only; build numbers belong to CI dev builds.
+  BuildNumber: 0
+
+jobs:
+  release:
+    name: Build, test and publish release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Version and checks
+        id: version
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content Directory.Build.props
+          $version = @($props.Project.PropertyGroup.VersionPrefix | Where-Object { $_ })[0]
+          $tag = "v$version"
+          if ("${{ github.ref_type }}" -eq "tag" -and "${{ github.ref_name }}" -ne $tag) {
+            throw "Tag ${{ github.ref_name }} does not match VersionPrefix $version in Directory.Build.props"
+          }
+          gh release view $tag 2>$null
+          if ($LASTEXITCODE -eq 0) { throw "Release $tag already exists. Bump VersionPrefix and CHANGELOG.md first." }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          exit 0
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Build and test
+        run: |
+          dotnet build HWSuite.slnx -c Release
+          dotnet test HWSuite.slnx -c Release --no-build
+
+      - name: Publish and package
+        shell: pwsh
+        run: |
+          dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o release
+          $out = & release/hwsuite.exe --version
+          Write-Host $out
+          if ($out -notlike "hwsuite ${{ steps.version.outputs.version }} *") { throw "Unexpected version: $out" }
+          Copy-Item README.md, LICENSE, CHANGELOG.md release/
+          Compress-Archive -Path release/hwsuite.exe, release/README.md, release/LICENSE, release/CHANGELOG.md -DestinationPath "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip"
+
+      - name: Release notes from CHANGELOG
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $lines = Get-Content CHANGELOG.md
+          $start = ($lines | Select-String -Pattern "^## \[$([regex]::Escape($version))\]").LineNumber
+          if (-not $start) { throw "CHANGELOG.md has no section for $version" }
+          $rest = $lines[$start..($lines.Count - 1)]
+          $end = ($rest | Select-String -Pattern '^## \[' | Select-Object -First 1).LineNumber
+          $notes = if ($end) { $rest[0..($end - 2)] } else { $rest }
+          $notes | Set-Content -Encoding utf8 notes.md
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
