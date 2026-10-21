@@ -61,6 +61,50 @@ public class SensorTests
     }
 
     [Fact]
+    public void Sensors_without_any_reading_are_hidden()
+    {
+        var snapshot = Snapshot(Cpu("Core #1", SensorKind.Clock, null), Cpu("Core #1 (Effective)", SensorKind.Clock, 4450));
+
+        using var text = new StringWriter(CultureInfo.InvariantCulture);
+        SensorTextWriter.Write(snapshot, Strings.For("en"), text);
+        var output = text.ToString();
+
+        var coreLines = output.Split('\n').Where(l => l.Contains("Core #1", StringComparison.Ordinal)).ToList();
+        Assert.Single(coreLines);
+        Assert.Contains("Core #1 (Effective)", coreLines[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Zeroed_cpu_readings_are_flagged_as_blocked_low_level_access()
+    {
+        // What the user's Ryzen 7 5800XT returned from a non-elevated terminal.
+        var blocked = Snapshot(
+            Cpu("Core (Tctl/Tdie)", SensorKind.Temperature, 0),
+            Cpu("Package", SensorKind.Power, 0),
+            Cpu("Core #1", SensorKind.Clock, null),
+            Cpu("CPU Total", SensorKind.Load, 3.9));
+        var healthy = Snapshot(Cpu("Core (Tctl/Tdie)", SensorKind.Temperature, 47.5), Cpu("Package", SensorKind.Power, 0));
+        var noCpuSensors = Snapshot(Cpu("CPU Total", SensorKind.Load, 3.9));
+
+        Assert.True(SensorDiagnostics.CpuLowLevelReadsBlocked(blocked));
+        Assert.False(SensorDiagnostics.CpuLowLevelReadsBlocked(healthy));
+        Assert.False(SensorDiagnostics.CpuLowLevelReadsBlocked(noCpuSensors));
+    }
+
+    [Fact]
+    public void Elevated_relaunch_keeps_the_sensor_options()
+    {
+        var watch = CliOptions.Parse(["sensors", "--watch", "--interval", "2"]);
+        Assert.Equal("sensors --watch --interval 2", SensorsCommand.ElevatedArguments(watch));
+
+        var log = CliOptions.Parse(["sensors", "--log", "temps.csv", "--duration", "60"]);
+        var args = SensorsCommand.ElevatedArguments(log);
+        Assert.StartsWith("sensors --log \"", args, StringComparison.Ordinal);
+        Assert.Contains("temps.csv\" --interval 1 --duration 60", args, StringComparison.Ordinal);
+        Assert.True(Path.IsPathRooted(args.Split('"')[1])); // absolute: the elevated copy may start in System32
+    }
+
+    [Fact]
     public void Empty_snapshot_says_so()
     {
         using var text = new StringWriter(CultureInfo.InvariantCulture);

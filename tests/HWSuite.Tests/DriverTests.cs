@@ -63,7 +63,7 @@ public class DriverTests
     [Fact]
     public void Self_invocation_reuses_the_running_program()
     {
-        var (fileName, arguments) = DriverCommand.SelfInvocation("driver install --yes");
+        var (fileName, arguments) = Elevation.SelfInvocation("driver install --yes");
 
         Assert.False(string.IsNullOrEmpty(fileName));
         Assert.EndsWith("driver install --yes", arguments, StringComparison.Ordinal);

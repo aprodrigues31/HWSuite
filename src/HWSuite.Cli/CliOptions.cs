@@ -135,7 +135,7 @@ public sealed record CliOptions
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
                 "--duration" when options.Command == CliCommand.Sensors => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },
-                "--result" when options.Command == CliCommand.Driver => options with { ResultPath = Value(arg) },
+                "--result" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { ResultPath = Value(arg) },
                 _ => throw new CliUsageException("cli.unknownArgument", arg),
             };
         }

@@ -13,7 +13,12 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - `hwsuite sensors --watch` atualiza a tabela continuamente; `--log arquivo.csv` grava as leituras em CSV; `--interval` e `--duration` controlam a amostragem.
 - Aviso quando faltam privilégio de administrador ou o driver PawnIO, que os sensores de processador e placa-mãe exigem.
 - `hwsuite driver status|install|uninstall`: instala o driver PawnIO oficial pelo winget ou, sem winget, pelo instalador do GitHub do autor com verificação da assinatura digital; pede confirmação (ou `--yes`) e permissão de administrador via UAC.
-- `hwsuite sensors` oferece instalar o PawnIO quando ele está faltando.
+- `hwsuite sensors` oferece instalar o PawnIO quando ele está faltando e reabrir como administrador quando o terminal não está elevado (o resultado volta para o mesmo terminal; `--watch` e `--log` abrem em nova janela).
+- Aviso quando o processador devolve apenas zeros mesmo com administrador e PawnIO (indica reinício pendente após instalar o driver).
+
+### Alterado
+- Avisos de administrador/driver saem junto com a tabela de sensores (antes iam só para a saída de erro e se perdiam ao redirecionar para arquivo).
+- Sensores sem nenhuma leitura deixam de aparecer na tabela.
 
 ## [0.2.0] - 2026-10-21
 

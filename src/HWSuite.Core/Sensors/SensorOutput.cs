@@ -53,7 +53,25 @@ public static class SensorFormat
     }
 }
 
-/// <summary>Console table grouped by device, with current, minimum and maximum values.</summary>
+/// <summary>Heuristics that turn raw readings into actionable hints.</summary>
+public static class SensorDiagnostics
+{
+    /// <summary>
+    /// True when the CPU exposes temperature/power/clock sensors but every one reads zero or nothing:
+    /// the signature of low-level (MSR/SMU) access being unavailable, as opposed to a CPU without sensors.
+    /// </summary>
+    public static bool CpuLowLevelReadsBlocked(SensorSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+        var lowLevel = snapshot.Readings
+            .Where(r => r.HardwareKind == "CPU" && r.Kind is SensorKind.Temperature or SensorKind.Power or SensorKind.Clock)
+            .ToList();
+
+        return lowLevel.Count > 0 && lowLevel.All(r => r.Value is null or 0);
+    }
+}
+
+/// <summary>Console table grouped by device, with current, minimum and maximum values. Sensors without any reading are omitted.</summary>
 public static class SensorTextWriter
 {
     public static void Write(SensorSnapshot snapshot, Strings strings, TextWriter output)
@@ -63,17 +81,18 @@ public static class SensorTextWriter
         ArgumentNullException.ThrowIfNull(output);
 
         var c = strings.Culture;
-        if (snapshot.Readings.Count == 0)
+        var readings = snapshot.Readings.Where(r => r.Value is not null || r.Min is not null || r.Max is not null).ToList();
+        if (readings.Count == 0)
         {
             output.WriteLine(strings["sensors.none"]);
             return;
         }
 
-        var nameWidth = Math.Max(24, snapshot.Readings.Max(r => r.Name.Length) + 2);
+        var nameWidth = Math.Max(24, readings.Max(r => r.Name.Length) + 2);
         const int ValueWidth = 14;
         var header = $"    {strings["sensors.sensor"].PadRight(nameWidth)}{strings["sensors.value"],ValueWidth}{strings["sensors.min"],ValueWidth}{strings["sensors.max"],ValueWidth}";
 
-        foreach (var device in snapshot.Readings.GroupBy(r => (r.Parent, r.Hardware, r.HardwareKind)))
+        foreach (var device in readings.GroupBy(r => (r.Parent, r.Hardware, r.HardwareKind)))
         {
             output.WriteLine();
             var title = device.Key.Parent is null ? device.Key.Hardware : $"{device.Key.Parent} › {device.Key.Hardware}";

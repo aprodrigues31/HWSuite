@@ -1,6 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.Text;
 using HWSuite.Core.Localization;
 using HWSuite.Providers.Windows;
@@ -14,8 +11,7 @@ namespace HWSuite.Cli;
 /// </summary>
 internal static class DriverCommand
 {
-    private const int ExitCancelled = 4;
-    private const int ErrorCancelledByUser = 1223; // ERROR_CANCELLED: UAC prompt dismissed
+    private const int ExitCancelled = Elevation.ExitCancelled;
 
     public static int Run(CliOptions options, Strings s)
     {
@@ -90,7 +86,7 @@ internal static class DriverCommand
 
         if (!access.IsElevated)
         {
-            var code = RunElevated(options, s, output, install);
+            var code = Elevation.Run(install ? "driver install --yes" : "driver uninstall --yes", s, output, capture: true);
             if (code == 0 && install)
             {
                 output.WriteLine(s["driver.nextStep"]);
@@ -124,69 +120,4 @@ internal static class DriverCommand
 
     internal static bool IsYes(string? answer) =>
         answer?.Trim().ToLowerInvariant() is "s" or "sim" or "y" or "yes";
-
-    private static int RunElevated(CliOptions options, Strings s, TextWriter output, bool install)
-    {
-        output.WriteLine(s["driver.elevating"]);
-        var resultPath = Path.Combine(Path.GetTempPath(), $"hwsuite-driver-{Guid.NewGuid():N}.txt");
-        var arguments = string.Join(' ',
-            "driver",
-            install ? "install" : "uninstall",
-            "--yes",
-            "--result", Quote(resultPath),
-            "--lang", s.Culture.Name.Length > 0 ? s.Culture.Name : CultureInfo.CurrentUICulture.Name);
-
-        var (fileName, fullArguments) = SelfInvocation(arguments);
-        try
-        {
-            using var child = Process.Start(new ProcessStartInfo(fileName, fullArguments)
-            {
-                UseShellExecute = true,
-                Verb = "runas",
-            });
-            if (child is null)
-            {
-                return 1;
-            }
-
-            child.WaitForExit();
-            if (File.Exists(resultPath))
-            {
-                output.Write(File.ReadAllText(resultPath));
-            }
-
-            return child.ExitCode;
-        }
-        catch (Win32Exception ex) when (ex.NativeErrorCode == ErrorCancelledByUser)
-        {
-            output.WriteLine(s["driver.uacDenied"]);
-            return ExitCancelled;
-        }
-        finally
-        {
-            try
-            {
-                File.Delete(resultPath);
-            }
-            catch (IOException)
-            {
-            }
-        }
-    }
-
-    /// <summary>How to start this same program again: the published exe, or "dotnet hwsuite.dll" in development.</summary>
-    internal static (string FileName, string Arguments) SelfInvocation(string arguments)
-    {
-        var processPath = Environment.ProcessPath ?? "hwsuite.exe";
-        if (Path.GetFileNameWithoutExtension(processPath).Equals("dotnet", StringComparison.OrdinalIgnoreCase))
-        {
-            // Development only ("dotnet hwsuite.dll"); the published single-file exe takes the branch below.
-            var dll = Path.Combine(AppContext.BaseDirectory, "hwsuite.dll");
-            return (processPath, $"{Quote(dll)} {arguments}");
-        }
-
-        return (processPath, arguments);
-    }
-
-    private static string Quote(string value) => "\"" + value.Replace("\"", "\\\"", StringComparison.Ordinal) + "\"";
 }

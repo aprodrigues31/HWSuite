@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using HWSuite.Core;
 using HWSuite.Core.Localization;
@@ -18,12 +19,25 @@ internal static class SensorsCommand
         }
 
         var access = AccessStatus.Detect();
-        if (!access.PawnIoInstalled && OfferDriver(options, s))
+        var isElevatedChild = options.ResultPath is not null;
+        if (!isElevatedChild)
         {
-            access = AccessStatus.Detect();
+            if (!access.PawnIoInstalled && OfferDriver(options, s))
+            {
+                access = AccessStatus.Detect();
+            }
+
+            if (!access.IsElevated && OfferElevation(options, s) is { } childExitCode)
+            {
+                return childExitCode;
+            }
         }
 
-        WriteAccessNotes(access, s, Console.Error);
+        // The elevated copy started for a one-shot table writes to the file the parent shows.
+        using var resultFile = isElevatedChild
+            ? new StreamWriter(options.ResultPath!, append: false, new UTF8Encoding(false)) { AutoFlush = true }
+            : null;
+        var output = resultFile ?? Console.Out;
 
         using var stop = new CancellationTokenSource();
         Console.CancelKeyPress += (_, e) =>
@@ -48,16 +62,17 @@ internal static class SensorsCommand
 
         if (options.LogPath is not null)
         {
+            WriteAccessNotes(access, s, output);
             return Log(source, options.LogPath, interval, s, stop.Token);
         }
 
         if (options.Watch)
         {
-            Watch(source, interval, s, stop.Token);
+            Watch(source, access, interval, s, stop.Token);
             return 0;
         }
 
-        WriteTable(source.Read(), s, Console.Out);
+        WriteTable(source.Read(), access, s, output);
         return 0;
     }
 
@@ -82,6 +97,46 @@ internal static class SensorsCommand
         return true;
     }
 
+    /// <summary>
+    /// Offers to reopen elevated. Returns the elevated run's exit code when it happened, null to
+    /// continue here without elevation.
+    /// </summary>
+    private static int? OfferElevation(CliOptions options, Strings s)
+    {
+        if (!options.AssumeYes && (Console.IsInputRedirected || DriverCommand.Confirm(s["sensors.offerElevate"]) != true))
+        {
+            return null;
+        }
+
+        var keepsRunning = options.Watch || options.LogPath is not null;
+        return Elevation.Run(ElevatedArguments(options), s, Console.Out, capture: !keepsRunning);
+    }
+
+    internal static string ElevatedArguments(CliOptions options)
+    {
+        var args = new List<string> { "sensors" };
+        if (options.Watch)
+        {
+            args.Add("--watch");
+        }
+
+        if (options.LogPath is not null)
+        {
+            args.Add("--log");
+            args.Add(Elevation.Quote(Path.GetFullPath(options.LogPath)));
+        }
+
+        args.Add("--interval");
+        args.Add(options.IntervalSeconds.ToString(CultureInfo.InvariantCulture));
+        if (options.DurationSeconds is { } duration)
+        {
+            args.Add("--duration");
+            args.Add(duration.ToString(CultureInfo.InvariantCulture));
+        }
+
+        return string.Join(' ', args);
+    }
+
     internal static void WriteAccessNotes(AccessStatus access, Strings s, TextWriter output)
     {
         if (!access.IsElevated)
@@ -95,7 +150,17 @@ internal static class SensorsCommand
         }
     }
 
-    private static void Watch(ISensorSource source, TimeSpan interval, Strings s, CancellationToken stop)
+    /// <summary>Access notes, plus the zero-readings hint when access looks fine but data does not.</summary>
+    private static void WriteHints(SensorSnapshot snapshot, AccessStatus access, Strings s, TextWriter output)
+    {
+        WriteAccessNotes(access, s, output);
+        if (access.IsElevated && access.PawnIoInstalled && SensorDiagnostics.CpuLowLevelReadsBlocked(snapshot))
+        {
+            output.WriteLine(s["sensors.lowLevelZero"]);
+        }
+    }
+
+    private static void Watch(ISensorSource source, AccessStatus access, TimeSpan interval, Strings s, CancellationToken stop)
     {
         do
         {
@@ -103,6 +168,7 @@ internal static class SensorsCommand
             var buffer = new StringWriter(s.Culture);
             buffer.WriteLine($"{s["sensors.title"]} · HWSuite {BuildInfo.Current.Display} · {snapshot.Timestamp.ToString("T", s.Culture)}");
             buffer.WriteLine(s.Format("sensors.watchHint", interval.TotalSeconds));
+            WriteHints(snapshot, access, s, buffer);
             SensorTextWriter.Write(snapshot, s, buffer);
 
             if (!Console.IsOutputRedirected)
@@ -140,9 +206,10 @@ internal static class SensorsCommand
         return 0;
     }
 
-    private static void WriteTable(SensorSnapshot snapshot, Strings s, TextWriter output)
+    private static void WriteTable(SensorSnapshot snapshot, AccessStatus access, Strings s, TextWriter output)
     {
         output.WriteLine($"{s["sensors.title"]} · HWSuite {BuildInfo.Current.Display} · {snapshot.Timestamp.ToString("g", s.Culture)}");
+        WriteHints(snapshot, access, s, output);
         SensorTextWriter.Write(snapshot, s, output);
     }
 
