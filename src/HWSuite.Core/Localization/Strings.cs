@@ -74,6 +74,37 @@ public sealed class Strings
         ["field.mediaErrors"] = "Media errors",
         ["field.dataRw"] = "Data read / written",
         ["field.criticalWarning"] = "Critical warning flags",
+        ["sensorKind.Temperature"] = "Temperatures",
+        ["sensorKind.Voltage"] = "Voltages",
+        ["sensorKind.Current"] = "Currents",
+        ["sensorKind.Power"] = "Power",
+        ["sensorKind.Clock"] = "Clocks",
+        ["sensorKind.Load"] = "Load",
+        ["sensorKind.Fan"] = "Fans",
+        ["sensorKind.Control"] = "Fan control",
+        ["sensorKind.Level"] = "Levels",
+        ["sensorKind.Frequency"] = "Frequencies",
+        ["sensorKind.Flow"] = "Flow",
+        ["sensorKind.Factor"] = "Factors",
+        ["sensorKind.Data"] = "Data",
+        ["sensorKind.SmallData"] = "Data",
+        ["sensorKind.Throughput"] = "Throughput",
+        ["sensorKind.TimeSpan"] = "Time",
+        ["sensorKind.Energy"] = "Energy",
+        ["sensorKind.Noise"] = "Noise",
+        ["sensorKind.Other"] = "Other",
+        ["sensors.sensor"] = "Sensor",
+        ["sensors.value"] = "Value",
+        ["sensors.min"] = "Min",
+        ["sensors.max"] = "Max",
+        ["sensors.none"] = "No sensors could be read.",
+        ["sensors.title"] = "HWSuite sensors",
+        ["sensors.watchHint"] = "Refreshing every {0} s. Press Ctrl+C to stop.",
+        ["sensors.logging"] = "Logging to {0} every {1} s. Press Ctrl+C to stop.",
+        ["sensors.logDone"] = "{0} samples written to {1}",
+        ["sensors.unsupported"] = "Real-time sensors are available on Windows only.",
+        ["sensors.notElevated"] = "Not running as administrator: CPU, motherboard and memory sensors are limited. Open the terminal with \"Run as administrator\".",
+        ["sensors.noPawnIo"] = "PawnIO driver not found: CPU and motherboard sensors need it. Install with: {0}",
         ["cache.shared"] = "shared by {0} threads",
         ["cache.sharedOne"] = "one per thread",
         ["cache.detail"] = "{0}, {1}-way, {2} B line, {3}",
@@ -87,12 +118,22 @@ public sealed class Strings
             Usage:
               hwsuite                       Print a text summary of this machine.
               hwsuite report [options]      Write a full report.
+              hwsuite sensors [options]     Show live sensors (temperatures, voltages, fans, power).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
               -o, --out <path>              Write to a file instead of the console.
                   --redact                  Remove serial numbers and UUIDs.
                   --lang <pt-BR|en>         Report language (default: system language).
+
+            Options for 'sensors':
+              -w, --watch                   Keep refreshing the table until Ctrl+C.
+                  --log <file.csv>          Record samples to a CSV file until Ctrl+C.
+              -i, --interval <seconds>      Refresh / sampling interval (default: 1).
+                  --duration <seconds>      Stop automatically after this time.
+
+            Most motherboard and CPU sensors need administrator rights and the PawnIO driver
+            (winget install namazso.PawnIO). GPU and disk sensors work without them.
 
             General:
               -h, --help                    Show this help.
@@ -101,6 +142,7 @@ public sealed class Strings
         ["cli.unknownArgument"] = "Unknown argument: {0}",
         ["cli.missingValue"] = "Missing value for {0}",
         ["cli.badFormat"] = "Unsupported format '{0}'. Use txt, html or json.",
+        ["cli.badNumber"] = "Invalid number for {0}: {1}",
         ["cli.written"] = "Report written to {0}",
     };
 
@@ -170,6 +212,37 @@ public sealed class Strings
         ["field.mediaErrors"] = "Erros de mídia",
         ["field.dataRw"] = "Dados lidos / gravados",
         ["field.criticalWarning"] = "Alertas críticos",
+        ["sensorKind.Temperature"] = "Temperaturas",
+        ["sensorKind.Voltage"] = "Tensões",
+        ["sensorKind.Current"] = "Correntes",
+        ["sensorKind.Power"] = "Consumo",
+        ["sensorKind.Clock"] = "Clocks",
+        ["sensorKind.Load"] = "Utilização",
+        ["sensorKind.Fan"] = "Ventoinhas",
+        ["sensorKind.Control"] = "Controle de ventoinhas",
+        ["sensorKind.Level"] = "Níveis",
+        ["sensorKind.Frequency"] = "Frequências",
+        ["sensorKind.Flow"] = "Vazão",
+        ["sensorKind.Factor"] = "Fatores",
+        ["sensorKind.Data"] = "Dados",
+        ["sensorKind.SmallData"] = "Dados",
+        ["sensorKind.Throughput"] = "Taxa de transferência",
+        ["sensorKind.TimeSpan"] = "Tempo",
+        ["sensorKind.Energy"] = "Energia",
+        ["sensorKind.Noise"] = "Ruído",
+        ["sensorKind.Other"] = "Outros",
+        ["sensors.sensor"] = "Sensor",
+        ["sensors.value"] = "Atual",
+        ["sensors.min"] = "Mín.",
+        ["sensors.max"] = "Máx.",
+        ["sensors.none"] = "Nenhum sensor pôde ser lido.",
+        ["sensors.title"] = "Sensores HWSuite",
+        ["sensors.watchHint"] = "Atualizando a cada {0} s. Pressione Ctrl+C para parar.",
+        ["sensors.logging"] = "Gravando em {0} a cada {1} s. Pressione Ctrl+C para parar.",
+        ["sensors.logDone"] = "{0} amostras gravadas em {1}",
+        ["sensors.unsupported"] = "Os sensores em tempo real estão disponíveis apenas no Windows.",
+        ["sensors.notElevated"] = "Sem privilégio de administrador: sensores de processador, placa-mãe e memória ficam limitados. Abra o terminal com \"Executar como administrador\".",
+        ["sensors.noPawnIo"] = "Driver PawnIO não encontrado: os sensores de processador e placa-mãe precisam dele. Instale com: {0}",
         ["cache.shared"] = "compartilhado por {0} threads",
         ["cache.sharedOne"] = "um por thread",
         ["cache.detail"] = "{0}, {1} vias, linha de {2} B, {3}",
@@ -183,12 +256,22 @@ public sealed class Strings
             Uso:
               hwsuite                       Mostra um resumo em texto desta máquina.
               hwsuite report [opções]       Gera o relatório completo.
+              hwsuite sensors [opções]      Mostra os sensores ao vivo (temperaturas, tensões, ventoinhas, consumo).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).
               -o, --out <caminho>           Grava em arquivo em vez de mostrar no console.
                   --redact                  Remove números de série e UUIDs.
                   --lang <pt-BR|en>         Idioma do relatório (padrão: idioma do sistema).
+
+            Opções de 'sensors':
+              -w, --watch                   Atualiza a tabela continuamente até Ctrl+C.
+                  --log <arquivo.csv>       Grava as leituras em CSV até Ctrl+C.
+              -i, --interval <segundos>     Intervalo de atualização / amostragem (padrão: 1).
+                  --duration <segundos>     Para automaticamente após esse tempo.
+
+            A maioria dos sensores da placa-mãe e do processador exige administrador e o driver
+            PawnIO (winget install namazso.PawnIO). Sensores de vídeo e de disco funcionam sem eles.
 
             Geral:
               -h, --help                    Mostra esta ajuda.
@@ -197,6 +280,7 @@ public sealed class Strings
         ["cli.unknownArgument"] = "Argumento desconhecido: {0}",
         ["cli.missingValue"] = "Falta o valor de {0}",
         ["cli.badFormat"] = "Formato '{0}' não suportado. Use txt, html ou json.",
+        ["cli.badNumber"] = "Número inválido para {0}: {1}",
         ["cli.written"] = "Relatório gravado em {0}",
     };
 

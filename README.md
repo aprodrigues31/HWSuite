@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: versão 0.2.0, fase 1 (MVP de inventário).** Identifica o hardware sem instalar nenhum driver e gera relatórios em texto, HTML e JSON pela linha de comando. Sensores em tempo real, interface gráfica e o driver PawnIO chegam na fase 2.
+> **Status: 0.2.0 lançada (inventário); 0.3.0 em desenvolvimento (sensores em tempo real).** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, e mostra os sensores ao vivo pela linha de comando. A interface gráfica vem na sequência da fase 2.
 
 ## O que a fase 1 já faz
 
@@ -30,6 +30,21 @@ hwsuite report --lang en                  Relatório em inglês
 ```
 
 `--redact` remove números de série, UUID e nome da máquina antes de compartilhar o relatório.
+
+### Sensores em tempo real
+
+```text
+hwsuite sensors                           Tabela única com valor atual, mínimo e máximo
+hwsuite sensors --watch                   Atualiza a cada segundo até Ctrl+C
+hwsuite sensors --log temps.csv --interval 2 --duration 600
+```
+
+Sensores de vídeo e de disco funcionam em qualquer conta. Para os sensores de processador e placa-mãe (temperaturas, tensões, ventoinhas, consumo):
+
+1. Instale o driver PawnIO uma vez: `winget install namazso.PawnIO`.
+2. Rode o terminal como administrador.
+
+O HWSuite não embarca driver de kernel; o PawnIO é assinado e instalado separadamente. Sem ele, o comando avisa o que está faltando e mostra o que conseguir ler.
 Código de saída: `0` sucesso, `2` argumento inválido, `3` relatório gerado mas algum provedor falhou.
 
 ## Como obter
@@ -67,7 +82,8 @@ Para lançar uma versão: atualize `VersionPrefix` e o `CHANGELOG.md`, faça o c
 src/
   HWSuite.Core                 Modelo, coleta, decodificadores (CPUID, SMBIOS, storage, PCI), relatórios, idiomas
   HWSuite.Providers.Common     CPUID (x86/x64) e SMBIOS via sysfs no Linux (apoio ao desenvolvimento)
-  HWSuite.Providers.Windows    SMBIOS do firmware, Windows, DXGI, IOCTLs de disco
+  HWSuite.Providers.Windows    SMBIOS do firmware, Windows, DXGI, IOCTLs de disco, detecção de admin/PawnIO
+  HWSuite.Providers.Lhm        Sensores em tempo real via LibreHardwareMonitorLib (MPL-2.0)
   HWSuite.Cli                  Linha de comando "hwsuite"
 tests/
   HWSuite.Tests                xUnit com dumps de registradores e tabelas montadas byte a byte
@@ -78,7 +94,7 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 ## Roadmap
 
 1. **Inventário sem driver** — esta versão.
-2. **Sensores (MVP público):** LibreHardwareMonitorLib + PawnIO, APIs de GPU (NVML/ADLX/IGCL), árvore de sensores, gráficos, log CSV, alertas, ícone na bandeja, interface WinUI 3.
+2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0). A seguir: interface gráfica com árvore de sensores e gráficos, alertas e ícone na bandeja.
 3. **Detalhe:** SPD/XMP/EXPO, temperatura dos módulos, teste de carga PCIe, baterias e nobreaks, S.M.A.R.T. de SATA.
 4. **Paridade:** banco de dados de GPUs, backup do BIOS de vídeo, detecção de GPU falsificada, benchmark, fontes/AIOs, NPU.
 

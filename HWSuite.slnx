@@ -3,6 +3,7 @@
     <Project Path="src/HWSuite.Cli/HWSuite.Cli.csproj" />
     <Project Path="src/HWSuite.Core/HWSuite.Core.csproj" />
     <Project Path="src/HWSuite.Providers.Common/HWSuite.Providers.Common.csproj" />
+    <Project Path="src/HWSuite.Providers.Lhm/HWSuite.Providers.Lhm.csproj" />
     <Project Path="src/HWSuite.Providers.Windows/HWSuite.Providers.Windows.csproj" />
   </Folder>
   <Folder Name="/tests/">

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>HWSuite.Providers.Lhm</RootNamespace>
+    <Description>Live sensors through LibreHardwareMonitorLib (MPL-2.0), with PawnIO for low-level access.</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="LibreHardwareMonitorLib" Version="0.9.6" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
+    <ProjectReference Include="..\HWSuite.Providers.Windows\HWSuite.Providers.Windows.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="HWSuite.Tests" />
+  </ItemGroup>
+</Project>

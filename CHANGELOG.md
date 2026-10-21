@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- Fase 2a: comando `hwsuite sensors` com os sensores em tempo real via LibreHardwareMonitorLib 0.9.6 — temperaturas, tensões, ventoinhas, consumo, clocks e utilização de CPU, placa-mãe (Super I/O), memória, GPUs NVIDIA/AMD/Intel, discos, fontes e baterias, com valores mínimo e máximo.
+- `hwsuite sensors --watch` atualiza a tabela continuamente; `--log arquivo.csv` grava as leituras em CSV; `--interval` e `--duration` controlam a amostragem.
+- Aviso quando faltam privilégio de administrador ou o driver PawnIO (`winget install namazso.PawnIO`), que os sensores de processador e placa-mãe exigem.
+
 ## [0.2.0] - 2026-10-21
 
 ### Adicionado

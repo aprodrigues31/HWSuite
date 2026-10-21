@@ -10,5 +10,6 @@
     <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />
     <ProjectReference Include="..\HWSuite.Providers.Common\HWSuite.Providers.Common.csproj" />
     <ProjectReference Include="..\HWSuite.Providers.Windows\HWSuite.Providers.Windows.csproj" />
+    <ProjectReference Include="..\HWSuite.Providers.Lhm\HWSuite.Providers.Lhm.csproj" />
   </ItemGroup>
 </Project>

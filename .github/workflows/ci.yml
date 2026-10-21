@@ -66,6 +66,20 @@ jobs:
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           exit 0
 
+      - name: Sensors smoke test on the runner
+        shell: pwsh
+        run: |
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --lang pt-BR | Tee-Object artifacts/reports/sensors.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --log artifacts/reports/sensors.csv --interval 1 --duration 4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $rows = (Get-Content artifacts/reports/sensors.csv).Count
+          Write-Host "CSV lines: $rows"
+          if ($rows -lt 3) { throw "Sensor log has too few rows ($rows)" }
+          "### Sensores no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/reports/sensors.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
       - name: Publish single-file executable (win-x64)
         run: dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/publish
 
