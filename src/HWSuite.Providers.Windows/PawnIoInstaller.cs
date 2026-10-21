@@ -57,7 +57,7 @@ public static partial class PawnIoInstaller
         }
 
         var access = AccessStatus.Detect();
-        if (access.PawnIoInstalled)
+        if (access.PawnIoInstalled && !access.PawnIoRemovalPending)
         {
             return new DriverResult(DriverOutcome.AlreadyInstalled);
         }
@@ -91,7 +91,7 @@ public static partial class PawnIoInstaller
         }
 
         var access = AccessStatus.Detect();
-        if (!access.PawnIoInstalled)
+        if (!access.PawnIoInstalled || access.PawnIoRemovalPending)
         {
             return new DriverResult(DriverOutcome.NotInstalled);
         }
@@ -108,7 +108,8 @@ public static partial class PawnIoInstaller
 
         progress(DriverStep.Uninstalling, winget);
         var code = Run(winget, $"uninstall --id {WingetId} --exact --source winget --silent --disable-interactivity");
-        if (code == 0 || !AccessStatus.Detect().PawnIoInstalled)
+        var after = AccessStatus.Detect();
+        if (code == 0 || !after.PawnIoInstalled || after.PawnIoRemovalPending)
         {
             return new DriverResult(DriverOutcome.Uninstalled);
         }

@@ -45,7 +45,12 @@ internal static class DriverCommand
     private static int Status(Strings s, TextWriter output)
     {
         var access = AccessStatus.Detect();
-        output.WriteLine(s[access.PawnIoInstalled ? "driver.statusInstalled" : "driver.statusMissing"]);
+        output.WriteLine(s[access switch
+        {
+            { PawnIoRemovalPending: true } => "driver.statusPendingRemoval",
+            { PawnIoInstalled: true } => "driver.statusInstalled",
+            _ => "driver.statusMissing",
+        }]);
         output.WriteLine(s[access.IsElevated ? "driver.statusElevated" : "driver.statusNotElevated"]);
         output.WriteLine();
         output.WriteLine(s.Format("driver.about", PawnIoInstaller.Homepage));
@@ -62,7 +67,7 @@ internal static class DriverCommand
             return 0;
         }
 
-        if (!install && !access.PawnIoInstalled)
+        if (!install && (!access.PawnIoInstalled || access.PawnIoRemovalPending))
         {
             output.WriteLine(s.Format("driver.outcome.NotInstalled"));
             return 0;
@@ -98,6 +103,10 @@ internal static class DriverCommand
 
         var result = install ? PawnIoInstaller.Install(Progress) : PawnIoInstaller.Uninstall(Progress);
         output.WriteLine(s.Format($"driver.outcome.{result.Outcome}", result.Detail ?? ""));
+        if (result.Outcome == DriverOutcome.Uninstalled && AccessStatus.Detect().PawnIoInstalled)
+        {
+            output.WriteLine(s["driver.rebootToFinish"]);
+        }
         return result.Succeeded ? 0 : 1;
     }
 
