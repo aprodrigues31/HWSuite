@@ -24,5 +24,5 @@ public static class ProviderCatalog
     ];
 
     /// <summary>Live sensor source; the single place to swap or combine sensor back-ends.</summary>
-    public static ISensorSource CreateSensorSource(AccessStatus access) => new LhmSensorSource(access);
+    public static ISensorSource CreateSensorSource(AccessStatus access) => new MinMaxTrackingSource(new LhmSensorSource(access));
 }

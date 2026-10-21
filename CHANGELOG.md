@@ -19,8 +19,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ### Alterado
 - Avisos de administrador/driver saem junto com a tabela de sensores (antes iam só para a saída de erro e se perdiam ao redirecionar para arquivo).
 - Sensores sem nenhuma leitura deixam de aparecer na tabela.
+- Dados em GB/MB exibidos em unidades legíveis (21029 GB → 20,5 TB; 16368 MB → 16 GB); contadores sem decimais inúteis.
+- Temporizações da memória (SPD) aparecem em "Temporizações", em nanossegundos.
 
 ### Corrigido
+- Mínimos falsos em 0 (temperatura de SSD, consumo da GPU): o HWSuite calcula mínimo e máximo por conta própria, ignorando a leitura inicial que ainda não tem dados.
 - Perguntas de confirmação (instalar driver, reabrir como administrador) saem na tela mesmo quando a saída é redirecionada para arquivo; antes iam para dentro do arquivo e o comando parecia travado.
 
 ## [0.2.0] - 2026-10-21

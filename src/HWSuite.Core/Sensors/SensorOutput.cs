@@ -24,6 +24,9 @@ public static class SensorFormat
         SensorKind.TimeSpan => "s",
         SensorKind.Energy => "mWh",
         SensorKind.Noise => "dBA",
+        SensorKind.Timing => "ns",
+        SensorKind.Humidity => "%",
+        SensorKind.Conductivity => "µS/cm",
         _ => "",
     };
 
@@ -34,16 +37,22 @@ public static class SensorFormat
             return "—";
         }
 
-        if (kind == SensorKind.Throughput)
+        switch (kind)
         {
-            return ReportModel.Bytes((long)Math.Max(0, v), culture) + "/s";
+            case SensorKind.Throughput:
+                return ReportModel.Bytes((long)Math.Max(0, v), culture) + "/s";
+            case SensorKind.Data: // gigabytes
+                return ReportModel.Bytes((long)Math.Max(0, v * 1024 * 1024 * 1024), culture);
+            case SensorKind.SmallData: // megabytes
+                return ReportModel.Bytes((long)Math.Max(0, v * 1024 * 1024), culture);
         }
 
         var format = kind switch
         {
             SensorKind.Voltage => "0.000",
-            SensorKind.Current or SensorKind.Factor => "0.00",
-            SensorKind.Clock or SensorKind.Fan or SensorKind.Frequency or SensorKind.SmallData or SensorKind.TimeSpan or SensorKind.Energy => "0",
+            SensorKind.Current => "0.00",
+            SensorKind.Factor or SensorKind.Timing => "0.##",
+            SensorKind.Clock or SensorKind.Fan or SensorKind.Frequency or SensorKind.TimeSpan or SensorKind.Energy => "0",
             _ => "0.0",
         };
 

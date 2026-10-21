@@ -25,7 +25,11 @@ public class SensorTests
     [InlineData(SensorKind.Fan, 1234.4, "1234 RPM")]
     [InlineData(SensorKind.Load, 7.5, "7.5 %")]
     [InlineData(SensorKind.Throughput, 1572864.0, "1.5 MB/s")]
-    [InlineData(SensorKind.Factor, 0.5, "0.50")]
+    [InlineData(SensorKind.Factor, 0.5, "0.5")]
+    [InlineData(SensorKind.Factor, 1983.0, "1983")]
+    [InlineData(SensorKind.Data, 21029.0, "20.5 TB")]
+    [InlineData(SensorKind.SmallData, 16368.0, "16 GB")]
+    [InlineData(SensorKind.Timing, 14.25, "14.25 ns")]
     public void Formats_values_with_units(SensorKind kind, double value, string expected) =>
         Assert.Equal(expected, SensorFormat.Format(value, kind, CultureInfo.InvariantCulture));
 
@@ -104,6 +108,39 @@ public class SensorTests
         Assert.True(Path.IsPathRooted(args.Split('"')[1])); // absolute: the elevated copy may start in System32
     }
 
+    private sealed class ScriptedSource(params double?[][] reads) : ISensorSource
+    {
+        private int _next;
+
+        public string Name => "scripted";
+
+        public IReadOnlyList<HWSuite.Core.Model.Diagnostic> Diagnostics => [];
+
+        public SensorSnapshot Read() =>
+            Snapshot([.. reads[_next++].Select((v, i) => Cpu($"S{i}", SensorKind.Temperature, v, min: 0, max: 0))]);
+
+        public void Dispose()
+        {
+        }
+    }
+
+    [Fact]
+    public void Min_max_ignore_the_priming_read_and_library_values()
+    {
+        // First read: hardware not primed yet (zeros). Then 52, 50, 53.
+        using var source = new MinMaxTrackingSource(new ScriptedSource([0, null], [52, 40], [50, null], [53, 41]));
+
+        var first = source.Read();
+        Assert.Null(first.Readings[0].Min);
+
+        source.Read();
+        source.Read();
+        var last = source.Read();
+
+        Assert.Equal((50.0, 53.0), (last.Readings[0].Min, last.Readings[0].Max));
+        Assert.Equal((40.0, 41.0), (last.Readings[1].Min, last.Readings[1].Max));
+    }
+
     [Fact]
     public void Empty_snapshot_says_so()
     {
@@ -132,7 +169,8 @@ public class SensorTests
     [Theory]
     [InlineData("Temperature", SensorKind.Temperature)]
     [InlineData("SmallData", SensorKind.SmallData)]
-    [InlineData("Humidity", SensorKind.Other)] // unknown to HWSuite: kept, not dropped
+    [InlineData("Timing", SensorKind.Timing)] // DIMM timings, added in LibreHardwareMonitor 0.9.6
+    [InlineData("SomethingNew", SensorKind.Other)] // unknown to HWSuite: kept, not dropped
     public void Maps_library_sensor_types(string libraryType, SensorKind expected) =>
         Assert.Equal(expected, LhmSensorSource.MapKind(libraryType));
 
