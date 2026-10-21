@@ -80,6 +80,32 @@ jobs:
           Get-Content artifacts/reports/sensors.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
 
+      - name: PawnIO installer signature (official download)
+        shell: pwsh
+        run: |
+          $file = Join-Path $env:RUNNER_TEMP 'PawnIO_setup.exe'
+          Invoke-WebRequest -Uri 'https://github.com/namazso/PawnIO.Setup/releases/latest/download/PawnIO_setup.exe' -OutFile $file
+          $sig = Get-AuthenticodeSignature -LiteralPath $file
+          Write-Host "Status: $($sig.Status)"
+          Write-Host "Signer: $($sig.SignerCertificate.Subject)"
+          "### Assinatura do instalador PawnIO`n- Status: $($sig.Status)`n- Assinante: $($sig.SignerCertificate.Subject)" | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
+      - name: Driver install / status / uninstall on the runner
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $cli = { dotnet run --project src/HWSuite.Cli -c Release --no-build -- @args }
+          $log = New-Object System.Collections.Generic.List[string]
+          foreach ($step in @(@('driver','status'), @('driver','install','--yes'), @('driver','status'), @('sensors'), @('driver','uninstall','--yes'), @('driver','status'))) {
+            $log.Add("> hwsuite $($step -join ' ')")
+            $out = & $cli @step 2>&1 | Out-String
+            $log.Add($out.TrimEnd())
+            $log.Add("(exit $LASTEXITCODE)")
+          }
+          $text = $log -join "`n"
+          Write-Host $text
+          "### Ciclo do driver no runner`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
       - name: Publish single-file executable (win-x64)
         run: dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/publish
 

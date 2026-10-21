@@ -36,5 +36,6 @@ if (options.ShowVersion)
 return options.Command switch
 {
     CliCommand.Sensors => SensorsCommand.Run(options, s),
+    CliCommand.Driver => DriverCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

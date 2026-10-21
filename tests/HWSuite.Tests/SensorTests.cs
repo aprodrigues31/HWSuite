@@ -106,7 +106,7 @@ public class SensorTests
 
         var notes = LhmSensorSource.AccessDiagnostics(new AccessStatus(IsElevated: false, PawnIoInstalled: false));
         Assert.Equal(2, notes.Count);
-        Assert.Contains(notes, n => n.Message.Contains("winget install namazso.PawnIO", StringComparison.Ordinal));
+        Assert.Contains(notes, n => n.Message.Contains("hwsuite driver install", StringComparison.Ordinal));
         Assert.All(notes, n => Assert.Equal(DiagnosticSeverity.Warning, n.Severity));
     }
 

@@ -41,10 +41,16 @@ hwsuite sensors --log temps.csv --interval 2 --duration 600
 
 Sensores de vídeo e de disco funcionam em qualquer conta. Para os sensores de processador e placa-mãe (temperaturas, tensões, ventoinhas, consumo):
 
-1. Instale o driver PawnIO uma vez: `winget install namazso.PawnIO`.
+1. Instale o driver PawnIO uma vez: `hwsuite driver install` (ou aceite a oferta que o `hwsuite sensors` faz quando ele falta).
 2. Rode o terminal como administrador.
 
-O HWSuite não embarca driver de kernel; o PawnIO é assinado e instalado separadamente. Sem ele, o comando avisa o que está faltando e mostra o que conseguir ler.
+```text
+hwsuite driver status                     Mostra se o PawnIO está instalado e se o terminal é administrador
+hwsuite driver install [--yes]            Instala o driver (pede confirmação e permissão de administrador)
+hwsuite driver uninstall [--yes]          Remove o driver
+```
+
+O HWSuite não distribui o driver de kernel. A instalação usa o pacote oficial do PawnIO pelo winget (`namazso.PawnIO`); sem winget, baixa o instalador do [GitHub do autor](https://github.com/namazso/PawnIO.Setup) e só o executa se a assinatura digital for válida e do autor. Sem o driver, `hwsuite sensors` avisa o que está faltando e mostra o que conseguir ler.
 Código de saída: `0` sucesso, `2` argumento inválido, `3` relatório gerado mas algum provedor falhou.
 
 ## Como obter

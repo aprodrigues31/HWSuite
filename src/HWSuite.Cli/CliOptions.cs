@@ -16,6 +16,14 @@ public enum CliCommand
 {
     Report,
     Sensors,
+    Driver,
+}
+
+public enum DriverAction
+{
+    Status,
+    Install,
+    Uninstall,
 }
 
 /// <summary>
@@ -46,6 +54,14 @@ public sealed record CliOptions
 
     public double? DurationSeconds { get; init; }
 
+    public DriverAction DriverAction { get; init; } = DriverAction.Status;
+
+    /// <summary>Skip confirmation prompts (driver install/uninstall, sensor driver offer).</summary>
+    public bool AssumeYes { get; init; }
+
+    /// <summary>Internal: the elevated child writes its output here for the parent to show.</summary>
+    public string? ResultPath { get; init; }
+
     public static CliOptions Parse(IReadOnlyList<string> args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -61,6 +77,25 @@ public sealed record CliOptions
         {
             options = options with { Command = CliCommand.Sensors };
             i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("driver", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Driver };
+            i = 1;
+            if (args.Count > 1 && !args[1].StartsWith('-'))
+            {
+                options = options with
+                {
+                    DriverAction = args[1].ToLowerInvariant() switch
+                    {
+                        "status" => DriverAction.Status,
+                        "install" => DriverAction.Install,
+                        "uninstall" => DriverAction.Uninstall,
+                        _ => throw new CliUsageException("cli.unknownArgument", args[1]),
+                    },
+                };
+                i = 2;
+            }
         }
 
         string Value(string name)
@@ -99,6 +134,8 @@ public sealed record CliOptions
                 "--log" when options.Command == CliCommand.Sensors => options with { LogPath = Value(arg) },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
                 "--duration" when options.Command == CliCommand.Sensors => options with { DurationSeconds = Seconds(arg) },
+                "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },
+                "--result" when options.Command == CliCommand.Driver => options with { ResultPath = Value(arg) },
                 _ => throw new CliUsageException("cli.unknownArgument", arg),
             };
         }

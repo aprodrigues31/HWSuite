@@ -102,9 +102,36 @@ public sealed class Strings
         ["sensors.watchHint"] = "Refreshing every {0} s. Press Ctrl+C to stop.",
         ["sensors.logging"] = "Logging to {0} every {1} s. Press Ctrl+C to stop.",
         ["sensors.logDone"] = "{0} samples written to {1}",
+        ["driver.statusInstalled"] = "PawnIO driver: installed",
+        ["driver.statusMissing"] = "PawnIO driver: not installed",
+        ["driver.statusElevated"] = "Administrator: yes",
+        ["driver.statusNotElevated"] = "Administrator: no",
+        ["driver.about"] = "PawnIO is a signed kernel driver by namazso ({0}). HWSuite installs the official package; it does not ship the driver.",
+        ["driver.confirmInstall"] = "Install the PawnIO driver now? Windows will ask for administrator permission. [y/N] ",
+        ["driver.confirmUninstall"] = "Remove the PawnIO driver? Other tools that use it (OpenRGB, FanControl, LibreHardwareMonitor) will stop reading sensors. [y/N] ",
+        ["driver.needYes"] = "Confirmation required. Run again with --yes to proceed without a prompt.",
+        ["driver.cancelled"] = "Cancelled. Nothing was changed.",
+        ["driver.elevating"] = "Requesting administrator permission...",
+        ["driver.uacDenied"] = "Administrator permission was not granted. Nothing was changed.",
+        ["driver.step.UsingWinget"] = "Installing through winget ({0})...",
+        ["driver.step.WingetFailed"] = "winget did not install the driver ({0}); trying the official installer from GitHub.",
+        ["driver.step.Downloading"] = "Downloading {0}",
+        ["driver.step.VerifyingSignature"] = "Digital signature: {0}",
+        ["driver.step.RunningInstaller"] = "Running the official installer silently...",
+        ["driver.step.Uninstalling"] = "Removing through winget ({0})...",
+        ["driver.outcome.Installed"] = "PawnIO installed ({0}).",
+        ["driver.outcome.AlreadyInstalled"] = "PawnIO is already installed.",
+        ["driver.outcome.Uninstalled"] = "PawnIO removed.",
+        ["driver.outcome.NotInstalled"] = "PawnIO is not installed.",
+        ["driver.outcome.NotElevated"] = "This operation requires administrator rights.",
+        ["driver.outcome.DownloadFailed"] = "Could not download the installer: {0}",
+        ["driver.outcome.SignatureRejected"] = "Installer rejected: its signature is not from the PawnIO author ({0}). Install manually from the official site.",
+        ["driver.outcome.InstallerFailed"] = "Installation failed: {0}",
+        ["driver.nextStep"] = "Now open the terminal as administrator and run: hwsuite sensors",
+        ["sensors.offerDriver"] = "The PawnIO driver is missing, so CPU and motherboard sensors cannot be read. Install it now? Windows will ask for administrator permission. [y/N] ",
         ["sensors.unsupported"] = "Real-time sensors are available on Windows only.",
         ["sensors.notElevated"] = "Not running as administrator: CPU, motherboard and memory sensors are limited. Open the terminal with \"Run as administrator\".",
-        ["sensors.noPawnIo"] = "PawnIO driver not found: CPU and motherboard sensors need it. Install with: {0}",
+        ["sensors.noPawnIo"] = "PawnIO driver not found: CPU and motherboard sensors need it. Install with: hwsuite driver install",
         ["cache.shared"] = "shared by {0} threads",
         ["cache.sharedOne"] = "one per thread",
         ["cache.detail"] = "{0}, {1}-way, {2} B line, {3}",
@@ -119,6 +146,8 @@ public sealed class Strings
               hwsuite                       Print a text summary of this machine.
               hwsuite report [options]      Write a full report.
               hwsuite sensors [options]     Show live sensors (temperatures, voltages, fans, power).
+              hwsuite driver <status|install|uninstall> [--yes]
+                                            Check, install or remove the PawnIO driver.
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -133,7 +162,7 @@ public sealed class Strings
                   --duration <seconds>      Stop automatically after this time.
 
             Most motherboard and CPU sensors need administrator rights and the PawnIO driver
-            (winget install namazso.PawnIO). GPU and disk sensors work without them.
+            (hwsuite driver install). GPU and disk sensors work without them.
 
             General:
               -h, --help                    Show this help.
@@ -240,9 +269,36 @@ public sealed class Strings
         ["sensors.watchHint"] = "Atualizando a cada {0} s. Pressione Ctrl+C para parar.",
         ["sensors.logging"] = "Gravando em {0} a cada {1} s. Pressione Ctrl+C para parar.",
         ["sensors.logDone"] = "{0} amostras gravadas em {1}",
+        ["driver.statusInstalled"] = "Driver PawnIO: instalado",
+        ["driver.statusMissing"] = "Driver PawnIO: não instalado",
+        ["driver.statusElevated"] = "Administrador: sim",
+        ["driver.statusNotElevated"] = "Administrador: não",
+        ["driver.about"] = "O PawnIO é um driver de kernel assinado, de namazso ({0}). O HWSuite instala o pacote oficial; não distribui o driver.",
+        ["driver.confirmInstall"] = "Instalar o driver PawnIO agora? O Windows vai pedir permissão de administrador. [s/N] ",
+        ["driver.confirmUninstall"] = "Remover o driver PawnIO? Outras ferramentas que o usam (OpenRGB, FanControl, LibreHardwareMonitor) deixarão de ler sensores. [s/N] ",
+        ["driver.needYes"] = "É preciso confirmar. Rode de novo com --yes para seguir sem pergunta.",
+        ["driver.cancelled"] = "Cancelado. Nada foi alterado.",
+        ["driver.elevating"] = "Solicitando permissão de administrador...",
+        ["driver.uacDenied"] = "A permissão de administrador não foi concedida. Nada foi alterado.",
+        ["driver.step.UsingWinget"] = "Instalando pelo winget ({0})...",
+        ["driver.step.WingetFailed"] = "O winget não instalou o driver ({0}); tentando o instalador oficial do GitHub.",
+        ["driver.step.Downloading"] = "Baixando {0}",
+        ["driver.step.VerifyingSignature"] = "Assinatura digital: {0}",
+        ["driver.step.RunningInstaller"] = "Executando o instalador oficial em modo silencioso...",
+        ["driver.step.Uninstalling"] = "Removendo pelo winget ({0})...",
+        ["driver.outcome.Installed"] = "PawnIO instalado ({0}).",
+        ["driver.outcome.AlreadyInstalled"] = "O PawnIO já está instalado.",
+        ["driver.outcome.Uninstalled"] = "PawnIO removido.",
+        ["driver.outcome.NotInstalled"] = "O PawnIO não está instalado.",
+        ["driver.outcome.NotElevated"] = "Esta operação exige privilégio de administrador.",
+        ["driver.outcome.DownloadFailed"] = "Não foi possível baixar o instalador: {0}",
+        ["driver.outcome.SignatureRejected"] = "Instalador recusado: a assinatura não é do autor do PawnIO ({0}). Instale manualmente pelo site oficial.",
+        ["driver.outcome.InstallerFailed"] = "A instalação falhou: {0}",
+        ["driver.nextStep"] = "Agora abra o terminal como administrador e rode: hwsuite sensors",
+        ["sensors.offerDriver"] = "O driver PawnIO não está instalado, então os sensores de processador e placa-mãe não podem ser lidos. Instalar agora? O Windows vai pedir permissão de administrador. [s/N] ",
         ["sensors.unsupported"] = "Os sensores em tempo real estão disponíveis apenas no Windows.",
         ["sensors.notElevated"] = "Sem privilégio de administrador: sensores de processador, placa-mãe e memória ficam limitados. Abra o terminal com \"Executar como administrador\".",
-        ["sensors.noPawnIo"] = "Driver PawnIO não encontrado: os sensores de processador e placa-mãe precisam dele. Instale com: {0}",
+        ["sensors.noPawnIo"] = "Driver PawnIO não encontrado: os sensores de processador e placa-mãe precisam dele. Instale com: hwsuite driver install",
         ["cache.shared"] = "compartilhado por {0} threads",
         ["cache.sharedOne"] = "um por thread",
         ["cache.detail"] = "{0}, {1} vias, linha de {2} B, {3}",
@@ -257,6 +313,8 @@ public sealed class Strings
               hwsuite                       Mostra um resumo em texto desta máquina.
               hwsuite report [opções]       Gera o relatório completo.
               hwsuite sensors [opções]      Mostra os sensores ao vivo (temperaturas, tensões, ventoinhas, consumo).
+              hwsuite driver <status|install|uninstall> [--yes]
+                                            Verifica, instala ou remove o driver PawnIO.
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).
@@ -271,7 +329,7 @@ public sealed class Strings
                   --duration <segundos>     Para automaticamente após esse tempo.
 
             A maioria dos sensores da placa-mãe e do processador exige administrador e o driver
-            PawnIO (winget install namazso.PawnIO). Sensores de vídeo e de disco funcionam sem eles.
+            PawnIO (hwsuite driver install). Sensores de vídeo e de disco funcionam sem eles.
 
             Geral:
               -h, --help                    Mostra esta ajuda.

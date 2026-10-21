@@ -18,6 +18,11 @@ internal static class SensorsCommand
         }
 
         var access = AccessStatus.Detect();
+        if (!access.PawnIoInstalled && OfferDriver(options, s))
+        {
+            access = AccessStatus.Detect();
+        }
+
         WriteAccessNotes(access, s, Console.Error);
 
         using var stop = new CancellationTokenSource();
@@ -56,6 +61,27 @@ internal static class SensorsCommand
         return 0;
     }
 
+    /// <summary>Offers to install PawnIO when it is missing; returns true when an install was attempted.</summary>
+    private static bool OfferDriver(CliOptions options, Strings s)
+    {
+        if (!options.AssumeYes)
+        {
+            if (Console.IsInputRedirected || options.LogPath is not null)
+            {
+                return false; // never block unattended runs on a question
+            }
+
+            if (DriverCommand.Confirm(s["sensors.offerDriver"]) != true)
+            {
+                return false;
+            }
+        }
+
+        DriverCommand.Change(options with { DriverAction = DriverAction.Install, AssumeYes = true }, s, Console.Out, install: true);
+        Console.WriteLine();
+        return true;
+    }
+
     internal static void WriteAccessNotes(AccessStatus access, Strings s, TextWriter output)
     {
         if (!access.IsElevated)
@@ -65,7 +91,7 @@ internal static class SensorsCommand
 
         if (!access.PawnIoInstalled)
         {
-            output.WriteLine(s.Format("sensors.noPawnIo", AccessStatus.PawnIoInstallCommand));
+            output.WriteLine(s["sensors.noPawnIo"]);
         }
     }
 

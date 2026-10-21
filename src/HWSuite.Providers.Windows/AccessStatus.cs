@@ -10,7 +10,7 @@ namespace HWSuite.Providers.Windows;
 /// </summary>
 public sealed record AccessStatus(bool IsElevated, bool PawnIoInstalled)
 {
-    public const string PawnIoInstallCommand = "winget install namazso.PawnIO";
+    public const string PawnIoInstallCommand = "hwsuite driver install";
 
     public static AccessStatus Detect() =>
         OperatingSystem.IsWindows() ? new AccessStatus(IsAdministrator(), IsPawnIoInstalled()) : new AccessStatus(false, false);
