@@ -40,9 +40,9 @@ public static class SmbiosDecoder
             return;
         }
 
-        inventory.Bios.Vendor = bios.Text(0x04);
-        inventory.Bios.Version = bios.Text(0x05);
-        inventory.Bios.ReleaseDate = bios.Text(0x08);
+        inventory.Bios.Vendor = Clean(bios, 0x04);
+        inventory.Bios.Version = Clean(bios, 0x05);
+        inventory.Bios.ReleaseDate = Clean(bios, 0x08);
     }
 
     private static void DecodeSystem(SmbiosTable table, HardwareInventory inventory)
@@ -57,13 +57,13 @@ public static class SmbiosDecoder
         var info = inventory.System ??= new SystemInfo();
         if (system is not null)
         {
-            info.Manufacturer = system.Text(0x04);
-            info.Product = system.Text(0x05);
-            info.Version = system.Text(0x06);
-            info.SerialNumber = system.Text(0x07);
+            info.Manufacturer = Clean(system, 0x04);
+            info.Product = Clean(system, 0x05);
+            info.Version = Clean(system, 0x06);
+            info.SerialNumber = Clean(system, 0x07);
             info.Uuid = FormatUuid(system.Bytes(0x08, 16), table.MajorVersion, table.MinorVersion);
-            info.Sku = system.Text(0x19);
-            info.Family = system.Text(0x1A);
+            info.Sku = Clean(system, 0x19);
+            info.Family = Clean(system, 0x1A);
         }
 
         if (chassis?.Byte(0x05) is { } chassisType)
@@ -82,10 +82,10 @@ public static class SmbiosDecoder
 
         inventory.Motherboard = new MotherboardInfo
         {
-            Manufacturer = board.Text(0x04),
-            Product = board.Text(0x05),
-            Version = board.Text(0x06),
-            SerialNumber = board.Text(0x07),
+            Manufacturer = Clean(board, 0x04),
+            Product = Clean(board, 0x05),
+            Version = Clean(board, 0x06),
+            SerialNumber = Clean(board, 0x07),
         };
     }
 
@@ -105,9 +105,9 @@ public static class SmbiosDecoder
             }
 
             var cpu = inventory.Processors[i];
-            cpu.Socket = s.Text(0x04);
-            cpu.Vendor ??= s.Text(0x07);
-            cpu.Name ??= s.Text(0x10);
+            cpu.Socket = Clean(s, 0x04);
+            cpu.Vendor ??= Clean(s, 0x07);
+            cpu.Name ??= Clean(s, 0x10);
             cpu.BusClockMhz = NonZero(s.Word(0x12));
             cpu.MaxClockMhz = NonZero(s.Word(0x14));
             cpu.CurrentClockMhz = NonZero(s.Word(0x16));
@@ -157,17 +157,17 @@ public static class SmbiosDecoder
 
             memory.Modules.Add(new MemoryModule
             {
-                Slot = device.Text(0x10),
-                Bank = device.Text(0x11),
+                Slot = Clean(device, 0x10),
+                Bank = Clean(device, 0x11),
                 SizeBytes = size,
                 FormFactor = FormFactorName(device.Byte(0x0E) ?? 0),
                 Type = MemoryTypeName(device.Byte(0x12) ?? 0),
                 SpeedMts = NonZero(speed),
                 ConfiguredSpeedMts = NonZero(configured),
                 Ranks = ranks == 0 ? null : ranks,
-                Manufacturer = CleanPlaceholder(device.Text(0x17)),
-                SerialNumber = CleanPlaceholder(device.Text(0x18)),
-                PartNumber = CleanPlaceholder(device.Text(0x1A)),
+                Manufacturer = Clean(device, 0x17),
+                SerialNumber = Clean(device, 0x18),
+                PartNumber = Clean(device, 0x1A),
             });
         }
     }
@@ -265,11 +265,15 @@ public static class SmbiosDecoder
         _ => null,
     };
 
+    private static string? Clean(SmbiosStructure structure, int offset) => CleanPlaceholder(structure.Text(offset));
+
     private static int? NonZero(int? value) => value is null or 0 ? null : value;
 
     private static readonly string[] Placeholders =
     [
-        "Unknown", "Not Specified", "To Be Filled By O.E.M.", "Default string", "None", "N/A", "0000000000000000",
+        "Unknown", "Not Specified", "Not Applicable", "To Be Filled By O.E.M.", "To be filled by O.E.M.", "Default string",
+        "None", "N/A", "0000000000000000", "System Product Name", "System manufacturer", "System Version",
+        "System Serial Number", "Base Board Serial Number", "Type2 - Board Serial Number", "123456789", "O.E.M.",
     ];
 
     private static string? CleanPlaceholder(string? value) =>

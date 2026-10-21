@@ -17,9 +17,9 @@ jobs:
       DOTNET_NOLOGO: true
       DOTNET_CLI_TELEMETRY_OPTOUT: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -42,12 +42,16 @@ jobs:
             if ($LASTEXITCODE -notin 0, 3) { exit $LASTEXITCODE }
           }
           Get-Content artifacts/reports/runner.txt
+          # Also show the text report on the run page (job summary).
+          "## Relatório de exemplo (runner Windows)`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/reports/runner.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           exit 0
 
       - name: Publish single-file executable (win-x64)
         run: dotnet publish src/HWSuite.Cli -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o artifacts/publish
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: always()
         with:
           name: hwsuite-win-x64

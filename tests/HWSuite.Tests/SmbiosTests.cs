@@ -92,7 +92,7 @@ public class SmbiosTests
         var table = new TableBuilder()
             .Add(0, new Body(0x18).B(0x04, 1).B(0x05, 2).B(0x08, 3).Bytes, "American Megatrends Inc.", "1.40", "05/12/2025")
             .Add(1, new Body(0x1B).B(0x04, 1).B(0x05, 2).B(0x07, 3).Raw(0x08, UuidBytes).B(0x19, 4).B(0x1A, 5).Bytes,
-                "Positivo", "Master D3400", "SN-SYS-001", "SKU-01", "Master")
+                "Positivo", "Master D3400", "SN-SYS-001", "None", "Master")
             .Add(2, new Body(0x0F).B(0x04, 1).B(0x05, 2).B(0x06, 3).B(0x07, 4).Bytes, "ASUSTeK COMPUTER INC.", "PRIME B760M-A", "Rev 1.xx", "BOARD-SN")
             .Add(3, new Body(0x0D).B(0x04, 1).B(0x05, 3).Bytes, "Default string")
             .Add(4, new Body(0x30).B(0x04, 1).B(0x05, 3).B(0x07, 2).B(0x10, 3).W(0x12, 100).W(0x14, 4900).W(0x16, 2500)
@@ -139,6 +139,7 @@ public class SmbiosTests
         Assert.Equal("Master D3400", inv.System.Product);
         Assert.Equal("SN-SYS-001", inv.System.SerialNumber);
         Assert.Equal("Master", inv.System.Family);
+        Assert.Null(inv.System.Sku); // "None" is an OEM placeholder
         Assert.Equal("Desktop", inv.System.ChassisType);
         Assert.Equal("12345678-1234-5678-9ABC-DEF012345678", inv.System.Uuid);
 

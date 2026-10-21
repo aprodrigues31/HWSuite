@@ -43,7 +43,11 @@ public sealed class TextReportWriter : IReportWriter
             .Select(r => r.Label.Length).DefaultIfEmpty(10).Max() + 2;
 
         output.WriteLine(strings["report.title"]);
-        output.WriteLine($"{strings["report.machine"]}: {inventory.MachineName}");
+        if (inventory.MachineName is not null)
+        {
+            output.WriteLine($"{strings["report.machine"]}: {inventory.MachineName}");
+        }
+
         output.WriteLine($"{strings["report.generated"]}: {inventory.CollectedAt.ToString("g", strings.Culture)}");
 
         foreach (var section in sections)
@@ -106,9 +110,10 @@ public sealed class HtmlReportWriter : IReportWriter
         output.WriteLine("<!doctype html>");
         output.WriteLine($"<html lang=\"{E(strings.Culture.Name)}\"><head><meta charset=\"utf-8\">");
         output.WriteLine("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
-        output.WriteLine($"<title>{E(title)} — {E(inventory.MachineName)}</title><style>{Style}</style></head><body><main>");
+        output.WriteLine($"<title>{E(title)}{(inventory.MachineName is null ? "" : " — " + E(inventory.MachineName))}</title><style>{Style}</style></head><body><main>");
         output.WriteLine($"<h1>{E(title)}</h1>");
-        output.WriteLine($"<div class=\"meta\">{E(strings["report.machine"])}: {E(inventory.MachineName)} · {E(strings["report.generated"])}: {E(inventory.CollectedAt.ToString("g", strings.Culture))}</div>");
+        var machine = inventory.MachineName is null ? "" : $"{E(strings["report.machine"])}: {E(inventory.MachineName)} · ";
+        output.WriteLine($"<div class=\"meta\">{machine}{E(strings["report.generated"])}: {E(inventory.CollectedAt.ToString("g", strings.Culture))}</div>");
 
         foreach (var section in ReportModel.Build(inventory, strings))
         {
