@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.6.0] - 2026-10-21
+
 ### Corrigido
 - Sensores paravam com "Object reference not set to an instance of an object" depois de abrir a página Hardware: a leitura do SPD fechava a biblioteca de sensores, que libera recursos globais ainda em uso. A biblioteca agora só é fechada quando ninguém mais a usa, e o SPD aproveita a conexão dos sensores.
 - Página Hardware levava cerca de 1 minuto com administrador: o SPD era lido byte a byte, com uma pausa que dura ~15 ms no relógio padrão do Windows. Agora só os bytes usados são lidos e com relógio de 1 ms.
@@ -82,7 +84,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.5.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.5.0
 [0.4.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.4.0
 [0.3.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.3.0
