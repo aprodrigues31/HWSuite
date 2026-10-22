@@ -347,3 +347,100 @@ public class BoardProfileTests
         Assert.Empty(source.ProfilesInUse);
     }
 }
+
+public class AdlTelemetryTests
+{
+    private static readonly Dictionary<int, int> RadeonValues = new()
+    {
+        [8] = 41, // edge: already mapped by LibreHardwareMonitor, not repeated
+        [24] = 42, // VR SoC
+        [25] = 46,
+        [26] = 0, // unsupported temperature reported as 0: dropped
+        [40] = 4, // PCIe 4.0 (link status encoding)
+        [41] = 16,
+        [50] = 51,
+        [64] = 1,
+        [67] = 21,
+    };
+
+    [Fact]
+    public void Adds_only_what_librehardwaremonitor_leaves_out()
+    {
+        var readings = AdlTelemetry.Readings("AMD Radeon RX 7800 XT", "/adl/3-0", RadeonValues, raw: false).ToDictionary(r => r.Name);
+
+        Assert.Equal(42, readings["GPU VR SoC"].Value);
+        Assert.Equal(46, readings["GPU VR Memory 0"].Value);
+        Assert.False(readings.ContainsKey("GPU VR Memory 1"));
+        Assert.Equal(51, readings["GPU Hot Spot (GCD)"].Value);
+        Assert.Equal(16, readings["PCIe Link Speed (GT/s)"].Value);
+        Assert.Equal(16, readings["PCIe Link Width (lanes)"].Value);
+        Assert.Equal(21, readings["Limit: PPT"].Value);
+        Assert.Equal(SensorKind.Load, readings["Limit: GFX TDC"].Kind);
+        Assert.DoesNotContain(readings.Values, r => r.Name.Contains("Edge", StringComparison.Ordinal) && r.Kind == SensorKind.Temperature);
+        Assert.All(readings.Values, r =>
+        {
+            Assert.Equal("GPU", r.HardwareKind);
+            Assert.Equal("AMD Radeon RX 7800 XT", r.Hardware);
+            Assert.StartsWith("/adl/3-0/", r.Id, StringComparison.Ordinal);
+        });
+    }
+
+    [Fact]
+    public void Raw_mode_lists_every_supported_sensor_by_number()
+    {
+        var readings = AdlTelemetry.Readings("GPU", "/adl/0-0", RadeonValues, raw: true);
+        Assert.Equal(RadeonValues.Count, readings.Count);
+        Assert.Equal("ADL #8 TEMPERATURE_EDGE", readings[0].Name);
+        Assert.Contains(readings, r => r.Name == "ADL #40 BUS_SPEED" && r.Value == 4);
+    }
+
+    [Theory]
+    [InlineData(1, 2.5)]
+    [InlineData(4, 16.0)]
+    [InlineData(5, 32.0)]
+    [InlineData(16, 16.0)]
+    [InlineData(16000, 16.0)]
+    [InlineData(8000, 8.0)]
+    [InlineData(0, null)]
+    [InlineData(123, null)]
+    public void Bus_speed_encodings(int value, double? expected)
+    {
+        Assert.Equal(expected, AdlTelemetry.LinkSpeedGts(value));
+    }
+
+    private sealed class Fixed(string name, params SensorReading[] readings) : ISensorSource
+    {
+        public string Name => name;
+
+        public IReadOnlyList<HWSuite.Core.Model.Diagnostic> Diagnostics => [];
+
+        public SensorSnapshot Read() => new(DateTimeOffset.UnixEpoch, readings);
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class Broken : ISensorSource
+    {
+        public string Name => "broken";
+
+        public IReadOnlyList<HWSuite.Core.Model.Diagnostic> Diagnostics => [];
+
+        public SensorSnapshot Read() => throw new InvalidOperationException("driver went away");
+
+        public void Dispose()
+        {
+        }
+    }
+
+    [Fact]
+    public void Composite_merges_and_survives_a_failing_extra_source()
+    {
+        var a = new SensorReading("/a", "CPU", "CPU", "Core", SensorKind.Temperature, 50, null, null);
+        using var composite = new CompositeSensorSource(new Fixed("lhm", a), new Broken());
+        var snapshot = composite.Read();
+        Assert.Equal("/a", Assert.Single(snapshot.Readings).Id);
+        Assert.Contains(composite.Diagnostics, d => d.Message == "driver went away");
+    }
+}

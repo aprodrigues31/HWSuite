@@ -32,6 +32,11 @@ public static class ProviderCatalog
     public static ISensorSource CreateSensorSource(AccessStatus access, bool raw = false)
     {
         ISensorSource source = new LhmSensorSource(access);
+        if (OperatingSystem.IsWindows())
+        {
+            source = new CompositeSensorSource(source, new AdlTelemetrySource(raw));
+        }
+
         if (!raw)
         {
             source = new BoardProfileSource(source);
