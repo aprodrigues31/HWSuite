@@ -121,6 +121,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
                         DedicatedMemoryBytes = (long)desc.DedicatedVideoMemory,
                         SharedMemoryBytes = (long)desc.SharedSystemMemory,
                         DriverVersion = driver,
+                        PcieLink = PciLinkReader.ForDevice((ushort)desc.VendorId, (ushort)desc.DeviceId, desc.SubSysId),
                     });
                 }
                 finally

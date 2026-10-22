@@ -176,6 +176,9 @@ public sealed class GpuInfo
     public string? DriverVersion { get; set; }
     public string? DriverDate { get; set; }
     public string? BiosVersion { get; set; }
+
+    /// <summary>Link to the motherboard slot (through the card's own PCIe switch, if it has one).</summary>
+    public Pci.PcieLink? PcieLink { get; set; }
 }
 
 public sealed class DiskInfo

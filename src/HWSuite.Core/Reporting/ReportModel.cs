@@ -124,6 +124,7 @@ public static class ReportModel
         Section("section.gpu", [.. inv.Gpus.Select(g => Group(g.Name,
             (s["field.vendor"], g.Vendor),
             (s["field.pciId"], g.PciVendorId is null ? null : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")),
+            (s["field.pcie"], Link(g.PcieLink, s)),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
             (s["field.driver"], Join(c, " / ", g.DriverVersion, DateText.Display(g.DriverDate, c))),
@@ -215,7 +216,7 @@ public static class ReportModel
             (s["field.organization"], spd is { Ranks: { } r, DeviceWidth: { } dw, DieDensityBits: { } d }
                 ? s.Format("spd.organization", r, dw, string.Create(c, $"{d / (1024.0 * 1024 * 1024):0.##} Gb")) + (spd.Ecc ? ", ECC" : "")
                 : null),
-            (s["field.thermalSensor"], s[spd.HasThermalSensor ? "common.yes" : "common.no"]),
+            (s["field.thermalSensor"], s[spd.HasThermalSensor ? "value.yes" : "value.no"]),
             ("JEDEC", Profile(spd.MemoryType, spd.Jedec, c)),
         };
 
@@ -225,6 +226,25 @@ public static class ReportModel
         }
 
         return [.. rows];
+    }
+
+    /// <summary>"PCIe 4.0 x16, running at PCIe 4.0 x16", with a hint when the link runs below the card's maximum.</summary>
+    private static string? Link(Pci.PcieLink? link, Strings s)
+    {
+        if (link is null)
+        {
+            return null;
+        }
+
+        var max = Pci.PcieLink.Describe(link.MaxSpeed, link.MaxWidth);
+        var current = Pci.PcieLink.Describe(link.CurrentSpeed, link.CurrentWidth);
+        if (max is null || current is null)
+        {
+            return max ?? current;
+        }
+
+        var key = link.RunsBelowMaxWidth ? "gpu.linkNarrow" : link.RunsBelowMaxSpeed ? "gpu.linkIdle" : "gpu.link";
+        return s.Format(key, max, current);
     }
 
     /// <summary>"DDR4-3200 16-18-18-36 · 1.35 V"</summary>

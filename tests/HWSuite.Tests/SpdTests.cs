@@ -217,7 +217,7 @@ public class SpdTests
         Assert.Equal("Micron Technology", rows["Fabricante dos chips"]);
         Assert.Equal("semana 12 de 2023", rows["Fabricação"]);
         Assert.Equal("2 rank(s), chips x8 de 8 Gb", rows["Organização"]);
-        Assert.Equal("não", rows["Sensor de temperatura"]);
+        Assert.Equal("Não", rows["Sensor de temperatura"]);
         Assert.Equal("DDR4-3200 22-22-22-52 · 1,20 V", rows["JEDEC"]);
         Assert.Equal("DDR4-3200 16-18-18-36 · 1,35 V", rows["XMP 2.0 perfil 1"]);
     }
