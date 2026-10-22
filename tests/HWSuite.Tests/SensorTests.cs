@@ -301,9 +301,36 @@ public class BoardProfileTests
         Assert.Equal("+3.3V Standby", byId["/lpc/nct6798d/0/voltage/7"].Name);
         Assert.Equal(3.392, byId["/lpc/nct6798d/0/voltage/7"].Value!.Value, 3); // already scaled by the library
 
-        Assert.Equal("Temperature #3", byId["/lpc/nct6798d/0/temperature/2"].Name); // no rule: unchanged
+        Assert.False(byId.ContainsKey("/lpc/nct6798d/0/temperature/2")); // floating SYSTIN (81 °C) hidden
         Assert.Equal(["CPU", "Super I/O"], byId.Values.Select(r => r.HardwareKind).Distinct().Order());
         Assert.Equal("ASUS TUF GAMING B550M-PLUS", Assert.Single(source.ProfilesInUse));
+    }
+
+    [Fact]
+    public void Fans_and_vtt_match_hwinfo_on_the_users_board()
+    {
+        using var source = new BoardProfileSource(new FixedSource(
+            SuperIo("voltage", 9, "CPU Termination", SensorKind.Voltage, 0.904),
+            SuperIo("fan", 0, "Fan #1", SensorKind.Fan, 808),
+            SuperIo("fan", 1, "Fan #2", SensorKind.Fan, 2224),
+            SuperIo("fan", 2, "Fan #3", SensorKind.Fan, 1247),
+            SuperIo("fan", 3, "Fan #4", SensorKind.Fan, 0),
+            SuperIo("fan", 5, "Fan #6", SensorKind.Fan, 1500),
+            SuperIo("fan", 6, "Fan #7", SensorKind.Fan, 1015),
+            SuperIo("control", 3, "Fan #4", SensorKind.Control, 60),
+            SuperIo("temperature", 0, "Temperature #1", SensorKind.Temperature, 41.5)));
+
+        var byId = source.Read().Readings.ToDictionary(r => r.Id);
+
+        Assert.Equal(1.808, byId["/lpc/nct6798d/0/voltage/9"].Value!.Value, 3); // HWiNFO: VTT 1.808 V
+        Assert.Equal("CPU Fan (CPU_FAN)", byId["/lpc/nct6798d/0/fan/1"].Name);
+        Assert.Equal("Chassis Fan 1 (CHA_FAN1)", byId["/lpc/nct6798d/0/fan/0"].Name);
+        Assert.Equal("Chassis Fan 2 (CHA_FAN2)", byId["/lpc/nct6798d/0/fan/2"].Name);
+        Assert.Equal("CPU Optional (CPU_OPT)", byId["/lpc/nct6798d/0/fan/6"].Name);
+        Assert.False(byId.ContainsKey("/lpc/nct6798d/0/fan/3")); // empty header, 0 RPM
+        Assert.Equal("Fan #6", byId["/lpc/nct6798d/0/fan/5"].Name); // spins: shown even without a name
+        Assert.False(byId.ContainsKey("/lpc/nct6798d/0/control/3"));
+        Assert.Equal("CPU", byId["/lpc/nct6798d/0/temperature/0"].Name);
     }
 
     [Fact]

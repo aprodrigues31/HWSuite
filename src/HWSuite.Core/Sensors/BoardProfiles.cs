@@ -7,8 +7,9 @@ namespace HWSuite.Core.Sensors;
 /// What one Super I/O input means on a given motherboard: its real name, the resistor divider the
 /// board uses in front of it (<see cref="Scale"/>), or that nothing is wired to it (<see cref="Hide"/>).
 /// <see cref="Index"/> is the chip input number, the last part of the sensor id (".../voltage/4").
+/// <see cref="HideWhenZero"/> is for headers that may or may not have a fan: hidden while they read 0.
 /// </summary>
-public sealed record BoardSensorRule(SensorKind Kind, int Index, string? Name = null, double Scale = 1, double Offset = 0, bool Hide = false);
+public sealed record BoardSensorRule(SensorKind Kind, int Index, string? Name = null, double Scale = 1, double Offset = 0, bool Hide = false, bool HideWhenZero = false);
 
 /// <summary>
 /// Labels for one motherboard model. Super I/O chips only report numbered inputs; which input is the
@@ -34,15 +35,52 @@ public static partial class BoardProfiles
             TufB550mPlus(),
             "NCT6798D",
             [
-                // Dividers confirmed against the CPU's own telemetry (SVI2 Core 1.138 V vs 0.576 V x 2)
-                // and the nominal rails (+5 V: 1.008 V x 5; +12 V: 0.992 V x 12).
-                new(SensorKind.Voltage, 0, "CPU Core (Vcore)", Scale: 2),
+                // Checked against HWiNFO's ASUS labels and the readings of a real board (Ryzen 7 5800XT):
+                // the chip inputs follow the NCT6798D pin order (Vcore, VIN1, AVSB, 3VCC, VIN0, VIN8,
+                // VIN4, 3VSB, VBAT, VTT, VIN5, VIN6, VIN2, VIN3, VIN7, VIN9).
+                new(SensorKind.Voltage, 0, "CPU Core (Vcore)", Scale: 2), // 0.576 V -> 1.152 V; CPU SVI2 reports 1.138 V
                 new(SensorKind.Voltage, 1, "+5V", Scale: 5),
-                new(SensorKind.Voltage, 4, "+12V", Scale: 12),
-                new(SensorKind.Voltage, 2, "AVCC"),
+                new(SensorKind.Voltage, 2, "AVSB"),
                 new(SensorKind.Voltage, 3, "+3.3V"),
+                new(SensorKind.Voltage, 4, "+12V", Scale: 12),
+                new(SensorKind.Voltage, 5, "VIN8"),
+                new(SensorKind.Voltage, 6, "VIN4"),
                 new(SensorKind.Voltage, 7, "+3.3V Standby"),
                 new(SensorKind.Voltage, 8, "CMOS Battery"),
+                new(SensorKind.Voltage, 9, "VTT", Scale: 2),
+                new(SensorKind.Voltage, 10, "VIN5", Scale: 2),
+                new(SensorKind.Voltage, 11, "VIN6", Scale: 2),
+                new(SensorKind.Voltage, 12, "VIN2"),
+                new(SensorKind.Voltage, 13, "VIN3"),
+                new(SensorKind.Voltage, 14, "VIN7"),
+                new(SensorKind.Voltage, 15, "VIN9"),
+
+                // CPU temperature from the board sensor; Tctl/Tdie itself is in the processor group.
+                new(SensorKind.Temperature, 0, "CPU"),
+                // CPUTIN, AUXTIN0 and AUXTIN1 read the same (±1 °C) as HWiNFO's "Motherboard", "Temp3"
+                // and "Temp9", so they keep the chip's pin names instead of a guess.
+                new(SensorKind.Temperature, 1, "Motherboard (CPUTIN)"),
+                new(SensorKind.Temperature, 3, "AUXTIN0"),
+                new(SensorKind.Temperature, 4, "AUXTIN1"),
+                // Inputs with nothing attached: SYSTIN floats around 81 °C, AUXTIN2 near room level.
+                new(SensorKind.Temperature, 2, Hide: true),
+                new(SensorKind.Temperature, 5, Hide: true),
+
+                // Fan headers as printed on the board.
+                new(SensorKind.Fan, 0, "Chassis Fan 1 (CHA_FAN1)"),
+                new(SensorKind.Fan, 1, "CPU Fan (CPU_FAN)"),
+                new(SensorKind.Fan, 2, "Chassis Fan 2 (CHA_FAN2)"),
+                new(SensorKind.Fan, 6, "CPU Optional (CPU_OPT)"),
+                new(SensorKind.Fan, 3, HideWhenZero: true), // other headers: shown once something spins there
+                new(SensorKind.Fan, 4, HideWhenZero: true),
+                new(SensorKind.Fan, 5, HideWhenZero: true),
+                new(SensorKind.Control, 0, "Chassis Fan 1 (CHA_FAN1)"),
+                new(SensorKind.Control, 1, "CPU Fan (CPU_FAN)"),
+                new(SensorKind.Control, 2, "Chassis Fan 2 (CHA_FAN2)"),
+                new(SensorKind.Control, 6, "CPU Optional (CPU_OPT)"),
+                new(SensorKind.Control, 3, Hide: true),
+                new(SensorKind.Control, 4, Hide: true),
+                new(SensorKind.Control, 5, Hide: true),
             ]),
     ];
 
@@ -70,7 +108,7 @@ public static partial class BoardProfiles
             return reading;
         }
 
-        if (rule.Hide)
+        if (rule.Hide || (rule.HideWhenZero && reading.Value is 0))
         {
             return null;
         }
