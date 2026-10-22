@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.7.0] - 2026-10-22
+
+### Corrigido
+- Autoteste do aplicativo no CI falhava de forma intermitente: os temporizadores do teste eram recolhidos pelo coletor de lixo antes de disparar (o aplicativo em si não era afetado). O CI agora também captura as pilhas gerenciada e nativa se a interface parar.
+
 ### Adicionado
 - Fase 3d: **telemetria extra de placas AMD** pela AMD Display Library (sem administrador), lida da mesma sessão de telemetria que o driver usa: **link PCIe ao vivo** (velocidade e linhas; numa RX 7800 XT, 16 GT/s x16, igual ao HWiNFO) e os **limites** que o driver usa para reduzir o clock (temperaturas de borda, hot spot, GCD/MCD, memória e VR, TDC e PPT, em %). Temperaturas dos reguladores de tensão e dos chiplets aparecem quando o driver as informa (o da RX 7800 XT não informa).
 - `hwsuite sensors --raw` lista todos os sensores que o driver AMD informa, numerados, para comparar com outras ferramentas.
@@ -88,7 +93,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.6.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.5.0
 [0.4.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.4.0

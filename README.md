@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: 0.6.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória e link PCIe da placa de vídeo.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
+> **Status: 0.7.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória, link PCIe e telemetria extra de placas AMD.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
 
 ## O que a fase 1 já faz
 
@@ -109,7 +109,7 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 
 1. **Inventário sem driver** — esta versão.
 2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0); ✅ aplicativo de desktop com sensores, gráfico e inventário (0.4.0). ✅ área de notificação, alertas e configurações (0.5.0).
-3. **Detalhe:** ✅ perfis de placa-mãe, SPD/XMP da memória e link PCIe (0.6.0). A seguir: S.M.A.R.T. de SATA, baterias e nobreaks, controlador de tensão (VRM), temperaturas internas da placa de vídeo, EXPO.
+3. **Detalhe:** ✅ perfis de placa-mãe, SPD/XMP da memória e link PCIe (0.6.0); ✅ telemetria AMD pela ADL: link PCIe ao vivo e limites do driver (0.7.0). A seguir: S.M.A.R.T. de SATA, baterias e nobreaks, controlador de tensão (VRM), EXPO.
 4. **Paridade:** banco de dados de GPUs, backup do BIOS de vídeo, detecção de GPU falsificada, benchmark, fontes/AIOs, NPU.
 
 ## Licença
