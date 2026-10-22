@@ -25,6 +25,8 @@ public static class AdlTelemetry
         [51] = new("GPU Hot Spot (MCD)", SensorKind.Temperature),
         [52] = new("Limit: Edge Temperature", SensorKind.Load),
         [53] = new("Limit: Hot Spot Temperature", SensorKind.Load),
+        [54] = new("Limit: Hot Spot Temperature (GCD)", SensorKind.Load),
+        [55] = new("Limit: Hot Spot Temperature (MCD)", SensorKind.Load),
         [56] = new("Limit: Memory Temperature", SensorKind.Load),
         [57] = new("Limit: VR GFX Temperature", SensorKind.Load),
         [60] = new("Limit: VR SoC Temperature", SensorKind.Load),

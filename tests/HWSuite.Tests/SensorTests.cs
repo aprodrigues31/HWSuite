@@ -386,6 +386,27 @@ public class AdlTelemetryTests
     }
 
     [Fact]
+    public void Rx_7800_xt_idle_reading_from_the_users_pc()
+    {
+        // The 25 PMLog sensors the Radeon driver reported (hwsuite sensors --raw, build 36), idle desktop.
+        var values = new Dictionary<int, int>
+        {
+            [1] = 35, [2] = 2425, [8] = 38, [9] = 59, [14] = 1058, [15] = 20, [19] = 2, [20] = 0, [21] = 302,
+            [27] = 56, [38] = 0, [39] = 0, [40] = 3, [41] = 16, [46] = 0, [47] = 0, [48] = 0, [49] = 0,
+            [52] = 24, [53] = 0, [54] = 0, [55] = 0, [56] = 0, [57] = 0, [73] = 71,
+        };
+
+        var readings = AdlTelemetry.Readings("AMD Radeon RX 7800 XT", "/adl/3-0", values, raw: false).ToDictionary(r => r.Name, r => r.Value);
+
+        Assert.Equal(8, readings["PCIe Link Speed (GT/s)"]); // PCIe 3.0 while idle (16 GT/s under load)
+        Assert.Equal(16, readings["PCIe Link Width (lanes)"]);
+        Assert.Equal(24, readings["Limit: Edge Temperature"]);
+        Assert.Equal(0, readings["Limit: Hot Spot Temperature (MCD)"]);
+        Assert.False(readings.ContainsKey("GPU VR SoC")); // not exposed by this driver through ADL
+        Assert.Equal(8, readings.Count);
+    }
+
+    [Fact]
     public void Raw_mode_lists_every_supported_sensor_by_number()
     {
         var readings = AdlTelemetry.Readings("GPU", "/adl/0-0", RadeonValues, raw: true);
