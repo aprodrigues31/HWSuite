@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using HWSuite.Core.Collection;
 using HWSuite.Core.Model;
 using HWSuite.Core.Spd;
@@ -14,7 +15,7 @@ namespace HWSuite.Providers.Lhm;
 /// manufacturing date, JEDEC and XMP profiles) to the modules from SMBIOS. SMBus access goes through
 /// the PawnIO driver, so this needs administrator rights; without them it only leaves a note.
 /// </summary>
-public sealed class LhmSpdProvider : IInventoryProvider
+public sealed partial class LhmSpdProvider : IInventoryProvider
 {
     public string Name => "SPD";
 
@@ -62,17 +63,39 @@ public sealed class LhmSpdProvider : IInventoryProvider
     private sealed record SpdDump(byte Address, byte[] Data, string? ModuleManufacturer, string? DramManufacturer);
 
     /// <summary>
-    /// Opening LibreHardwareMonitor's memory group installs its PawnIO SMBus driver and detects the
-    /// buses; the toolkit's global SMBus mutex keeps these reads from colliding with sensor polling.
+    /// Uses the SMBus that live sensors already opened (the desktop app); otherwise opens
+    /// LibreHardwareMonitor's memory group just for this read, which installs its PawnIO SMBus
+    /// driver and detects the buses. The toolkit's global SMBus mutex keeps reads from colliding.
     /// </summary>
     private static List<SpdDump> ReadAll()
     {
-        var dumps = new List<SpdDump>();
+        if (LhmRuntime.AnyOpen && SMBusManager.RegisteredSMBuses.Count > 0)
+        {
+            return ReadBuses();
+        }
+
         var computer = new Computer { IsMemoryEnabled = true };
-        computer.Open();
+        LhmRuntime.Open(computer);
         try
         {
-            var seen = new HashSet<(SMBusInterface, byte)>();
+            return ReadBuses();
+        }
+        finally
+        {
+            LhmRuntime.Close(computer);
+        }
+    }
+
+    private static List<SpdDump> ReadBuses()
+    {
+        var dumps = new List<SpdDump>();
+        var seen = new HashSet<(SMBusInterface, byte)>();
+
+        // Each SPD byte read is followed by a 1 ms sleep, which lasts ~15 ms at Windows' default timer
+        // resolution: ask for 1 ms while reading.
+        _ = TimeBeginPeriod(1);
+        try
+        {
             foreach (var bus in SMBusManager.RegisteredSMBuses)
             {
                 for (var address = SPDConstants.SPD_BEGIN; address <= SPDConstants.SPD_END; address++)
@@ -82,16 +105,20 @@ public sealed class LhmSpdProvider : IInventoryProvider
                         continue;
                     }
 
-                    var length = SpdDecoder.Length(spd.At(2));
+                    var type = spd.At(2);
+                    var length = SpdDecoder.Length(type);
                     if (length == 0)
                     {
                         continue; // DDR3 or older: SMBIOS already has the basics
                     }
 
                     var data = new byte[length];
-                    for (var i = 0; i < length; i++)
+                    foreach (var (from, to) in SpdDecoder.RangesToRead(type, i => spd.At((ushort)i)))
                     {
-                        data[i] = spd.At((ushort)i);
+                        for (var i = from; i <= to; i++)
+                        {
+                            data[i] = spd.At((ushort)i);
+                        }
                     }
 
                     dumps.Add(new SpdDump(address, data, spd.GetModuleManufacturerString(), spd.GetDRAMManufacturerString()));
@@ -100,9 +127,15 @@ public sealed class LhmSpdProvider : IInventoryProvider
         }
         finally
         {
-            computer.Close();
+            _ = TimeEndPeriod(1);
         }
 
         return dumps;
     }
+
+    [LibraryImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+    private static partial uint TimeBeginPeriod(uint milliseconds);
+
+    [LibraryImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+    private static partial uint TimeEndPeriod(uint milliseconds);
 }

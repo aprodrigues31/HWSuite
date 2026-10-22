@@ -256,4 +256,38 @@ public class SpdTests
         Assert.Equal(new SpdTimingProfile("JEDEC", 2666, 19, 19, 19, 43, 62, 1.2), spd.Jedec);
         Assert.Equal(new SpdTimingProfile("XMP 1", 3000, 15, 16, 16, 35, 69, 1.35), Assert.Single(spd.XmpProfiles));
     }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void Reading_only_the_needed_ranges_decodes_the_same(bool ddr5)
+    {
+        var full = ddr5 ? Ddr5() : Ddr4();
+        var partial = new byte[full.Length];
+        var ranges = SpdDecoder.RangesToRead(full[2], i => full[i]);
+        foreach (var (from, to) in ranges)
+        {
+            Array.Copy(full, from, partial, from, to - from + 1);
+        }
+
+        var expected = SpdDecoder.Decode(full)!;
+        var actual = SpdDecoder.Decode(partial)!;
+        Assert.Equal(expected.Jedec, actual.Jedec);
+        Assert.True(expected.XmpProfiles.SequenceEqual(actual.XmpProfiles));
+        Assert.True(actual.XmpProfiles.Count > 0);
+        Assert.Equal(expected.PartNumber, actual.PartNumber);
+        Assert.Equal(expected.SerialNumber, actual.SerialNumber);
+        Assert.Equal(expected.ManufactureYear, actual.ManufactureYear);
+        Assert.Equal(expected.Ranks, actual.Ranks);
+        Assert.Equal(expected.SizeBytes, actual.SizeBytes);
+        Assert.Equal(expected.Ecc, actual.Ecc);
+        Assert.True(ranges.Sum(r => r.To - r.From + 1) < (ddr5 ? 360 : 200));
+    }
+
+    [Fact]
+    public void Xmp_block_is_skipped_when_absent()
+    {
+        var bytes = Ddr4(xmp: false);
+        Assert.False(SpdDecoder.RangesToRead(bytes[2], i => bytes[i]).Any(r => r.From == 393));
+    }
 }

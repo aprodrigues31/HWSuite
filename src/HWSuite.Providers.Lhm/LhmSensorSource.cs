@@ -35,7 +35,7 @@ public sealed class LhmSensorSource : ISensorSource
             IsPsuEnabled = true,
             IsNetworkEnabled = false,
         };
-        _computer.Open();
+        LhmRuntime.Open(_computer);
     }
 
     public string Name => "LibreHardwareMonitor";
@@ -69,7 +69,7 @@ public sealed class LhmSensorSource : ISensorSource
         }
 
         _disposed = true;
-        _computer.Close();
+        LhmRuntime.Close(_computer);
     }
 
     private static void Collect(IHardware hardware, string? parent, List<SensorReading> readings)

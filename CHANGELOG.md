@@ -8,6 +8,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Corrigido
+- Sensores paravam com "Object reference not set to an instance of an object" depois de abrir a página Hardware: a leitura do SPD fechava a biblioteca de sensores, que libera recursos globais ainda em uso. A biblioteca agora só é fechada quando ninguém mais a usa, e o SPD aproveita a conexão dos sensores.
+- Página Hardware levava cerca de 1 minuto com administrador: o SPD era lido byte a byte, com uma pausa que dura ~15 ms no relógio padrão do Windows. Agora só os bytes usados são lidos e com relógio de 1 ms.
+
 ### Adicionado
 - Fase 3a: **perfis por placa-mãe**. O chip de sensores da placa (Super I/O) só numera as entradas; o perfil diz o que cada uma é naquela placa, aplica o divisor de tensão e oculta entradas sem nada ligado. Vale para a linha de comando e para o aplicativo, e os alertas e o log usam os valores corrigidos.
 - Primeiro perfil: ASUS TUF GAMING B550M-PLUS (e a versão Wi-Fi), conferido com o HWiNFO numa placa real: ventoinhas com o nome do conector (CPU_FAN, CPU_OPT, CHA_FAN1, CHA_FAN2), tensões nas escalas corretas (Vcore, +5 V, +12 V, VTT e demais entradas com o nome do pino), temperatura da CPU pelo sensor da placa e entradas sem nada ligado ocultas (o "Temperature #3" de 81 °C). Conectores de ventoinha vazios aparecem sozinhos quando algo passa a girar neles.

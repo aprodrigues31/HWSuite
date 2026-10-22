@@ -23,6 +23,37 @@ public static class SpdDecoder
         _ => 0,
     };
 
+    /// <summary>
+    /// The byte ranges <see cref="Decode"/> uses (inclusive), so a slow SMBus reads ~180 bytes per
+    /// module instead of 512/1024. <paramref name="peek"/> reads one byte; it is used to skip the
+    /// XMP block when its header is absent. Unread bytes can be left as 0.
+    /// </summary>
+    public static IReadOnlyList<(int From, int To)> RangesToRead(byte memoryType, Func<int, byte> peek)
+    {
+        ArgumentNullException.ThrowIfNull(peek);
+        switch (memoryType)
+        {
+            case TypeDdr4 or TypeDdr4E:
+                List<(int, int)> ddr4 = [(0, 29), (117, 125), (320, 351), (384, 387)];
+                if (peek(384) == 0x0C && peek(385) == 0x4A)
+                {
+                    ddr4.Add((393, 486)); // both XMP 2.0 profiles with their fine offsets
+                }
+
+                return ddr4;
+            case TypeDdr5:
+                List<(int, int)> ddr5 = [(0, 39), (235, 235), (512, 554), (640, 642)];
+                if (peek(640) == 0x0C && peek(641) == 0x4A)
+                {
+                    ddr5.Add((704, 895)); // three XMP 3.0 profiles
+                }
+
+                return ddr5;
+            default:
+                return [];
+        }
+    }
+
     /// <summary>Null when the dump is too short or is not DDR4/DDR5.</summary>
     public static SpdInfo? Decode(ReadOnlySpan<byte> spd, string? moduleManufacturer = null, string? dramManufacturer = null)
     {

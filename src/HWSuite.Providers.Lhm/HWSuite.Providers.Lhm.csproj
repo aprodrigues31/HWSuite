@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>HWSuite.Providers.Lhm</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Live sensors through LibreHardwareMonitorLib (MPL-2.0), with PawnIO for low-level access.</Description>
   </PropertyGroup>
   <ItemGroup>
