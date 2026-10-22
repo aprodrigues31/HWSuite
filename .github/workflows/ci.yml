@@ -143,8 +143,22 @@ jobs:
             # Report written but the process did not exit: the hang is in shutdown, not in the sensors.
             Write-Host "Self-test did not exit within 60 s. Report so far:`n$text"
             Get-Process -Id $test.Id -ErrorAction SilentlyContinue | Format-List Id, Responding, CPU, @{ n = 'Threads'; e = { $_.Threads.Count } }, @{ n = 'MemoryMB'; e = { [math]::Round($_.WorkingSet64 / 1MB) } }
+            # Managed stacks of every thread, to see where the UI thread is stuck.
+            $stacks = '(no stacks)'
+            try {
+              dotnet tool install --global dotnet-dump | Out-Null
+              $dumpTool = Join-Path $env:USERPROFILE '.dotnet\tools\dotnet-dump.exe'
+              $dump = Join-Path $env:RUNNER_TEMP 'hwsuite-gui.dmp'
+              & $dumpTool collect -p $test.Id -o $dump --type Full | Out-Host
+              $stacks = (& $dumpTool analyze $dump -c 'clrstack -all' -c 'exit' 2>&1 | Out-String)
+              New-Item -ItemType Directory -Force artifacts/reports | Out-Null
+              $stacks | Out-File -Encoding utf8 artifacts/reports/gui-hang-stacks.txt
+            } catch { $stacks = "dotnet-dump failed: $_" }
+            Write-Host $stacks
             $test.Kill()
             "### Autoteste do aplicativo (não terminou em 60 s)`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+            $main = ($stacks -split "`n" | Select-Object -First 160) -join "`n"
+            "#### Pilhas das threads (início)`n" + '```text' + "`n$main`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
             Fail "Self-test did not finish"
           }
           Write-Host $text

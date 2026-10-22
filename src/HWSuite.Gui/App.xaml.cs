@@ -91,26 +91,47 @@ public partial class App : Application
     private void RunSelfTest(string reportPath)
     {
         File.WriteAllText(reportPath, "result: started\n"); // proves the app reached this point if it never finishes
-        var timer = _ui!.CreateTimer();
+
+        // UI heartbeat: if the UI thread stops running queued work, the watchdog below reports it.
+        var lastBeat = DateTime.UtcNow.Ticks;
+        var heartbeat = _ui!.CreateTimer();
+        heartbeat.Interval = TimeSpan.FromSeconds(1);
+        heartbeat.Tick += (_, _) => Interlocked.Exchange(ref lastBeat, DateTime.UtcNow.Ticks);
+        heartbeat.Start();
+
+        string Report(string result) => $"""
+            result: {result}
+            updates: {_updates}
+            sensors: {Monitor.Latest?.Readings.Count ?? 0}
+            tray icon: {Tray?.IsAdded}
+            ui thread idle for: {(DateTime.UtcNow - new DateTime(Interlocked.Read(ref lastBeat), DateTimeKind.Utc)).TotalSeconds:0.0} s
+            error: {_lastError ?? "none"}
+            """;
+
+        var done = 0;
+        var timer = _ui.CreateTimer();
         timer.Interval = TimeSpan.FromSeconds(12);
         timer.IsRepeating = false;
         timer.Tick += (_, _) =>
         {
+            Interlocked.Exchange(ref done, 1);
             var latest = Monitor.Latest;
             var ok = _updates >= 3 && _lastError is null && latest is { Readings.Count: > 0 };
-            var report = $"""
-                result: {(ok ? "pass" : "fail")}
-                updates: {_updates}
-                sensors: {latest?.Readings.Count ?? 0}
-                window shown: {MainWindow?.IsShown}
-                tray icon: {Tray?.IsAdded}
-                tooltip: {SensorSummary.Tooltip(latest, Text)}
-                error: {_lastError ?? "none"}
-                """;
-            File.WriteAllText(reportPath, report);
+            File.WriteAllText(reportPath, Report(ok ? "pass" : "fail") + $"\nwindow shown: {MainWindow?.IsShown}\ntooltip: {SensorSummary.Tooltip(latest, Text)}\n");
             Environment.Exit(ok ? 0 : 3);
         };
         timer.Start();
+
+        // Watchdog on its own thread: still reports when the UI thread is stuck (the timer above then never fires).
+        new Thread(() =>
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(25));
+            if (Volatile.Read(ref done) == 0)
+            {
+                File.WriteAllText(reportPath, Report("ui-thread-blocked"));
+            }
+        })
+        { IsBackground = true, Name = "HWSuite self-test watchdog" }.Start();
     }
 
     /// <summary>Exits for real (tray menu "Exit"), bypassing close-to-tray.</summary>
