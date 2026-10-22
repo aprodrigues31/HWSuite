@@ -221,4 +221,39 @@ public class SpdTests
         Assert.Equal("DDR4-3200 22-22-22-52 · 1,20 V", rows["JEDEC"]);
         Assert.Equal("DDR4-3200 16-18-18-36 · 1,35 V", rows["XMP 2.0 perfil 1"]);
     }
+
+    /// <summary>
+    /// Crucial Ballistix BL16G30C15U4W.M16FE1 as CPU-Z 3.01 reads it on the user's PC: JEDEC #10
+    /// DDR4-2666 (1333 MHz) and "XMP-3002" (1501 MHz) 15-16-16-35 tRC 69 at 1.35 V, week 05/2020.
+    /// </summary>
+    [Fact]
+    public void Matches_cpuz_on_a_crucial_ballistix_module()
+    {
+        var s = Ddr4(serial: [0xE4, 0x28, 0xD2, 0xC8]);
+        s[18] = 6; // tCK 0.75 ns: DDR4-2666
+        s[24] = s[25] = s[26] = 114; // 14.25 ns
+        s[27] = 0x11;
+        s[28] = 0x00; // tRAS 32 ns
+        s[29] = 0x72; // tRC 370 MTB = 46.25 ns
+        s[323] = 0x20;
+        s[324] = 0x05;
+        Array.Fill(s, (byte)0x20, 329, 20);
+        Encoding.ASCII.GetBytes("BL16G30C15U4W.M16FE1").CopyTo(s, 329);
+
+        const int b = 393;
+        s[b + 3] = 5;
+        s[b + 38] = 41; // tCK 0.625 + 0.041 = 0.666 ns ("3002")
+        s[b + 8] = 80; // tAA 10 ns
+        s[b + 9] = s[b + 10] = 85; // 10.625 ns
+        s[b + 11] = 0x10;
+        s[b + 12] = 186; // tRAS 23.25 ns
+        s[b + 13] = 0x6F; // tRC 367 MTB = 45.875 ns
+
+        var spd = SpdDecoder.Decode(s, "Crucial Technology", "Micron Technology")!;
+        Assert.Equal("BL16G30C15U4W.M16FE1", spd.PartNumber);
+        Assert.Equal("E428D2C8", spd.SerialNumber);
+        Assert.Equal((2020, 5), (spd.ManufactureYear!.Value, spd.ManufactureWeek!.Value));
+        Assert.Equal(new SpdTimingProfile("JEDEC", 2666, 19, 19, 19, 43, 62, 1.2), spd.Jedec);
+        Assert.Equal(new SpdTimingProfile("XMP 1", 3000, 15, 16, 16, 35, 69, 1.35), Assert.Single(spd.XmpProfiles));
+    }
 }
