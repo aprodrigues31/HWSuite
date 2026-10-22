@@ -356,7 +356,7 @@ public class AdlTelemetryTests
         [24] = 42, // VR SoC
         [25] = 46,
         [26] = 0, // unsupported temperature reported as 0: dropped
-        [40] = 4, // PCIe 4.0 (link status encoding)
+        [40] = 3, // rate index 3 = PCIe 4.0
         [41] = 16,
         [50] = 51,
         [64] = 1,
@@ -398,7 +398,7 @@ public class AdlTelemetryTests
 
         var readings = AdlTelemetry.Readings("AMD Radeon RX 7800 XT", "/adl/3-0", values, raw: false).ToDictionary(r => r.Name, r => r.Value);
 
-        Assert.Equal(8, readings["PCIe Link Speed (GT/s)"]); // PCIe 3.0 while idle (16 GT/s under load)
+        Assert.Equal(16, readings["PCIe Link Speed (GT/s)"]); // HWiNFO showed 16 GT/s (min = max) on the same card
         Assert.Equal(16, readings["PCIe Link Width (lanes)"]);
         Assert.Equal(24, readings["Limit: Edge Temperature"]);
         Assert.Equal(0, readings["Limit: Hot Spot Temperature (MCD)"]);
@@ -412,7 +412,7 @@ public class AdlTelemetryTests
         var readings = AdlTelemetry.Readings("GPU", "/adl/0-0", RadeonValues, raw: true);
         Assert.Equal(RadeonValues.Count, readings.Count);
         Assert.Equal("ADL #8 TEMPERATURE_EDGE", readings[0].Name);
-        Assert.Contains(readings, r => r.Name == "ADL #40 BUS_SPEED" && r.Value == 4);
+        Assert.Contains(readings, r => r.Name == "ADL #40 BUS_SPEED" && r.Value == 3);
     }
 
     [Theory]
@@ -427,13 +427,14 @@ public class AdlTelemetryTests
     }
 
     [Theory]
-    [InlineData(1, 2.5)]
-    [InlineData(4, 16.0)]
-    [InlineData(5, 32.0)]
+    [InlineData(0, 2.5)]
+    [InlineData(2, 8.0)]
+    [InlineData(3, 16.0)]
+    [InlineData(4, 32.0)]
     [InlineData(16, 16.0)]
     [InlineData(16000, 16.0)]
     [InlineData(8000, 8.0)]
-    [InlineData(0, null)]
+    [InlineData(-1, null)]
     [InlineData(123, null)]
     public void Bus_speed_encodings(int value, double? expected)
     {

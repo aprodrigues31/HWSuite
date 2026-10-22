@@ -9,7 +9,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
-- Fase 3d: **telemetria extra de placas AMD** pela AMD Display Library (sem administrador), lida da mesma sessão de telemetria que o driver usa: **link PCIe ao vivo** (velocidade e linhas; por exemplo, PCIe 3.0 x16 em repouso e 4.0 sob carga numa RX 7800 XT) e os **limites** que o driver usa para reduzir o clock (temperaturas de borda, hot spot, GCD/MCD, memória e VR, TDC e PPT, em %). Temperaturas dos reguladores de tensão e dos chiplets aparecem quando o driver as informa (o da RX 7800 XT não informa).
+- Fase 3d: **telemetria extra de placas AMD** pela AMD Display Library (sem administrador), lida da mesma sessão de telemetria que o driver usa: **link PCIe ao vivo** (velocidade e linhas; numa RX 7800 XT, 16 GT/s x16, igual ao HWiNFO) e os **limites** que o driver usa para reduzir o clock (temperaturas de borda, hot spot, GCD/MCD, memória e VR, TDC e PPT, em %). Temperaturas dos reguladores de tensão e dos chiplets aparecem quando o driver as informa (o da RX 7800 XT não informa).
 - `hwsuite sensors --raw` lista todos os sensores que o driver AMD informa, numerados, para comparar com outras ferramentas.
 
 ## [0.6.0] - 2026-10-21

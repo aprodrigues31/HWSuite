@@ -128,14 +128,16 @@ public static class AdlTelemetry
     }
 
     /// <summary>
-    /// BUS_SPEED as GT/s. Drivers report either the link status encoding (1..6) or the rate itself
-    /// (in GT/s or MT/s); all three map to the same scale here.
+    /// BUS_SPEED as GT/s. The driver passes the GPU power controller's PCIe rate index, which starts
+    /// at zero (0 = 2.5, 1 = 5, 2 = 8, 3 = 16, 4 = 32, 5 = 64 GT/s; amdgpu's DECODE_GEN_SPEED),
+    /// unlike the PCIe link status register (1 = 2.5 GT/s). Checked on an RX 7800 XT: ADL reports 3
+    /// while HWiNFO shows 16 GT/s. Rates sent as MT/s or GT/s are accepted too.
     /// </summary>
     public static double? LinkSpeedGts(int value) => value switch
     {
-        >= 1 and <= 6 => PcieLink.GigaTransfers(value),
+        >= 0 and <= 5 => PcieLink.GigaTransfers(value + 1),
+        8 or 16 or 32 or 64 => value,
         2500 or 5000 or 8000 or 16000 or 32000 or 64000 => value / 1000.0,
-        > 6 and <= 64 => value,
         _ => null,
     };
 
