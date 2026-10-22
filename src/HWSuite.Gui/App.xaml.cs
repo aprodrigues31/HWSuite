@@ -23,6 +23,10 @@ public partial class App : Application
     private DispatcherQueue? _ui;
     private DateTime _lastTooltip;
     private int _updates;
+
+    // DispatcherQueueTimers must stay referenced: a timer held only by a local variable can be
+    // garbage collected and then never fires (this made the CI self-test "hang" intermittently).
+    private readonly List<DispatcherQueueTimer> _timers = [];
     private string? _lastError;
 
     public App()
@@ -98,6 +102,7 @@ public partial class App : Application
         heartbeat.Interval = TimeSpan.FromSeconds(1);
         heartbeat.Tick += (_, _) => Interlocked.Exchange(ref lastBeat, DateTime.UtcNow.Ticks);
         heartbeat.Start();
+        _timers.Add(heartbeat);
 
         string Report(string result) => $"""
             result: {result}
@@ -121,6 +126,7 @@ public partial class App : Application
             Environment.Exit(ok ? 0 : 3);
         };
         timer.Start();
+        _timers.Add(timer);
 
         // Watchdog on its own thread: still reports when the UI thread is stuck (the timer above then never fires).
         new Thread(() =>
