@@ -288,6 +288,6 @@ public class SpdTests
     public void Xmp_block_is_skipped_when_absent()
     {
         var bytes = Ddr4(xmp: false);
-        Assert.False(SpdDecoder.RangesToRead(bytes[2], i => bytes[i]).Any(r => r.From == 393));
+        Assert.DoesNotContain(SpdDecoder.RangesToRead(bytes[2], i => bytes[i]), r => r.From == 393);
     }
 }
