@@ -395,6 +395,17 @@ public class AdlTelemetryTests
     }
 
     [Theory]
+    [InlineData(@"PCI_VEN_1002&DEV_747E&SUBSYS_24171849&REV_C8_6&2F8F9CE6&0&00000000A", 0x1002)]
+    [InlineData("pci_ven_10de&dev_2684", 0x10DE)]
+    [InlineData("PCI_VEN_1002", 0x1002)]
+    [InlineData("", null)]
+    [InlineData(null, null)]
+    public void Vendor_comes_from_the_udid(string? udid, int? expected)
+    {
+        Assert.Equal(expected, AdlTelemetry.VendorFromUdid(udid));
+    }
+
+    [Theory]
     [InlineData(1, 2.5)]
     [InlineData(4, 16.0)]
     [InlineData(5, 32.0)]

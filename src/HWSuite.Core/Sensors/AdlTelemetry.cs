@@ -37,6 +37,26 @@ public static class AdlTelemetry
     private const int BusSpeed = 40;
     private const int BusLanes = 41;
 
+    /// <summary>
+    /// PCI vendor from an ADL adapter UDID ("PCI_VEN_1002&amp;DEV_747E&amp;..."). ADL's own VendorID field
+    /// is wrong on Windows (1002 in decimal instead of 0x1002), as LibreHardwareMonitor also notes.
+    /// </summary>
+    public static int? VendorFromUdid(string? udid)
+    {
+        const string Marker = "PCI_VEN_";
+        var at = udid?.IndexOf(Marker, StringComparison.OrdinalIgnoreCase) ?? -1;
+        if (at < 0)
+        {
+            return null;
+        }
+
+        var hex = udid!.AsSpan(at + Marker.Length);
+        var end = hex.IndexOf('&');
+        return int.TryParse(end < 0 ? hex : hex[..end], System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var vendor)
+            ? vendor
+            : null;
+    }
+
     /// <summary>ADL_PMLOG_* names by number, for raw listings.</summary>
     public static string SensorName(int number) => number switch
     {

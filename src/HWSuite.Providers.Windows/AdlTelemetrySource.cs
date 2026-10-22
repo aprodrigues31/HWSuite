@@ -214,6 +214,7 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
         int count = 0;
         var counted = ADL2_Adapter_NumberOfAdapters_Get(_context, &count);
         _status["Adapter_NumberOfAdapters_Get"] = counted;
+        _status["ADL adapters (all outputs)"] = count;
         if (counted != AdlOk || count <= 0)
         {
             return;
@@ -237,8 +238,9 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
             var index = BitConverter.ToInt32(info[4..]);
             var bus = BitConverter.ToInt32(info[264..]);
             var device = BitConverter.ToInt32(info[268..]);
-            var vendor = BitConverter.ToInt32(info[276..]);
-            if (vendor != AmdVendorId || !seen.Add((bus, device)))
+            var udid = AnsiString(info.Slice(8, AdlMaxPath));
+            var vendor = AdlTelemetry.VendorFromUdid(udid) ?? BitConverter.ToInt32(info[276..]);
+            if (vendor is not (AmdVendorId or 1002) || !seen.Add((bus, device)))
             {
                 continue;
             }
