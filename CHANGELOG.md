@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.5.0] - 2026-10-21
+
 ### Adicionado
 - Fase 2c no aplicativo de desktop:
   - **Área de notificação:** ícone com a temperatura da CPU e da GPU na dica; fechar a janela mantém o monitoramento rodando (configurável); menu com Abrir e Sair.
@@ -69,7 +71,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.4.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.5.0
 [0.4.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.4.0
 [0.3.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.2.0
