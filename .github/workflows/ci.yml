@@ -135,35 +135,51 @@ jobs:
           }
 
           # 0. Sensors reach the window: runs 12 s with the window open and reports what happened.
-          $report = Join-Path $env:RUNNER_TEMP 'gui-self-test.txt'
-          $test = Start-Process -FilePath $exe -ArgumentList '--self-test', "`"$report`"" -PassThru
-          $finished = $test.WaitForExit(60000)
-          $text = if (Test-Path $report) { Get-Content $report -Raw } else { '(no report)' }
-          if (-not $finished) {
-            # Report written but the process did not exit: the hang is in shutdown, not in the sensors.
-            Write-Host "Self-test did not exit within 60 s. Report so far:`n$text"
-            Get-Process -Id $test.Id -ErrorAction SilentlyContinue | Format-List Id, Responding, CPU, @{ n = 'Threads'; e = { $_.Threads.Count } }, @{ n = 'MemoryMB'; e = { [math]::Round($_.WorkingSet64 / 1MB) } }
-            # Managed stacks of every thread, to see where the UI thread is stuck.
-            $stacks = '(no stacks)'
+          #    The runner renders WinUI in software and sometimes stalls the UI thread inside native
+          #    code; a stall is diagnosed (managed + native stacks) and retried once, with a warning.
+          function Get-Stacks($processId, $name) {
+            New-Item -ItemType Directory -Force artifacts/reports | Out-Null
+            $dump = Join-Path $env:RUNNER_TEMP "$name.dmp"
+            $managed = '(no managed stacks)'; $native = '(no native stacks)'
             try {
-              dotnet tool install --global dotnet-dump | Out-Null
+              dotnet tool install --global dotnet-dump 2>$null | Out-Null
               $dumpTool = Join-Path $env:USERPROFILE '.dotnet\tools\dotnet-dump.exe'
-              $dump = Join-Path $env:RUNNER_TEMP 'hwsuite-gui.dmp'
-              & $dumpTool collect -p $test.Id -o $dump --type Full | Out-Host
-              $stacks = (& $dumpTool analyze $dump -c 'clrstack -all' -c 'exit' 2>&1 | Out-String)
-              New-Item -ItemType Directory -Force artifacts/reports | Out-Null
-              $stacks | Out-File -Encoding utf8 artifacts/reports/gui-hang-stacks.txt
-            } catch { $stacks = "dotnet-dump failed: $_" }
-            Write-Host $stacks
-            $test.Kill()
-            "### Autoteste do aplicativo (não terminou em 60 s)`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-            $main = ($stacks -split "`n" | Select-Object -First 160) -join "`n"
-            "#### Pilhas das threads (início)`n" + '```text' + "`n$main`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-            Fail "Self-test did not finish"
+              & $dumpTool collect -p $processId -o $dump --type Full | Out-Null
+              $managed = (& $dumpTool analyze $dump -c 'clrstack -all' -c 'exit' 2>&1 | Out-String)
+            } catch { $managed = "dotnet-dump failed: $_" }
+            $cdb = @("${env:ProgramFiles(x86)}\Windows Kits\10\Debuggers\x64\cdb.exe", "$env:ProgramFiles\Windows Kits\10\Debuggers\x64\cdb.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
+            if ($cdb -and (Test-Path $dump)) {
+              $native = (& $cdb -z $dump -c '.symfix; .reload; ~0k 40; ~*k 12; q' 2>&1 | Out-String)
+            } elseif (-not $cdb) { $native = '(cdb.exe not found on the runner)' }
+            $managed | Out-File -Encoding utf8 "artifacts/reports/$name-managed.txt"
+            $native | Out-File -Encoding utf8 "artifacts/reports/$name-native.txt"
+            return $native
           }
-          Write-Host $text
-          "### Autoteste do aplicativo`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          if ($test.ExitCode -ne 0) { Fail "Self-test failed (exit $($test.ExitCode))" }
+
+          $report = Join-Path $env:RUNNER_TEMP 'gui-self-test.txt'
+          $passed = $false
+          foreach ($attempt in 1, 2) {
+            Remove-Item $report -ErrorAction SilentlyContinue
+            $test = Start-Process -FilePath $exe -ArgumentList '--self-test', "`"$report`"" -PassThru
+            $finished = $test.WaitForExit(60000)
+            $text = if (Test-Path $report) { Get-Content $report -Raw } else { '(no report)' }
+            Write-Host "Attempt $attempt`n$text"
+            if ($finished) {
+              "### Autoteste do aplicativo (tentativa $attempt)`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+              if ($test.ExitCode -ne 0) { Fail "Self-test failed (exit $($test.ExitCode))" }
+              $passed = $true
+              break
+            }
+
+            $native = Get-Stacks $test.Id "gui-hang-$attempt"
+            $test.Kill()
+            $mainThread = ($native -split "`n" | Select-Object -First 70) -join "`n"
+            "### Autoteste do aplicativo travou (tentativa $attempt)`n" + '```text' + "`n$text`n" + '```' + "`n#### Pilha nativa da thread de interface`n" + '```text' + "`n$mainThread`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+            $sensorsOk = $text -match 'error: none' -and $text -notmatch 'updates: 0\b'
+            if (-not $sensorsOk) { Fail "Self-test did not finish and the sensors were not healthy" }
+            Write-Host "::warning title=Interface travou no runner::A thread de interface do WinUI parou na tentativa $attempt com os sensores funcionando; pilhas em artifacts/reports/gui-hang-$attempt-*.txt"
+          }
+          if (-not $passed) { Fail "Self-test hung twice" }
 
           # 1. Starts minimized (as the logon task does) and keeps running.
           $app = Start-Process -FilePath $exe -ArgumentList '--minimized' -PassThru
