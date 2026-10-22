@@ -132,6 +132,35 @@ public sealed class MemoryModule
     public string? Manufacturer { get; set; }
     public string? PartNumber { get; set; }
     public string? SerialNumber { get; set; }
+
+    /// <summary>Details read from the module's own SPD chip (needs administrator rights and PawnIO).</summary>
+    public SpdInfo? Spd { get; set; }
+}
+
+/// <summary>Timings of one SPD profile (JEDEC or XMP), in clock cycles at that profile's speed.</summary>
+public sealed record SpdTimingProfile(string Name, int SpeedMts, int Cl, int Trcd, int Trp, int Tras, int? Trc, double? VoltageV);
+
+/// <summary>What a memory module's SPD EEPROM says about itself.</summary>
+public sealed class SpdInfo
+{
+    public string MemoryType { get; set; } = "";
+    public string? SpdRevision { get; set; }
+    public string? ModuleType { get; set; }
+    public string? ModuleManufacturer { get; set; }
+    public string? DramManufacturer { get; set; }
+    public string? PartNumber { get; set; }
+    public string? SerialNumber { get; set; }
+    public int? ManufactureYear { get; set; }
+    public int? ManufactureWeek { get; set; }
+    public long? SizeBytes { get; set; }
+    public int? Ranks { get; set; }
+    public int? DeviceWidth { get; set; }
+    public long? DieDensityBits { get; set; }
+    public bool Ecc { get; set; }
+    public bool HasThermalSensor { get; set; }
+    public SpdTimingProfile? Jedec { get; set; }
+    public string? XmpVersion { get; set; }
+    public List<SpdTimingProfile> XmpProfiles { get; } = [];
 }
 
 public sealed class GpuInfo

@@ -108,13 +108,16 @@ public static class ReportModel
                 (s["field.slots"], mem.SlotCount is { } slots ? string.Create(c, $"{mem.Modules.Count} / {slots}") : null),
                 (s["field.maxCapacity"], mem.MaxCapacityBytes is { } max ? Bytes(max, c) : null));
             var modules = mem.Modules.Select(m => Group(m.Slot ?? m.Bank,
+            [
                 (s["field.size"], Bytes(m.SizeBytes, c)),
                 (s["field.type"], Join(c, " ", m.Type, m.FormFactor)),
                 (s["field.speed"], Join(c, " / ", Mts(m.SpeedMts), Mts(m.ConfiguredSpeedMts))),
                 (s["field.ranks"], m.Ranks?.ToString(c)),
                 (s["field.manufacturer"], m.Manufacturer),
                 (s["field.partNumber"], m.PartNumber),
-                (s["field.serial"], m.SerialNumber)));
+                (s["field.serial"], m.SerialNumber),
+                .. SpdRows(m.Spd, s),
+            ]));
             Section("section.memory", [summary, .. modules]);
         }
 
@@ -195,6 +198,39 @@ public static class ReportModel
     private static string? Hex(int? value) => value is { } v ? string.Create(CultureInfo.InvariantCulture, $"0x{v:X}") : null;
 
     private static string? Mhz(int? value) => value is { } v ? string.Create(CultureInfo.InvariantCulture, $"{v} MHz") : null;
+
+    /// <summary>Rows from the module's own SPD: chip maker, date, organization, JEDEC and XMP profiles.</summary>
+    private static (string Label, string? Value)[] SpdRows(SpdInfo? spd, Strings s)
+    {
+        if (spd is null)
+        {
+            return [];
+        }
+
+        var c = s.Culture;
+        var rows = new List<(string, string?)>
+        {
+            (s["field.dramManufacturer"], spd.DramManufacturer),
+            (s["field.manufactured"], spd is { ManufactureWeek: { } w, ManufactureYear: { } y } ? s.Format("spd.week", w, y) : null),
+            (s["field.organization"], spd is { Ranks: { } r, DeviceWidth: { } dw, DieDensityBits: { } d }
+                ? s.Format("spd.organization", r, dw, string.Create(c, $"{d / (1024.0 * 1024 * 1024):0.##} Gb")) + (spd.Ecc ? ", ECC" : "")
+                : null),
+            (s["field.thermalSensor"], s[spd.HasThermalSensor ? "common.yes" : "common.no"]),
+            ("JEDEC", Profile(spd.MemoryType, spd.Jedec, c)),
+        };
+
+        foreach (var profile in spd.XmpProfiles)
+        {
+            rows.Add((s.Format("field.xmpProfile", spd.XmpVersion ?? "", profile.Name.Replace("XMP ", "", StringComparison.Ordinal)), Profile(spd.MemoryType, profile, c)));
+        }
+
+        return [.. rows];
+    }
+
+    /// <summary>"DDR4-3200 16-18-18-36 · 1.35 V"</summary>
+    private static string? Profile(string type, SpdTimingProfile? p, CultureInfo c) => p is null
+        ? null
+        : string.Create(c, $"{type}-{p.SpeedMts} {p.Cl}-{p.Trcd}-{p.Trp}-{p.Tras}") + (p.VoltageV is { } v ? string.Create(c, $" · {v:0.00} V") : "");
 
     private static string? Mts(int? value) => value is { } v ? string.Create(CultureInfo.InvariantCulture, $"{v} MT/s") : null;
 

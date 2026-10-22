@@ -21,6 +21,7 @@ public static class ProviderCatalog
         new CpuidProvider(),
         new DxgiGpuProvider(),
         new WindowsStorageProvider(),
+        new LhmSpdProvider(), // after SMBIOS: attaches SPD details to the modules it listed
     ];
 
     /// <summary>

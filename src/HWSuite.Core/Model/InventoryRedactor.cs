@@ -22,6 +22,10 @@ public static class InventoryRedactor
         foreach (var module in inventory.Memory?.Modules ?? [])
         {
             module.SerialNumber = null;
+            if (module.Spd is { } spd)
+            {
+                spd.SerialNumber = null;
+            }
         }
 
         foreach (var disk in inventory.Disks)

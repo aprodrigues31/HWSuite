@@ -11,6 +11,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ### Adicionado
 - Fase 3a: **perfis por placa-mãe**. O chip de sensores da placa (Super I/O) só numera as entradas; o perfil diz o que cada uma é naquela placa, aplica o divisor de tensão e oculta entradas sem nada ligado. Vale para a linha de comando e para o aplicativo, e os alertas e o log usam os valores corrigidos.
 - Primeiro perfil: ASUS TUF GAMING B550M-PLUS (e a versão Wi-Fi), conferido com o HWiNFO numa placa real: ventoinhas com o nome do conector (CPU_FAN, CPU_OPT, CHA_FAN1, CHA_FAN2), tensões nas escalas corretas (Vcore, +5 V, +12 V, VTT e demais entradas com o nome do pino), temperatura da CPU pelo sensor da placa e entradas sem nada ligado ocultas (o "Temperature #3" de 81 °C). Conectores de ventoinha vazios aparecem sozinhos quando algo passa a girar neles.
+- Fase 3b: **memória em detalhe** pelo SPD de cada pente (com administrador e PawnIO): fabricante dos chips de memória, semana e ano de fabricação, organização (ranks, largura e densidade dos chips, ECC), sensor de temperatura, perfil JEDEC e perfis **XMP** (2.0 em DDR4, 3.0 em DDR5) com velocidade, latências e tensão. Aparece no relatório e na página Hardware do aplicativo. EXPO (AMD, DDR5) fica para uma próxima versão.
 - `hwsuite sensors --raw` mostra as entradas sem o perfil, para comparar com a BIOS ao criar perfis novos.
 
 ## [0.5.0] - 2026-10-21
