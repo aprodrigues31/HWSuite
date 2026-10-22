@@ -90,6 +90,7 @@ public partial class App : Application
     /// </summary>
     private void RunSelfTest(string reportPath)
     {
+        File.WriteAllText(reportPath, "result: started\n"); // proves the app reached this point if it never finishes
         var timer = _ui!.CreateTimer();
         timer.Interval = TimeSpan.FromSeconds(12);
         timer.IsRepeating = false;

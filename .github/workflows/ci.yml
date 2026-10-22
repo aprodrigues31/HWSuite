@@ -137,8 +137,16 @@ jobs:
           # 0. Sensors reach the window: runs 12 s with the window open and reports what happened.
           $report = Join-Path $env:RUNNER_TEMP 'gui-self-test.txt'
           $test = Start-Process -FilePath $exe -ArgumentList '--self-test', "`"$report`"" -PassThru
-          if (-not $test.WaitForExit(60000)) { $test.Kill(); Fail "Self-test did not finish" }
+          $finished = $test.WaitForExit(60000)
           $text = if (Test-Path $report) { Get-Content $report -Raw } else { '(no report)' }
+          if (-not $finished) {
+            # Report written but the process did not exit: the hang is in shutdown, not in the sensors.
+            Write-Host "Self-test did not exit within 60 s. Report so far:`n$text"
+            Get-Process -Id $test.Id -ErrorAction SilentlyContinue | Format-List Id, Responding, CPU, @{ n = 'Threads'; e = { $_.Threads.Count } }, @{ n = 'MemoryMB'; e = { [math]::Round($_.WorkingSet64 / 1MB) } }
+            $test.Kill()
+            "### Autoteste do aplicativo (não terminou em 60 s)`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+            Fail "Self-test did not finish"
+          }
           Write-Host $text
           "### Autoteste do aplicativo`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           if ($test.ExitCode -ne 0) { Fail "Self-test failed (exit $($test.ExitCode))" }
