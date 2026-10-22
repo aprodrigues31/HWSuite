@@ -134,6 +134,15 @@ jobs:
             exit 1
           }
 
+          # 0. Sensors reach the window: runs 12 s with the window open and reports what happened.
+          $report = Join-Path $env:RUNNER_TEMP 'gui-self-test.txt'
+          $test = Start-Process -FilePath $exe -ArgumentList '--self-test', "`"$report`"" -PassThru
+          if (-not $test.WaitForExit(60000)) { $test.Kill(); Fail "Self-test did not finish" }
+          $text = if (Test-Path $report) { Get-Content $report -Raw } else { '(no report)' }
+          Write-Host $text
+          "### Autoteste do aplicativo`n" + '```text' + "`n$text`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          if ($test.ExitCode -ne 0) { Fail "Self-test failed (exit $($test.ExitCode))" }
+
           # 1. Starts minimized (as the logon task does) and keeps running.
           $app = Start-Process -FilePath $exe -ArgumentList '--minimized' -PassThru
           Start-Sleep -Seconds 20

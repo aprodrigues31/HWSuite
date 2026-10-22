@@ -40,6 +40,9 @@ public sealed class SensorMonitor : IDisposable
 
     public event EventHandler<IReadOnlyList<AlertEvent>>? Alerted;
 
+    /// <summary>A subscriber (page, tray) threw while handling an update; reading itself worked.</summary>
+    public event EventHandler<Exception>? SubscriberFailed;
+
     /// <summary>Applies interval, alert and log settings without reopening the hardware.</summary>
     public void Configure(AppSettings settings, IReadOnlyList<AlertRule> rules, string logFolder)
     {
@@ -154,10 +157,10 @@ public sealed class SensorMonitor : IDisposable
                 WriteLog(snapshot);
             }
 
-            Updated?.Invoke(this, snapshot);
+            Notify(Updated, snapshot);
             if (events.Count > 0)
             {
-                Alerted?.Invoke(this, events);
+                Notify(Alerted, events);
             }
         }
         catch (Exception ex)
@@ -167,6 +170,31 @@ public sealed class SensorMonitor : IDisposable
         finally
         {
             Volatile.Write(ref _busy, 0);
+        }
+    }
+
+    /// <summary>
+    /// Calls each subscriber separately: a bug in one page must neither stop the others nor be
+    /// reported as "sensors could not start".
+    /// </summary>
+    private void Notify<T>(EventHandler<T>? handlers, T value)
+    {
+        if (handlers is null)
+        {
+            return;
+        }
+
+        foreach (var handler in handlers.GetInvocationList().Cast<EventHandler<T>>())
+        {
+            try
+            {
+                handler(this, value);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"HWSuite: sensor subscriber failed: {ex}");
+                SubscriberFailed?.Invoke(this, ex);
+            }
         }
     }
 

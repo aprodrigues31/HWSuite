@@ -15,6 +15,7 @@ public sealed partial class MainWindow : Window
     private bool _installing;
     private bool _allowClose;
     private bool _toldAboutTray;
+    private volatile bool _isShown;
 
     public MainWindow()
     {
@@ -28,6 +29,7 @@ public sealed partial class MainWindow : Window
         }
 
         AppWindow.Closing += AppWindow_Closing;
+        Activated += (_, _) => _isShown = AppWindow.IsVisible;
 
         NavSensors.Content = s["app.nav.sensors"];
         NavInventory.Content = s["app.nav.inventory"];
@@ -40,8 +42,11 @@ public sealed partial class MainWindow : Window
         UpdateAccessBar(App.Monitor.Access);
     }
 
-    /// <summary>True while the window is on screen; pages skip UI work while it sits in the tray.</summary>
-    public bool IsShown => AppWindow.IsVisible;
+    /// <summary>
+    /// True while the window is on screen; pages skip UI work while it sits in the tray. Kept in a
+    /// field because it is read from the sensor thread, and AppWindow may only be used on the UI thread.
+    /// </summary>
+    public bool IsShown => _isShown;
 
     /// <summary>Lets the next Close() really close (exit from the tray menu, elevation relaunch).</summary>
     public void AllowClose() => _allowClose = true;
@@ -49,6 +54,7 @@ public sealed partial class MainWindow : Window
     public void ShowFromTray()
     {
         AppWindow.Show();
+        _isShown = true;
         if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
         {
             presenter.Restore();
@@ -66,6 +72,7 @@ public sealed partial class MainWindow : Window
 
         args.Cancel = true;
         sender.Hide();
+        _isShown = false;
         if (!_toldAboutTray)
         {
             _toldAboutTray = true;

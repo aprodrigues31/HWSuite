@@ -14,11 +14,16 @@ public partial class App : Application
     /// <summary>Passed by the elevation relaunch: the old (non-elevated) instance is still closing.</summary>
     public const string RelaunchArgument = "--relaunched";
 
+    /// <summary>CI check: run normally for a few seconds, then write what the sensors did to a file and exit.</summary>
+    public const string SelfTestArgument = "--self-test";
+
     private const string InstanceMutexName = @"Local\HWSuite.Gui.Instance";
 
     private Mutex? _instance;
     private DispatcherQueue? _ui;
     private DateTime _lastTooltip;
+    private int _updates;
+    private string? _lastError;
 
     public App()
     {
@@ -54,6 +59,8 @@ public partial class App : Application
         Settings.Changed += (_, s) => Monitor.Configure(s, Settings.Rules, Settings.LogFolder);
         Monitor.Alerted += OnAlerted;
         Monitor.Updated += OnUpdated;
+        Monitor.Failed += (_, ex) => _lastError ??= ex.ToString();
+        Monitor.SubscriberFailed += (_, ex) => _lastError ??= ex.ToString();
 
         Tray = new TrayIcon(IconPath, Text["app.tray.open"], Text["app.tray.exit"]);
         Tray.OpenRequested += (_, _) => MainWindow?.ShowFromTray();
@@ -69,6 +76,40 @@ public partial class App : Application
         }
 
         Monitor.Start();
+
+        var selfTest = Array.FindIndex(commandLine, a => a.Equals(SelfTestArgument, StringComparison.OrdinalIgnoreCase));
+        if (selfTest >= 0 && selfTest + 1 < commandLine.Length)
+        {
+            RunSelfTest(commandLine[selfTest + 1]);
+        }
+    }
+
+    /// <summary>
+    /// Passes when the sensors delivered several updates to a visible window with no error. The
+    /// report lists the first error, so CI shows why the app would say "sensors could not start".
+    /// </summary>
+    private void RunSelfTest(string reportPath)
+    {
+        var timer = _ui!.CreateTimer();
+        timer.Interval = TimeSpan.FromSeconds(12);
+        timer.IsRepeating = false;
+        timer.Tick += (_, _) =>
+        {
+            var latest = Monitor.Latest;
+            var ok = _updates >= 3 && _lastError is null && latest is { Readings.Count: > 0 };
+            var report = $"""
+                result: {(ok ? "pass" : "fail")}
+                updates: {_updates}
+                sensors: {latest?.Readings.Count ?? 0}
+                window shown: {MainWindow?.IsShown}
+                tray icon: {Tray?.IsAdded}
+                tooltip: {SensorSummary.Tooltip(latest, Text)}
+                error: {_lastError ?? "none"}
+                """;
+            File.WriteAllText(reportPath, report);
+            Environment.Exit(ok ? 0 : 3);
+        };
+        timer.Start();
     }
 
     /// <summary>Exits for real (tray menu "Exit"), bypassing close-to-tray.</summary>
@@ -106,6 +147,7 @@ public partial class App : Application
 
     private void OnUpdated(object? sender, SensorSnapshot snapshot)
     {
+        Interlocked.Increment(ref _updates);
         if (DateTime.UtcNow - _lastTooltip < TimeSpan.FromSeconds(2))
         {
             return;
