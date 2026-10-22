@@ -225,3 +225,98 @@ public class SensorTests
         Assert.Throws<CliUsageException>(() => CliOptions.Parse(["report", "--watch"]));
     }
 }
+
+public class BoardProfileTests
+{
+    private static SensorReading SuperIo(string type, int index, string name, SensorKind kind, double? value) =>
+        new($"/lpc/nct6798d/0/{type}/{index}", "Nuvoton NCT6798D", "Super I/O", name, kind, value, value, value)
+        {
+            Parent = "ASUS TUF GAMING B550M-PLUS",
+        };
+
+    private sealed class FixedSource(params SensorReading[] readings) : ISensorSource
+    {
+        public string Name => "fixed";
+
+        public IReadOnlyList<HWSuite.Core.Model.Diagnostic> Diagnostics => [];
+
+        public SensorSnapshot Read() => new(DateTimeOffset.UnixEpoch, readings);
+
+        public void Dispose()
+        {
+        }
+    }
+
+    [Theory]
+    [InlineData("ASUS TUF GAMING B550M-PLUS", true)]
+    [InlineData("ASUS TUF GAMING B550M-PLUS (WI-FI)", true)]
+    [InlineData("ASUS TUF GAMING B550-PLUS", false)]
+    [InlineData("ASUS ROG STRIX B550-F GAMING (WI-FI)", false)]
+    public void Tuf_B550M_profile_matches_both_variants(string board, bool expected)
+    {
+        Assert.Equal(expected, BoardProfiles.Find(board, "Nuvoton NCT6798D") is not null);
+    }
+
+    [Fact]
+    public void Profile_requires_the_expected_chip()
+    {
+        Assert.Null(BoardProfiles.Find("ASUS TUF GAMING B550M-PLUS", "ITE IT8689E"));
+        Assert.Null(BoardProfiles.Find(null, "Nuvoton NCT6798D"));
+    }
+
+    [Theory]
+    [InlineData("/lpc/nct6798d/0/voltage/4", 4)]
+    [InlineData("/lpc/nct6798d/0/fan/12", 12)]
+    [InlineData("/amdcpu/0/temperature/x", null)]
+    [InlineData("noslash", null)]
+    public void Input_index_comes_from_the_end_of_the_id(string id, int? expected)
+    {
+        Assert.Equal(expected, BoardProfiles.InputIndex(id));
+    }
+
+    [Fact]
+    public void Real_readings_from_the_users_board_get_names_and_dividers()
+    {
+        // Values from an elevated "hwsuite sensors" on a TUF GAMING B550M-PLUS with a Ryzen 7 5800XT.
+        using var source = new BoardProfileSource(new FixedSource(
+            SuperIo("voltage", 0, "Vcore", SensorKind.Voltage, 0.576),
+            SuperIo("voltage", 1, "Voltage #2", SensorKind.Voltage, 1.008),
+            SuperIo("voltage", 4, "Voltage #5", SensorKind.Voltage, 0.992),
+            SuperIo("voltage", 7, "+3V Standby", SensorKind.Voltage, 3.392),
+            SuperIo("temperature", 2, "Temperature #3", SensorKind.Temperature, 81),
+            new SensorReading("/amdcpu/0/voltage/2", "AMD Ryzen 7 5800XT", "CPU", "Core (SVI2 TFN)", SensorKind.Voltage, 1.138, null, null)));
+
+        var byId = source.Read().Readings.ToDictionary(r => r.Id);
+
+        var vcore = byId["/lpc/nct6798d/0/voltage/0"];
+        Assert.Equal("CPU Core (Vcore)", vcore.Name);
+        Assert.Equal(1.152, vcore.Value!.Value, 3);
+        Assert.Equal(1.152, vcore.Max!.Value, 3);
+        Assert.True(Math.Abs(vcore.Value.Value - byId["/amdcpu/0/voltage/2"].Value!.Value) < 0.05); // matches the CPU's own report
+
+        Assert.Equal("+5V", byId["/lpc/nct6798d/0/voltage/1"].Name);
+        Assert.Equal(5.04, byId["/lpc/nct6798d/0/voltage/1"].Value!.Value, 2);
+        Assert.Equal("+12V", byId["/lpc/nct6798d/0/voltage/4"].Name);
+        Assert.Equal(11.904, byId["/lpc/nct6798d/0/voltage/4"].Value!.Value, 3);
+        Assert.Equal("+3.3V Standby", byId["/lpc/nct6798d/0/voltage/7"].Name);
+        Assert.Equal(3.392, byId["/lpc/nct6798d/0/voltage/7"].Value!.Value, 3); // already scaled by the library
+
+        Assert.Equal("Temperature #3", byId["/lpc/nct6798d/0/temperature/2"].Name); // no rule: unchanged
+        Assert.Equal(["CPU", "Super I/O"], byId.Values.Select(r => r.HardwareKind).Distinct().Order());
+        Assert.Equal("ASUS TUF GAMING B550M-PLUS", Assert.Single(source.ProfilesInUse));
+    }
+
+    [Fact]
+    public void Hidden_inputs_are_dropped_and_other_boards_pass_through()
+    {
+        var profile = new BoardProfile("Test", new System.Text.RegularExpressions.Regex("TEST BOARD"), "NCT",
+            [new BoardSensorRule(SensorKind.Fan, 4, Hide: true)]);
+        var fan = new SensorReading("/lpc/nct6798d/0/fan/4", "Nuvoton NCT6798D", "Super I/O", "Fan #5", SensorKind.Fan, 0, null, null);
+        Assert.Null(BoardProfiles.Apply(profile, fan));
+
+        var other = SuperIo("voltage", 0, "Vcore", SensorKind.Voltage, 0.576) with { Parent = "Some Other Board" };
+        using var source = new BoardProfileSource(new FixedSource(other));
+        Assert.Equal(0.576, Assert.Single(source.Read().Readings).Value);
+        Assert.Empty(source.ProfilesInUse);
+    }
+}

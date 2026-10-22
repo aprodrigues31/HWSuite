@@ -50,6 +50,9 @@ public sealed record CliOptions
 
     public string? LogPath { get; init; }
 
+    /// <summary>Show the chip's own numbered motherboard inputs, without board profiles.</summary>
+    public bool Raw { get; init; }
+
     public double IntervalSeconds { get; init; } = 1;
 
     public double? DurationSeconds { get; init; }
@@ -132,6 +135,7 @@ public sealed record CliOptions
                 "--lang" => options with { Language = Value(arg) },
                 "-w" or "--watch" when options.Command == CliCommand.Sensors => options with { Watch = true },
                 "--log" when options.Command == CliCommand.Sensors => options with { LogPath = Value(arg) },
+                "--raw" when options.Command == CliCommand.Sensors => options with { Raw = true },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
                 "--duration" when options.Command == CliCommand.Sensors => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },

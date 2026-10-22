@@ -23,6 +23,19 @@ public static class ProviderCatalog
         new WindowsStorageProvider(),
     ];
 
-    /// <summary>Live sensor source; the single place to swap or combine sensor back-ends.</summary>
-    public static ISensorSource CreateSensorSource(AccessStatus access) => new MinMaxTrackingSource(new LhmSensorSource(access));
+    /// <summary>
+    /// Live sensor source; the single place to swap or combine sensor back-ends. Board profiles name
+    /// and scale motherboard inputs before min/max are tracked; <paramref name="raw"/> skips them,
+    /// to compare the chip's own numbered inputs with the BIOS when writing a new profile.
+    /// </summary>
+    public static ISensorSource CreateSensorSource(AccessStatus access, bool raw = false)
+    {
+        ISensorSource source = new LhmSensorSource(access);
+        if (!raw)
+        {
+            source = new BoardProfileSource(source);
+        }
+
+        return new MinMaxTrackingSource(source);
+    }
 }

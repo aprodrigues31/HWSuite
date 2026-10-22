@@ -53,7 +53,7 @@ internal static class SensorsCommand
         }
 
         var interval = TimeSpan.FromSeconds(options.IntervalSeconds);
-        using var source = ProviderCatalog.CreateSensorSource(access);
+        using var source = ProviderCatalog.CreateSensorSource(access, options.Raw);
 
         // The first update primes rate-based sensors (CPU load, throughput); show the second one.
         source.Read();
@@ -120,6 +120,11 @@ internal static class SensorsCommand
         if (options.Watch)
         {
             args.Add("--watch");
+        }
+
+        if (options.Raw)
+        {
+            args.Add("--raw");
         }
 
         if (options.LogPath is not null)

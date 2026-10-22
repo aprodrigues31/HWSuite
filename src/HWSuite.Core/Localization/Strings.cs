@@ -223,6 +223,8 @@ public sealed class Strings
                   --log <file.csv>          Record samples to a CSV file until Ctrl+C.
               -i, --interval <seconds>      Refresh / sampling interval (default: 1).
                   --duration <seconds>      Stop automatically after this time.
+                  --raw                     Motherboard inputs as numbered by the chip, without
+                                            the board profile (to compare with the BIOS).
 
             Most motherboard and CPU sensors need administrator rights and the PawnIO driver
             (hwsuite driver install). GPU and disk sensors work without them.
@@ -453,6 +455,8 @@ public sealed class Strings
                   --log <arquivo.csv>       Grava as leituras em CSV até Ctrl+C.
               -i, --interval <segundos>     Intervalo de atualização / amostragem (padrão: 1).
                   --duration <segundos>     Para automaticamente após esse tempo.
+                  --raw                     Entradas da placa-mãe como o chip numera, sem o perfil
+                                            da placa (para comparar com a BIOS).
 
             A maioria dos sensores da placa-mãe e do processador exige administrador e o driver
             PawnIO (hwsuite driver install). Sensores de vídeo e de disco funcionam sem eles.
