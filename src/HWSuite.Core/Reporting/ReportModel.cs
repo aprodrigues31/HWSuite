@@ -258,19 +258,29 @@ public static class ReportModel
         return [.. rows];
     }
 
-    /// <summary>"GPU 2520 MHz · memory 2438 MHz": the card's own clocks as the driver reports them.</summary>
+    /// <summary>
+    /// "memory 2,438 MHz (19.5 Gbps · 624 GB/s) · GPU limit in Adrenalin 2,580 MHz": the card's own values as
+    /// the AMD driver reports them. The memory clock is the real one (it matches GPU-Z); the GPU value is the
+    /// top of the Adrenalin tuning range, a little above the boost clock, so it is not used for the fill rate.
+    /// </summary>
     private static string? CardClocks(GpuInfo g, Strings s)
     {
         var c = s.Culture;
         var parts = new List<string>();
+        if (g.CardMemoryClockMhz is { } memory)
+        {
+            var text = s.Format("gpu.cardMemoryClock", Gpu.GpuDatabase.Clock(memory, c));
+            if (g.Reference is { } r && Gpu.GpuDatabase.DataRateGbps(r.MemoryType, memory) is { } gbps)
+            {
+                text += " " + s.Format("gpu.cardMemoryBandwidth", gbps.ToString("0.0", c), (r.BusBits / 8.0 * gbps).ToString("N1", c));
+            }
+
+            parts.Add(text);
+        }
+
         if (g.CardGpuClockMhz is { } gpu)
         {
             parts.Add(s.Format("gpu.cardGpuClock", Gpu.GpuDatabase.Clock(gpu, c)));
-        }
-
-        if (g.CardMemoryClockMhz is { } memory)
-        {
-            parts.Add(s.Format("gpu.cardMemoryClock", Gpu.GpuDatabase.Clock(memory, c)));
         }
 
         return parts.Count > 0 ? string.Join(" · ", parts) : null;

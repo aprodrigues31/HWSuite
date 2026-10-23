@@ -195,6 +195,17 @@ public static partial class GpuDatabase
         return false;
     }
 
+    /// <summary>
+    /// Data rate per pin from the memory clock as AMD drivers and GPU-Z report it: GDDR6 moves 8 bits per pin
+    /// per clock (2,438 MHz -> 19.5 Gbps), GDDR6X 16. Null for types where the convention is not settled.
+    /// </summary>
+    public static double? DataRateGbps(string memoryType, int clockMhz) => memoryType switch
+    {
+        "GDDR6" => clockMhz * 8 / 1000.0,
+        "GDDR6X" => clockMhz * 16 / 1000.0,
+        _ => null,
+    };
+
     public static string Clock(int mhz, CultureInfo culture) => mhz.ToString("N0", culture) + " MHz";
 
     /// <summary>

@@ -38,13 +38,31 @@ public class Overdrive8Tests
         Assert.Equal("ID_200", Overdrive8.Name(200));
     }
 
+    /// <summary>The user's ASRock RX 7800 XT Steel Legend (driver table of 2026-10-22; GPU-Z shows 2438 MHz and 624.1 GB/s).</summary>
     [Fact]
-    public void Report_shows_the_card_clocks()
+    public void Report_shows_the_card_clocks_of_the_users_card()
     {
+        var table = new[]
+        {
+            new Od8Setting(Overdrive8.GfxClockMax, 500, 5000, 2580),
+            new Od8Setting(Overdrive8.GfxClockMin, 500, 5000, 500),
+            new Od8Setting(Overdrive8.MemoryClockMax, 2438, 3000, 2438),
+            new Od8Setting(Overdrive8.PowerPercentage, -10, 15, 0),
+        };
+        var (gpu, memory) = Overdrive8.DefaultClocks(table);
+        var card = new GpuInfo
+        {
+            Name = "AMD Radeon RX 7800 XT",
+            DedicatedMemoryBytes = 16L << 30,
+            CardGpuClockMhz = gpu,
+            CardMemoryClockMhz = memory,
+        };
+        card.Reference = GpuDatabase.Find(card.Name, card.DedicatedMemoryBytes);
         var inventory = new HardwareInventory();
-        inventory.Gpus.Add(new GpuInfo { Name = "AMD Radeon RX 7800 XT", CardGpuClockMhz = 2520, CardMemoryClockMhz = 2438 });
+        inventory.Gpus.Add(card);
+
         var rows = ReportModel.Build(inventory, Strings.For("pt-BR"))
             .Single(x => x.Title == "Vídeo").Groups.Single().Rows.ToDictionary(r => r.Label, r => r.Value);
-        Assert.Equal("GPU até 2.520 MHz · memória 2.438 MHz", rows["Clocks da placa (driver)"]);
+        Assert.Equal("memória 2.438 MHz (19,5 Gbps · 624,1 GB/s) · limite da GPU no Adrenalin 2.580 MHz", rows["Clocks da placa (driver)"]);
     }
 }

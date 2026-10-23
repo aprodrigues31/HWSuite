@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Clocks da placa lidos do driver AMD** (Overdrive 8): clock real da memória com a velocidade por pino e a banda calculadas a partir dele (na RX 7800 XT da ASRock: 2.438 MHz, 19,5 Gbps, 624,1 GB/s, iguais ao GPU-Z), e o limite de frequência da GPU no Adrenalin. O modo `--raw` mostra a tabela completa do Overdrive 8.
+
 ## [0.9.0] - 2026-10-22
 
 ### Adicionado
