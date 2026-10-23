@@ -26,6 +26,8 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     private const int MaxSensors = 256; // ADL_PMLOG_MAX_SENSORS
     private const int AmdVendorId = 0x1002;
     private const uint SampleRateMs = 1000;
+    private const int Od8Count = 77; // OD8_COUNT in adl_defines.h (display-library SDK)
+    private const int Od8BufferEntries = 256;
 
     private readonly bool _raw;
     private readonly nint _context;
@@ -132,34 +134,46 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
                 return settings;
             }
 
-            int capabilities = 0, count = 0;
+            // The count is an input too: the size of the table we understand (the SDK sample passes
+            // OD8_COUNT; with 0 the driver answers ADL_ERR_NULL_POINTER).
+            int capabilities = 0, count = Od8Count;
             Od8InitSetting* list = null;
             var result = ADL2_Overdrive8_Init_SettingX2_Get(_context, adapter.Index, &capabilities, &count, &list);
             _status[$"Overdrive8_Init_SettingX2_Get #{adapter.Index}"] = result;
-            _status[$"Overdrive8 settings #{adapter.Index}"] = count;
-            if (list == null)
+            _status[$"Overdrive8 X2 count #{adapter.Index}"] = count;
+            if (list != null)
             {
-                return settings;
+                try
+                {
+                    if (result == AdlOk)
+                    {
+                        Collect(settings, list, count);
+                    }
+                }
+                finally
+                {
+                    Marshal.FreeHGlobal((nint)list);
+                }
             }
 
-            try
+            if (settings.Count == 0)
             {
-                if (result == AdlOk)
+                // Older entry point: ADLOD8InitSetting { int count; int capabilities; ADLOD8SingleInitSetting[OD8_COUNT] },
+                // with spare room in case the driver knows more settings than this SDK.
+                var buffer = new int[2 + (4 * Od8BufferEntries)];
+                buffer[0] = Od8Count;
+                fixed (int* p = buffer)
                 {
-                    for (var i = 0; i < Math.Min(count, 512); i++)
+                    var fixedResult = ADL2_Overdrive8_Init_Setting_Get(_context, adapter.Index, p);
+                    _status[$"Overdrive8_Init_Setting_Get #{adapter.Index}"] = fixedResult;
+                    if (fixedResult == AdlOk)
                     {
-                        var s = list[i];
-                        if (s.FeatureId != 0 || s.MinValue != 0 || s.MaxValue != 0 || s.DefaultValue != 0)
-                        {
-                            settings.Add(new Od8Setting(i, s.MinValue, s.MaxValue, s.DefaultValue));
-                        }
+                        Collect(settings, (Od8InitSetting*)(p + 2), Math.Min(buffer[0], Od8Count));
                     }
                 }
             }
-            finally
-            {
-                Marshal.FreeHGlobal((nint)list);
-            }
+
+            _status[$"Overdrive8 settings #{adapter.Index}"] = settings.Count;
         }
         catch (EntryPointNotFoundException)
         {
@@ -371,6 +385,18 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static nint Allocate(int size) => Marshal.AllocHGlobal(size);
 
+    private static void Collect(List<Od8Setting> settings, Od8InitSetting* list, int count)
+    {
+        for (var i = 0; i < Math.Min(count, Od8BufferEntries); i++)
+        {
+            var s = list[i];
+            if (s.FeatureId != 0 || s.MinValue != 0 || s.MaxValue != 0 || s.DefaultValue != 0)
+            {
+                settings.Add(new Od8Setting(i, s.MinValue, s.MaxValue, s.DefaultValue));
+            }
+        }
+    }
+
     /// <summary>ADLOD8SingleInitSetting: featureID, minValue, maxValue, defaultValue.</summary>
     [StructLayout(LayoutKind.Sequential)]
     private struct Od8InitSetting
@@ -455,6 +481,10 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial int ADL2_Overdrive8_Init_SettingX2_Get(nint context, int adapterIndex, int* capabilities, int* count, Od8InitSetting** list);
+
+    [LibraryImport(Dll)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial int ADL2_Overdrive8_Init_Setting_Get(nint context, int adapterIndex, int* initSetting);
 
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
