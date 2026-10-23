@@ -36,7 +36,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
         }
 
         var registry = ReadDisplayClass();
-        var memoryVendors = AdlTelemetrySource.MemoryVendors();
+        var amdCards = AdlTelemetrySource.Cards();
         foreach (var gpu in EnumerateAdapters())
         {
             if (registry.FirstOrDefault(r => r.Matches(gpu)) is { } entry)
@@ -53,9 +53,10 @@ public sealed class DxgiGpuProvider : IInventoryProvider
             }
 
             Apis(gpu, registry.FirstOrDefault(r => r.Matches(gpu)));
-            if (gpu.Name is { } name && memoryVendors.TryGetValue(name, out var vendorCode))
+            if (gpu.Name is { } name && amdCards.TryGetValue(name, out var card))
             {
-                gpu.MemoryVendor = Core.Gpu.GpuDrivers.AmdMemoryVendor(vendorCode);
+                gpu.MemoryVendor = card.MemoryVendor is { } vendorCode ? Core.Gpu.GpuDrivers.AmdMemoryVendor(vendorCode) : null;
+                (gpu.CardGpuClockMhz, gpu.CardMemoryClockMhz) = Core.Gpu.Overdrive8.DefaultClocks(card.Overdrive);
             }
 
             inventory.Gpus.Add(gpu);

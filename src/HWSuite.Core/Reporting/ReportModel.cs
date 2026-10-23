@@ -129,6 +129,7 @@ public static class ReportModel
                 : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")
                   + (g.Revision is int rev ? string.Create(CultureInfo.InvariantCulture, $" · rev {rev:X2}") : "")),
             (s["field.pcie"], Link(g.PcieLink, s)),
+            (s["field.cardClocks"], CardClocks(g, s)),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
             (s["field.memoryVendor"], g.MemoryVendor),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
@@ -255,6 +256,24 @@ public static class ReportModel
         }
 
         return [.. rows];
+    }
+
+    /// <summary>"GPU 2520 MHz · memory 2438 MHz": the card's own clocks as the driver reports them.</summary>
+    private static string? CardClocks(GpuInfo g, Strings s)
+    {
+        var c = s.Culture;
+        var parts = new List<string>();
+        if (g.CardGpuClockMhz is { } gpu)
+        {
+            parts.Add(s.Format("gpu.cardGpuClock", Gpu.GpuDatabase.Clock(gpu, c)));
+        }
+
+        if (g.CardMemoryClockMhz is { } memory)
+        {
+            parts.Add(s.Format("gpu.cardMemoryClock", Gpu.GpuDatabase.Clock(memory, c)));
+        }
+
+        return parts.Count > 0 ? string.Join(" · ", parts) : null;
     }
 
     /// <summary>Reference specifications (GPU-Z style), plus a warning when the card reports less memory than the model has.</summary>

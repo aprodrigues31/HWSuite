@@ -1,7 +1,9 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
+using HWSuite.Core.Gpu;
 using HWSuite.Core.Model;
 using HWSuite.Core.Sensors;
 
@@ -30,6 +32,7 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     private readonly List<Adapter> _adapters = [];
     private readonly Dictionary<string, int> _status = [];
     private bool _disposed;
+    private Dictionary<int, List<Od8Setting>>? _overdrive; // raw mode only
 
     private sealed class Adapter(int index, string name, string id)
     {
@@ -73,13 +76,16 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
 
     public string Name => "AMD ADL";
 
+    /// <summary>What the inventory needs from the AMD driver about one card.</summary>
+    public sealed record CardDetails(int? MemoryVendor, IReadOnlyList<Od8Setting> Overdrive);
+
     /// <summary>
-    /// Video memory chip maker per AMD adapter name (ADL2_Adapter_VRAMVendor_Get), for the inventory.
-    /// Opens and closes its own ADL context; empty without an AMD driver.
+    /// Video memory chip maker (ADL2_Adapter_VRAMVendor_Get) and Overdrive 8 table per AMD adapter name,
+    /// for the inventory. Opens and closes its own ADL context; empty without an AMD driver.
     /// </summary>
-    public static Dictionary<string, int> MemoryVendors()
+    public static Dictionary<string, CardDetails> Cards()
     {
-        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, CardDetails>(StringComparer.OrdinalIgnoreCase);
         using var adl = new AdlTelemetrySource(raw: false, startLog: false);
         if (adl._context == 0)
         {
@@ -88,21 +94,79 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
 
         foreach (var adapter in adl._adapters)
         {
+            int? memoryVendor = null;
             try
             {
                 var vendor = 0;
                 if (ADL2_Adapter_VRAMVendor_Get(adl._context, adapter.Index, &vendor) == AdlOk && vendor > 0)
                 {
-                    result[adapter.Name] = vendor;
+                    memoryVendor = vendor;
                 }
             }
             catch (EntryPointNotFoundException)
             {
-                break; // older driver without this call
+                // older driver without this call
             }
+
+            result[adapter.Name] = new CardDetails(memoryVendor, adl.Overdrive(adapter));
         }
 
         return result;
+    }
+
+    /// <summary>
+    /// The Overdrive 8 table (tuning ranges and the card's defaults), when the card supports Overdrive 8.
+    /// The driver allocates the list through our callback; we free it.
+    /// </summary>
+    private List<Od8Setting> Overdrive(Adapter adapter)
+    {
+        var settings = new List<Od8Setting>();
+        try
+        {
+            int supported = 0, enabled = 0, version = 0;
+            var caps = ADL2_Overdrive_Caps(_context, adapter.Index, &supported, &enabled, &version);
+            _status[$"Overdrive_Caps #{adapter.Index}"] = caps;
+            _status[$"Overdrive version #{adapter.Index}"] = version;
+            if (caps != AdlOk || version < 8)
+            {
+                return settings;
+            }
+
+            int capabilities = 0, count = 0;
+            Od8InitSetting* list = null;
+            var result = ADL2_Overdrive8_Init_SettingX2_Get(_context, adapter.Index, &capabilities, &count, &list);
+            _status[$"Overdrive8_Init_SettingX2_Get #{adapter.Index}"] = result;
+            _status[$"Overdrive8 settings #{adapter.Index}"] = count;
+            if (list == null)
+            {
+                return settings;
+            }
+
+            try
+            {
+                if (result == AdlOk)
+                {
+                    for (var i = 0; i < Math.Min(count, 512); i++)
+                    {
+                        var s = list[i];
+                        if (s.FeatureId != 0 || s.MinValue != 0 || s.MaxValue != 0 || s.DefaultValue != 0)
+                        {
+                            settings.Add(new Od8Setting(i, s.MinValue, s.MaxValue, s.DefaultValue));
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Marshal.FreeHGlobal((nint)list);
+            }
+        }
+        catch (EntryPointNotFoundException)
+        {
+            _status[$"Overdrive8 not exported #{adapter.Index}"] = -1;
+        }
+
+        return settings;
     }
 
     public IReadOnlyList<Diagnostic> Diagnostics => [];
@@ -120,6 +184,16 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
 
         if (_raw)
         {
+            foreach (var adapter in _adapters)
+            {
+                _overdrive ??= _adapters.ToDictionary(a => a.Index, Overdrive);
+                foreach (var s in _overdrive[adapter.Index])
+                {
+                    var name = string.Create(CultureInfo.InvariantCulture, $"OD8 {s.Id} {Overdrive8.Name(s.Id)} (default; min {s.Min}, max {s.Max})");
+                    readings.Add(new SensorReading($"{adapter.Id}/od8/{s.Id}", $"{adapter.Name} (Overdrive 8)", "GPU", name, SensorKind.Other, s.Default, s.Min, s.Max));
+                }
+            }
+
             foreach (var (call, code) in _status)
             {
                 readings.Add(new SensorReading($"/adl/status/{call}", "AMD ADL (status)", "GPU", call, SensorKind.Other, code, code, code));
@@ -297,6 +371,16 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static nint Allocate(int size) => Marshal.AllocHGlobal(size);
 
+    /// <summary>ADLOD8SingleInitSetting: featureID, minValue, maxValue, defaultValue.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Od8InitSetting
+    {
+        public int FeatureId;
+        public int MinValue;
+        public int MaxValue;
+        public int DefaultValue;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private struct PmLogDataOutput
     {
@@ -363,6 +447,14 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial int ADL2_Adapter_PMLog_Start(nint context, int adapterIndex, PmLogStartInput* input, PmLogStartOutput* output, uint device);
+
+    [LibraryImport(Dll)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial int ADL2_Overdrive_Caps(nint context, int adapterIndex, int* supported, int* enabled, int* version);
+
+    [LibraryImport(Dll)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial int ADL2_Overdrive8_Init_SettingX2_Get(nint context, int adapterIndex, int* capabilities, int* count, Od8InitSetting** list);
 
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

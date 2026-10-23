@@ -206,6 +206,12 @@ public sealed class GpuInfo
 
     /// <summary>Video memory chip maker (Samsung, SK Hynix, Micron), when the driver reports it.</summary>
     public string? MemoryVendor { get; set; }
+
+    /// <summary>The card's own default maximum GPU clock in MHz (AMD Overdrive 8), factory overclock included.</summary>
+    public int? CardGpuClockMhz { get; set; }
+
+    /// <summary>The card's own default memory clock in MHz (AMD Overdrive 8).</summary>
+    public int? CardMemoryClockMhz { get; set; }
 }
 
 public sealed class DiskInfo
