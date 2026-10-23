@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.8.0] - 2026-10-22
+
 ### Adicionado
 - Fase 3e: **S.M.A.R.T. de discos SATA e USB** (com administrador): tabela completa de atributos (atual, pior, limite do fabricante, valor bruto), como no CrystalDiskInfo, com nomes em português. Discos SATA internos pela interface padrão do Windows; HDs e SSDs em gavetas USB pelo comando ATA embutido no padrão SAT, que a maioria dos adaptadores aceita. Páginas inválidas (adaptadores que não repassam o comando) são descartadas pelo checksum.
 - **Saúde** de cada disco no estilo CrystalDiskInfo: *Ruim* quando um atributo chega ao limite do fabricante, *Atenção* com setores realocados, pendentes ou incorrigíveis, *Boa* caso contrário. NVMe ganha a mesma avaliação pelo aviso crítico, reserva disponível e desgaste.
@@ -98,7 +100,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.7.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.6.0
 [0.5.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.5.0
