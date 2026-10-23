@@ -90,6 +90,11 @@ public sealed class InventoryCollector
     {
         VirtualMachineDetector.Reconcile(inventory);
 
+        foreach (var gpu in inventory.Gpus)
+        {
+            gpu.Reference ??= Gpu.GpuDatabase.Find(gpu.Name, gpu.DedicatedMemoryBytes);
+        }
+
         if (inventory.Memory is { TotalInstalledBytes: null, Modules.Count: > 0 } memory)
         {
             memory.TotalInstalledBytes = memory.Modules.Sum(m => m.SizeBytes);

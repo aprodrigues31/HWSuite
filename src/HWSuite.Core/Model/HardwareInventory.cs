@@ -179,6 +179,9 @@ public sealed class GpuInfo
 
     /// <summary>Link to the motherboard slot (through the card's own PCIe switch, if it has one).</summary>
     public Pci.PcieLink? PcieLink { get; set; }
+
+    /// <summary>Manufacturer reference specifications for this model, when HWSuite knows it.</summary>
+    public Gpu.GpuSpec? Reference { get; set; }
 }
 
 public sealed class DiskInfo

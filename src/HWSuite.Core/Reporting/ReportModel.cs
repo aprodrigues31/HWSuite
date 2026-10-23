@@ -122,13 +122,16 @@ public static class ReportModel
         }
 
         Section("section.gpu", [.. inv.Gpus.Select(g => Group(g.Name,
+        [
             (s["field.vendor"], g.Vendor),
             (s["field.pciId"], g.PciVendorId is null ? null : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")),
             (s["field.pcie"], Link(g.PcieLink, s)),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
             (s["field.driver"], Join(c, " / ", g.DriverVersion, DateText.Display(g.DriverDate, c))),
-            (s["field.vbios"], g.BiosVersion)))]);
+            (s["field.vbios"], g.BiosVersion),
+            .. ReferenceRows(g, s),
+        ]))]);
 
         Section("section.disks", [.. inv.Disks.Select(d => Group($"#{d.Index} {d.Model}".Trim(),
             (s["field.vendor"], d.Vendor),
@@ -235,6 +238,35 @@ public static class ReportModel
         foreach (var profile in spd.XmpProfiles)
         {
             rows.Add((s.Format("field.xmpProfile", spd.XmpVersion ?? "", profile.Name.Replace("XMP ", "", StringComparison.Ordinal)), Profile(spd.MemoryType, profile, c)));
+        }
+
+        return [.. rows];
+    }
+
+    /// <summary>Reference specifications (GPU-Z style), plus a warning when the card reports less memory than the model has.</summary>
+    private static (string Label, string? Value)[] ReferenceRows(GpuInfo g, Strings s)
+    {
+        if (g.Reference is not { } r)
+        {
+            return [];
+        }
+
+        var c = s.Culture;
+        var rows = new List<(string, string?)>
+        {
+            (s["field.gpuChip"], $"{r.Chip} · {r.Architecture} · {r.Process}"),
+            (s["field.gpuUnits"], s.Format("gpu.units", r.Units?.ToString(c) ?? "—", r.UnitName, r.Shaders.ToString("N0", c), r.Tmus.ToString(c), r.Rops.ToString(c))),
+            (s["field.gpuClocks"], $"{Gpu.GpuDatabase.Clock(r.BaseMhz, c)} / {Gpu.GpuDatabase.Clock(r.BoostMhz, c)}"),
+            (s["field.gpuMemorySpec"], string.Create(c, $"{r.MemoryGb} GB {r.MemoryType} · {r.BusBits} bits · {r.MemoryGbps:0.#} Gbps · {r.BandwidthGBps:N0} GB/s")),
+            (s["field.gpuPower"], string.Create(c, $"{r.PowerW} W")),
+            (s["field.gpuReleased"], DateText.Display(r.Released, c)),
+        };
+
+        // Dedicated memory well below the model's (25 % margin for reserved memory) is a sign of a
+        // relabeled or counterfeit card, or of a different variant than the name says.
+        if (g.DedicatedMemoryBytes is long dedicated and > 0 && dedicated < r.MemoryGb * 1024L * 1024 * 1024 * 0.75)
+        {
+            rows.Add((s["field.gpuCheck"], s.Format("gpu.memoryMismatch", Bytes(dedicated, c), r.MemoryGb)));
         }
 
         return [.. rows];
