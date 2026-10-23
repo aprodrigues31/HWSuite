@@ -138,13 +138,25 @@ public static class ReportModel
             (s["field.firmware"], d.Firmware),
             (s["field.serial"], d.SerialNumber),
             (s["field.removable"], d.Removable == true ? s["value.yes"] : null),
+            (s["field.health"], d.Health?.Assessment is { } verdict ? s[$"health.{verdict}"] : null),
             (s["field.temperature"], d.Health?.TemperatureCelsius is { } temp ? string.Create(c, $"{temp} °C") : null),
             (s["field.wear"], d.Health is { } h ? Join(c, " / ", Pct(h.PercentageUsed), Pct(h.AvailableSparePercent)) : null),
             (s["field.powerOn"], d.Health is { } h2 ? Join(c, " / ", h2.PowerOnHours?.ToString("N0", c), h2.PowerCycles?.ToString("N0", c)) : null),
             (s["field.dataRw"], d.Health is { } h3 ? Join(c, " / ", Bytes(h3.DataReadBytes, c), Bytes(h3.DataWrittenBytes, c)) : null),
             (s["field.unsafeShutdowns"], d.Health?.UnsafeShutdowns?.ToString("N0", c)),
             (s["field.mediaErrors"], d.Health?.MediaErrors?.ToString("N0", c)),
+            (s["field.reallocated"], d.Health is { ReallocatedSectors: not null } or { PendingSectors: not null }
+                ? Join(c, " / ", d.Health.ReallocatedSectors?.ToString("N0", c), d.Health.PendingSectors?.ToString("N0", c))
+                : null),
             (s["field.criticalWarning"], d.Health?.CriticalWarning is int w and > 0 ? string.Create(c, $"0x{w:X2}") : null)))]);
+
+        // Full ATA attribute table, as CrystalDiskInfo shows it (ids in hex).
+        Section("section.smart", [.. inv.Disks.Where(d => d.Health?.SmartAttributes is { Count: > 0 }).Select(d => Group(
+            $"#{d.Index} {d.Model}".Trim(),
+            [.. d.Health!.SmartAttributes!.Select(a => (
+                Label: string.Create(c, $"{a.Id:X2} ") + (Storage.AtaSmart.Name(a.Id, c) ?? s["smart.vendorSpecific"]),
+                Value: (string?)(s.Format("smart.values", a.Current, a.Worst, a.Threshold?.ToString(c) ?? "—", a.Raw.ToString("N0", c))
+                    + (a.BelowThreshold ? " ⚠ " + s["smart.belowThreshold"] : ""))))]))]);
 
         if (inv.Diagnostics.Count > 0)
         {

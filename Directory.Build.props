@@ -12,7 +12,7 @@
       CHANGELOG.md. CI passes BuildNumber (GitHub Actions run number); local builds use 0.
       Result: hwsuite 0.2.0, file version 0.2.0.<build>, informational 0.2.0+build.<build>.<commit>.
     -->
-    <VersionPrefix>0.7.0</VersionPrefix>
+    <VersionPrefix>0.8.0</VersionPrefix>
     <BuildNumber Condition="'$(BuildNumber)' == ''">0</BuildNumber>
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).$(BuildNumber)</FileVersion>

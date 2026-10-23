@@ -29,6 +29,9 @@ public sealed class WindowsStorageProvider : IInventoryProvider
     private const int NvmeLogSize = 512;
     private const int NvmeIdentifySize = 4096;
     private const int BusTypeNvme = 17;
+    private const int BusTypeAta = 3;
+    private const int BusTypeUsb = 7;
+    private const int BusTypeSata = 11;
 
     public string Name => "Storage";
 
@@ -119,6 +122,28 @@ public sealed class WindowsStorageProvider : IInventoryProvider
             if (disk.Health is null)
             {
                 context.Info(string.Create(CultureInfo.InvariantCulture, $"PhysicalDrive{index}: NVMe health log not available through the inbox driver"));
+            }
+            else
+            {
+                disk.Health.Assessment = AtaSmart.AssessNvme(disk.Health);
+            }
+        }
+        else if (descriptor.BusTypeCode is BusTypeSata or BusTypeAta or BusTypeUsb)
+        {
+            var usb = descriptor.BusTypeCode == BusTypeUsb;
+            var (result, data, thresholds) = AtaSmartReader.Read(index, usb);
+            switch (result)
+            {
+                case AtaSmartReader.Result.Ok:
+                    disk.Health = AtaSmart.Summarize(AtaSmart.Parse(data, thresholds), ssd: disk.MediaType == "SSD");
+                    break;
+                case AtaSmartReader.Result.AccessDenied:
+                    context.Info(string.Create(CultureInfo.InvariantCulture, $"PhysicalDrive{index}: S.M.A.R.T. needs administrator rights"));
+                    break;
+                default:
+                    context.Info(string.Create(CultureInfo.InvariantCulture,
+                        $"PhysicalDrive{index}: S.M.A.R.T. not available ({(usb ? "the USB adapter does not pass ATA commands" : "the controller driver does not pass SMART commands")})"));
+                    break;
             }
         }
 

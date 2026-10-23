@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- Fase 3e: **S.M.A.R.T. de discos SATA e USB** (com administrador): tabela completa de atributos (atual, pior, limite do fabricante, valor bruto), como no CrystalDiskInfo, com nomes em português. Discos SATA internos pela interface padrão do Windows; HDs e SSDs em gavetas USB pelo comando ATA embutido no padrão SAT, que a maioria dos adaptadores aceita. Páginas inválidas (adaptadores que não repassam o comando) são descartadas pelo checksum.
+- **Saúde** de cada disco no estilo CrystalDiskInfo: *Ruim* quando um atributo chega ao limite do fabricante, *Atenção* com setores realocados, pendentes ou incorrigíveis, *Boa* caso contrário. NVMe ganha a mesma avaliação pelo aviso crítico, reserva disponível e desgaste.
+- Discos SATA passam a mostrar temperatura, horas ligado, ciclos, desgaste (SSD), dados gravados e setores realocados/pendentes.
+
 ## [0.7.0] - 2026-10-22
 
 ### Corrigido

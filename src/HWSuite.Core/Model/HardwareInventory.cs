@@ -195,9 +195,25 @@ public sealed class DiskInfo
     public DiskHealth? Health { get; set; }
 }
 
-/// <summary>Health data decoded from the NVMe SMART / Health Information log page (02h).</summary>
+public enum DiskHealthStatus
+{
+    Good,
+    Caution,
+    Bad,
+}
+
+/// <summary>Disk health: from the NVMe SMART / Health log page (02h) or the ATA S.M.A.R.T. attributes.</summary>
 public sealed class DiskHealth
 {
+    /// <summary>Overall verdict, CrystalDiskInfo style: Good, Caution (damaged sectors, wear) or Bad.</summary>
+    public DiskHealthStatus? Assessment { get; set; }
+
+    /// <summary>ATA drives only: every attribute the drive reports.</summary>
+    public IReadOnlyList<Storage.SmartEntry>? SmartAttributes { get; set; }
+
+    public long? ReallocatedSectors { get; set; }
+    public long? PendingSectors { get; set; }
+
     public int? TemperatureCelsius { get; set; }
     public int? AvailableSparePercent { get; set; }
     public int? PercentageUsed { get; set; }
