@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.9.0] - 2026-10-22
+
 ### Adicionado
 - Fase 4a: **banco de dados de GPUs** (estilo GPU-Z) com as especificações de referência de 64 modelos de mesa: Radeon RX 6000/7000/9000, GeForce RTX 30/40/50 e Intel Arc A/B. Na página Hardware e no relatório, cada placa conhecida mostra chip, arquitetura e processo, unidades (CU/SM/Xe), shaders, TMUs, ROPs, clocks base/boost, memória (tipo, barramento, velocidade e banda), consumo e data de lançamento. O modelo é identificado pelo nome (a AMD usa o mesmo ID para modelos diferentes) e a memória escolhe entre variantes (RTX 3060 8/12 GB, RTX 4060 Ti 8/16 GB etc.).
 - **Vídeo no estilo GPU-Z:** fabricante da placa (ASRock, ASUS, Sapphire...), revisão do chip, área do die e transistores, taxas de preenchimento (pixel e textura), fabricante da memória de vídeo (AMD), pacote do driver (por exemplo "AMD Software: Adrenalin Edition 26.10.1" ou "NVIDIA 560.94"), suporte a DirectX 12 (nível de recursos e Shader Model) e ray tracing (DXR), APIs do driver (OpenCL, CUDA, DirectCompute, DirectML, Vulkan, OpenGL) e Resizable BAR (pela janela de memória que o Windows atribuiu à placa).
@@ -105,7 +107,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.8.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.9.0
 [0.8.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.7.0
 [0.6.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.6.0
