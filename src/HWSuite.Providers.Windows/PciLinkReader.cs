@@ -25,6 +25,9 @@ public static unsafe partial class PciLinkReader
     private const uint CmGetIdListFilterPresent = 0x100;
     private const uint DevPropTypeUInt32 = 0x7;
     private const int MaxDepth = 8;
+    private const uint AllocLogConf = 0x2; // ALLOC_LOG_CONF: resources currently assigned
+    private const uint ResTypeMem = 0x1;
+    private const uint ResTypeMemLarge = 0x7;
 
     /// <summary>Slot link of the present PCI device with these ids, or null if Windows does not report it.</summary>
     public static PcieLink? ForDevice(ushort vendorId, ushort deviceId, uint subsystemId)
@@ -55,6 +58,80 @@ public static unsafe partial class PciLinkReader
         {
             return null;
         }
+    }
+
+    /// <summary>
+    /// Largest memory range (BAR) Windows assigned to the device. Without Resizable BAR a GPU exposes a
+    /// 256 MB window into its VRAM; with it, the window covers the whole VRAM (e.g. 16 GB).
+    /// </summary>
+    public static long? LargestMemoryWindow(ushort vendorId, ushort deviceId, uint subsystemId)
+    {
+        try
+        {
+            var instance = FindInstance(vendorId, deviceId, subsystemId);
+            if (instance is null || CM_Locate_DevNodeW(out var node, instance, 0) != CrSuccess)
+            {
+                return null;
+            }
+
+            if (CM_Get_First_Log_Conf(out var logConf, node, AllocLogConf) != CrSuccess)
+            {
+                return null;
+            }
+
+            long largest = 0;
+            try
+            {
+                foreach (var resourceType in new[] { ResTypeMem, ResTypeMemLarge })
+                {
+                    var current = logConf;
+                    while (CM_Get_Next_Res_Des(out var next, current, resourceType, out _, 0) == CrSuccess)
+                    {
+                        if (current != logConf)
+                        {
+                            _ = CM_Free_Res_Des_Handle(current);
+                        }
+
+                        current = next;
+                        largest = Math.Max(largest, RangeLength(next));
+                    }
+
+                    if (current != logConf)
+                    {
+                        _ = CM_Free_Res_Des_Handle(current);
+                    }
+                }
+            }
+            finally
+            {
+                _ = CM_Free_Log_Conf_Handle(logConf);
+            }
+
+            return largest > 0 ? largest : null;
+        }
+        catch (Exception ex) when (ex is DllNotFoundException or EntryPointNotFoundException or ExternalException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>MEM_DES / MEM_LARGE_DES: Count(4) Type(4) Alloc_Base(8) Alloc_End(8) Flags(4) Reserved(4).</summary>
+    private static long RangeLength(nint resDes)
+    {
+        if (CM_Get_Res_Des_Data_Size(out var size, resDes, 0) != CrSuccess || size < 24)
+        {
+            return 0;
+        }
+
+        var buffer = stackalloc byte[(int)Math.Min(size, 4096u)];
+        if (CM_Get_Res_Des_Data(resDes, buffer, Math.Min(size, 4096u), 0) != CrSuccess)
+        {
+            return 0;
+        }
+
+        var start = *(ulong*)(buffer + 8);
+        var end = *(ulong*)(buffer + 16);
+        return end >= start ? (long)(end - start + 1) : 0;
     }
 
     private static PcieNode Node(uint devInst)
@@ -152,6 +229,24 @@ public static unsafe partial class PciLinkReader
 
     [LibraryImport("cfgmgr32.dll")]
     private static partial uint CM_Get_Device_IDW(uint devInst, char* buffer, uint length, uint flags);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Get_First_Log_Conf(out nint logConf, uint devInst, uint flags);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Get_Next_Res_Des(out nint next, nint current, uint forResource, out uint resourceId, uint flags);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Get_Res_Des_Data_Size(out uint size, nint resDes, uint flags);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Get_Res_Des_Data(nint resDes, byte* buffer, uint length, uint flags);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Free_Res_Des_Handle(nint resDes);
+
+    [LibraryImport("cfgmgr32.dll")]
+    private static partial uint CM_Free_Log_Conf_Handle(nint logConf);
 
     [LibraryImport("cfgmgr32.dll")]
     private static partial uint CM_Get_DevNode_PropertyW(uint devInst, DevPropKey* key, out uint propertyType, byte* buffer, ref uint bufferSize, uint flags);

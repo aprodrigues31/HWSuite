@@ -93,6 +93,12 @@ public sealed class InventoryCollector
         foreach (var gpu in inventory.Gpus)
         {
             gpu.Reference ??= Gpu.GpuDatabase.Find(gpu.Name, gpu.DedicatedMemoryBytes);
+
+            // DXGI SubSysId = (subsystem device << 16) | subsystem vendor.
+            if (gpu.Subvendor is null && uint.TryParse(gpu.PciSubsystemId, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var subsystem))
+            {
+                gpu.Subvendor = Pci.PciIds.CardMaker((ushort)(subsystem & 0xFFFF));
+            }
         }
 
         if (inventory.Memory is { TotalInstalledBytes: null, Modules.Count: > 0 } memory)

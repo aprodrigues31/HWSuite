@@ -182,6 +182,30 @@ public sealed class GpuInfo
 
     /// <summary>Manufacturer reference specifications for this model, when HWSuite knows it.</summary>
     public Gpu.GpuSpec? Reference { get; set; }
+
+    /// <summary>Company that built the card (ASRock, ASUS...), from the PCI subsystem vendor.</summary>
+    public string? Subvendor { get; set; }
+
+    /// <summary>Driver package the user knows, e.g. "AMD Adrenalin 26.10.1" or "NVIDIA 560.94".</summary>
+    public string? DriverPackage { get; set; }
+
+    /// <summary>Highest Direct3D 12 feature level, e.g. "12_2".</summary>
+    public string? Direct3DFeatureLevel { get; set; }
+
+    /// <summary>Highest HLSL shader model, e.g. "6.8".</summary>
+    public string? ShaderModel { get; set; }
+
+    /// <summary>DirectX Raytracing tier ("1.1"), or null when not supported.</summary>
+    public string? RaytracingTier { get; set; }
+
+    /// <summary>Compute and graphics APIs the installed driver provides (OpenCL, CUDA, Vulkan...).</summary>
+    public List<string> Apis { get; } = [];
+
+    /// <summary>Largest PCI memory window (BAR) Windows assigned to the card; with Resizable BAR it covers the VRAM.</summary>
+    public long? LargestBarBytes { get; set; }
+
+    /// <summary>Video memory chip maker (Samsung, SK Hynix, Micron), when the driver reports it.</summary>
+    public string? MemoryVendor { get; set; }
 }
 
 public sealed class DiskInfo

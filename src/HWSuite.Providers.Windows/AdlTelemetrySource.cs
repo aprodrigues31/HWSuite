@@ -41,6 +41,11 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     }
 
     public AdlTelemetrySource(bool raw = false)
+        : this(raw, startLog: true)
+    {
+    }
+
+    private AdlTelemetrySource(bool raw, bool startLog)
     {
         _raw = raw;
         try
@@ -55,7 +60,7 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
 
             _context = context;
             FindAdapters();
-            foreach (var adapter in _adapters)
+            foreach (var adapter in startLog ? _adapters : [])
             {
                 StartLog(adapter);
             }
@@ -67,6 +72,38 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     }
 
     public string Name => "AMD ADL";
+
+    /// <summary>
+    /// Video memory chip maker per AMD adapter name (ADL2_Adapter_VRAMVendor_Get), for the inventory.
+    /// Opens and closes its own ADL context; empty without an AMD driver.
+    /// </summary>
+    public static Dictionary<string, int> MemoryVendors()
+    {
+        var result = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        using var adl = new AdlTelemetrySource(raw: false, startLog: false);
+        if (adl._context == 0)
+        {
+            return result;
+        }
+
+        foreach (var adapter in adl._adapters)
+        {
+            try
+            {
+                var vendor = 0;
+                if (ADL2_Adapter_VRAMVendor_Get(adl._context, adapter.Index, &vendor) == AdlOk && vendor > 0)
+                {
+                    result[adapter.Name] = vendor;
+                }
+            }
+            catch (EntryPointNotFoundException)
+            {
+                break; // older driver without this call
+            }
+        }
+
+        return result;
+    }
 
     public IReadOnlyList<Diagnostic> Diagnostics => [];
 
@@ -326,6 +363,10 @@ public sealed unsafe partial class AdlTelemetrySource : ISensorSource
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
     private static partial int ADL2_Adapter_PMLog_Start(nint context, int adapterIndex, PmLogStartInput* input, PmLogStartOutput* output, uint device);
+
+    [LibraryImport(Dll)]
+    [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]
+    private static partial int ADL2_Adapter_VRAMVendor_Get(nint context, int adapterIndex, int* vendor);
 
     [LibraryImport(Dll)]
     [UnmanagedCallConv(CallConvs = [typeof(CallConvCdecl)])]

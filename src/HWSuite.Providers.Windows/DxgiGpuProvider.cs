@@ -36,6 +36,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
         }
 
         var registry = ReadDisplayClass();
+        var memoryVendors = AdlTelemetrySource.MemoryVendors();
         foreach (var gpu in EnumerateAdapters())
         {
             if (registry.FirstOrDefault(r => r.Matches(gpu)) is { } entry)
@@ -48,6 +49,13 @@ public sealed class DxgiGpuProvider : IInventoryProvider
 
                 gpu.BiosVersion = entry.BiosString;
                 gpu.DriverVersion ??= entry.DriverVersion;
+                gpu.DriverPackage = Core.Gpu.GpuDrivers.Package(gpu.PciVendorId, gpu.DriverVersion, entry.RadeonSoftwareVersion);
+            }
+
+            Apis(gpu, registry.FirstOrDefault(r => r.Matches(gpu)));
+            if (gpu.Name is { } name && memoryVendors.TryGetValue(name, out var vendorCode))
+            {
+                gpu.MemoryVendor = Core.Gpu.GpuDrivers.AmdMemoryVendor(vendorCode);
             }
 
             inventory.Gpus.Add(gpu);
@@ -122,7 +130,15 @@ public sealed class DxgiGpuProvider : IInventoryProvider
                         SharedMemoryBytes = (long)desc.SharedSystemMemory,
                         DriverVersion = driver,
                         PcieLink = PciLinkReader.ForDevice((ushort)desc.VendorId, (ushort)desc.DeviceId, desc.SubSysId),
+                        LargestBarBytes = PciLinkReader.LargestMemoryWindow((ushort)desc.VendorId, (ushort)desc.DeviceId, desc.SubSysId),
                     });
+
+                    if (D3D12Probe.Probe(adapter) is { } d3d)
+                    {
+                        result[^1].Direct3DFeatureLevel = d3d.FeatureLevel;
+                        result[^1].ShaderModel = d3d.ShaderModel;
+                        result[^1].RaytracingTier = d3d.RaytracingTier;
+                    }
                 }
                 finally
                 {
@@ -144,12 +160,54 @@ public sealed class DxgiGpuProvider : IInventoryProvider
         ((delegate* unmanaged[Stdcall]<nint, uint>)vtbl[2])(comObject);
     }
 
+    /// <summary>
+    /// GPU-Z style "Computing / Technologies": APIs backed by this adapter's driver. DirectCompute and
+    /// DirectML ride on Direct3D 12 (DirectML also needs DirectML.dll, Windows 10 1903+); CUDA needs
+    /// an NVIDIA GPU with nvcuda.dll; OpenCL, Vulkan and OpenGL come from the driver's ICD registration.
+    /// </summary>
+    [SupportedOSPlatform("windows")]
+    private static void Apis(GpuInfo gpu, DisplayClassEntry? entry)
+    {
+        var system = Environment.SystemDirectory;
+        if (entry?.Icds.Contains("OpenCL") == true)
+        {
+            gpu.Apis.Add("OpenCL");
+        }
+
+        if (string.Equals(gpu.PciVendorId, "10DE", StringComparison.OrdinalIgnoreCase) && File.Exists(Path.Combine(system, "nvcuda.dll")))
+        {
+            gpu.Apis.Add("CUDA");
+        }
+
+        if (gpu.Direct3DFeatureLevel is not null)
+        {
+            gpu.Apis.Add("DirectCompute");
+            if (File.Exists(Path.Combine(system, "DirectML.dll")))
+            {
+                gpu.Apis.Add("DirectML");
+            }
+        }
+
+        foreach (var api in new[] { "Vulkan", "OpenGL" })
+        {
+            if (entry?.Icds.Contains(api) == true)
+            {
+                gpu.Apis.Add(api);
+            }
+        }
+    }
+
     /// <summary>User-mode driver version packs four 16-bit parts, e.g. 32.0.15.6094.</summary>
     internal static string FormatDriverVersion(long value) => string.Create(CultureInfo.InvariantCulture,
         $"{(value >> 48) & 0xFFFF}.{(value >> 32) & 0xFFFF}.{(value >> 16) & 0xFFFF}.{value & 0xFFFF}");
 
     private sealed record DisplayClassEntry(PciHardwareId? Id, string? DriverVersion, string? DriverDate, string? BiosString, long? MemorySizeBytes)
     {
+        public string? RadeonSoftwareVersion { get; init; }
+
+        /// <summary>The driver registers an installable client driver for these APIs (OpenCL, Vulkan, OpenGL).</summary>
+        public List<string> Icds { get; } = [];
+
         public bool Matches(GpuInfo gpu) =>
             Id is not null
             && PciIds.FormatId(Id.VendorId) == gpu.PciVendorId
@@ -174,12 +232,26 @@ public sealed class DxgiGpuProvider : IInventoryProvider
                 continue;
             }
 
-            entries.Add(new DisplayClassEntry(
+            var entry = new DisplayClassEntry(
                 PciIds.Parse(key.GetValue("MatchingDeviceId") as string),
                 key.GetValue("DriverVersion") as string,
                 key.GetValue("DriverDate") as string,
                 RegistryText(key.GetValue("HardwareInformation.BiosString")),
-                RegistryNumber(key.GetValue("HardwareInformation.qwMemorySize")) ?? RegistryNumber(key.GetValue("HardwareInformation.MemorySize"))));
+                RegistryNumber(key.GetValue("HardwareInformation.qwMemorySize")) ?? RegistryNumber(key.GetValue("HardwareInformation.MemorySize")))
+            {
+                RadeonSoftwareVersion = key.GetValue("RadeonSoftwareVersion") as string,
+            };
+
+            // ICD registrations under the adapter's own key: what this driver provides, not just what is installed.
+            foreach (var (value, api) in new[] { ("OpenCLDriverName", "OpenCL"), ("VulkanDriverName", "Vulkan"), ("OpenGLDriverName", "OpenGL") })
+            {
+                if (key.GetValue(value) is not null)
+                {
+                    entry.Icds.Add(api);
+                }
+            }
+
+            entries.Add(entry);
         }
 
         return entries;

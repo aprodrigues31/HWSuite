@@ -124,12 +124,26 @@ public static class ReportModel
         Section("section.gpu", [.. inv.Gpus.Select(g => Group(g.Name,
         [
             (s["field.vendor"], g.Vendor),
-            (s["field.pciId"], g.PciVendorId is null ? null : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")),
+            (s["field.subvendor"], g.Subvendor),
+            (s["field.pciId"], g.PciVendorId is null ? null
+                : $"{g.PciVendorId}:{g.PciDeviceId}" + (g.PciSubsystemId is null ? "" : $" / {g.PciSubsystemId}")
+                  + (g.Revision is int rev ? string.Create(CultureInfo.InvariantCulture, $" · rev {rev:X2}") : "")),
             (s["field.pcie"], Link(g.PcieLink, s)),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
+            (s["field.memoryVendor"], g.MemoryVendor),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
+            (s["field.rebar"], g.LargestBarBytes is long bar
+                ? s.Format(bar > 512L * 1024 * 1024 ? "gpu.rebarOn" : "gpu.rebarOff", Bytes(bar, c))
+                : null),
             (s["field.driver"], Join(c, " / ", g.DriverVersion, DateText.Display(g.DriverDate, c))),
+            (s["field.driverPackage"], g.DriverPackage),
             (s["field.vbios"], g.BiosVersion),
+            (s["field.directx"], g.Direct3DFeatureLevel is { } fl
+                ? s.Format("gpu.directx", fl, g.ShaderModel ?? "—")
+                : null),
+            (s["field.raytracing"], g.Direct3DFeatureLevel is null ? null
+                : g.RaytracingTier is { } rt ? s.Format("gpu.raytracingTier", rt) : s["value.no"]),
+            (s["field.apis"], g.Apis.Count > 0 ? string.Join(" · ", g.Apis) : null),
             .. ReferenceRows(g, s),
         ]))]);
 
@@ -254,10 +268,13 @@ public static class ReportModel
         var c = s.Culture;
         var rows = new List<(string, string?)>
         {
-            (s["field.gpuChip"], $"{r.Chip} · {r.Architecture} · {r.Process}"),
+            (s["field.gpuChip"], $"{r.Chip} · {r.Architecture} · {r.Process}"
+                + (Gpu.GpuDatabase.Die(r.Chip) is { } die ? " · " + s.Format("gpu.die", die.DieMm2.ToString("0.#", c), die.TransistorsMillions.ToString("N0", c)) : "")),
             (s["field.gpuUnits"], s.Format("gpu.units", r.Units?.ToString(c) ?? "—", r.UnitName, r.Shaders.ToString("N0", c), r.Tmus.ToString(c), r.Rops.ToString(c))),
             (s["field.gpuClocks"], $"{Gpu.GpuDatabase.Clock(r.BaseMhz, c)} / {Gpu.GpuDatabase.Clock(r.BoostMhz, c)}"),
             (s["field.gpuMemorySpec"], string.Create(c, $"{r.MemoryGb} GB {r.MemoryType} · {r.BusBits} bits · {r.MemoryGbps:0.#} Gbps · {r.BandwidthGBps:N0} GB/s")),
+            (s["field.gpuFillrate"], s.Format("gpu.fillrate",
+                (r.Rops * r.BoostMhz / 1000.0).ToString("N1", c), (r.Tmus * r.BoostMhz / 1000.0).ToString("N1", c))),
             (s["field.gpuPower"], string.Create(c, $"{r.PowerW} W")),
             (s["field.gpuReleased"], DateText.Display(r.Released, c)),
         };

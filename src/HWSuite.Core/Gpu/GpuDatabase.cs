@@ -197,6 +197,52 @@ public static partial class GpuDatabase
 
     public static string Clock(int mhz, CultureInfo culture) => mhz.ToString("N0", culture) + " MHz";
 
+    /// <summary>
+    /// Die size (mm², all chiplets of the package) and transistor count (millions) per GPU die, from the
+    /// manufacturers' figures as listed in the Wikipedia architecture articles (Navi 31/32: AMD's figures).
+    /// </summary>
+    public static (double DieMm2, int TransistorsMillions)? Die(string chip)
+    {
+        ArgumentNullException.ThrowIfNull(chip);
+        var key = chip.Split(' ', '/')[0] switch
+        {
+            "Navi" => string.Join(' ', chip.Split(' ').Take(2)),
+            var first => first,
+        };
+
+        return Dies.TryGetValue(key, out var die) ? die : null;
+    }
+
+    private static readonly Dictionary<string, (double, int)> Dies = new(StringComparer.Ordinal)
+    {
+        ["Navi 21"] = (520, 26_800),
+        ["Navi 22"] = (335, 17_200),
+        ["Navi 23"] = (237, 11_060),
+        ["Navi 24"] = (107, 5_400),
+        ["Navi 31"] = (529, 57_700),
+        ["Navi 32"] = (346, 28_100),
+        ["Navi 33"] = (204, 13_300),
+        ["Navi 44"] = (199, 29_700),
+        ["Navi 48"] = (356.5, 53_900),
+        ["GA102"] = (628, 28_300),
+        ["GA104"] = (392, 17_400),
+        ["GA106"] = (276, 12_000),
+        ["GA107"] = (200, 8_700),
+        ["AD102"] = (609, 76_300),
+        ["AD103"] = (379, 45_900),
+        ["AD104"] = (294, 35_800),
+        ["AD106"] = (188, 22_900),
+        ["AD107"] = (159, 18_900),
+        ["GB202"] = (750, 92_200),
+        ["GB203"] = (378, 45_600),
+        ["GB205"] = (263, 31_100),
+        ["GB206"] = (181, 21_900),
+        ["GB207"] = (149, 16_900),
+        ["ACM-G10"] = (406, 21_700),
+        ["ACM-G11"] = (157, 7_200),
+        ["BMG-G21"] = (272, 19_600),
+    };
+
     [GeneratedRegex(@"\s+")]
     private static partial Regex Spaces();
 }

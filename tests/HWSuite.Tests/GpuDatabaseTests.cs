@@ -72,7 +72,7 @@ public class GpuDatabaseTests
 
         var groups = ReportModel.Build(inventory, Strings.For("pt-BR")).Single(x => x.Title == "Vídeo").Groups;
         var amd = groups[0].Rows.ToDictionary(r => r.Label, r => r.Value);
-        Assert.Equal("Navi 32 · RDNA 3 · TSMC N5 + N6", amd["Chip (referência)"]);
+        Assert.Equal("Navi 32 · RDNA 3 · TSMC N5 + N6 · 346 mm² · 28.100 milhões de transistores", amd["Chip (referência)"]); // GPU-Z: 346 mm², 28100M
         Assert.Equal("60 CU · 3.840 shaders · 240 TMUs · 96 ROPs", amd["Unidades (referência)"]);
         Assert.Equal("1.800 MHz / 2.430 MHz", amd["Clock base / boost (referência)"]);
         Assert.Equal("16 GB GDDR6 · 256 bits · 19,5 Gbps · 624 GB/s", amd["Memória (referência)"]);
@@ -81,5 +81,84 @@ public class GpuDatabaseTests
 
         var fake = groups[1].Rows.ToDictionary(r => r.Label, r => r.Value);
         Assert.StartsWith("a placa informa 4 GB, mas este modelo tem 24 GB", fake["Conferência"], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Gpuz_fields_for_the_users_rx_7800_xt()
+    {
+        // Values from GPU-Z 2.71 on the user's ASRock RX 7800 XT Steel Legend.
+        var gpu = new GpuInfo
+        {
+            Name = "AMD Radeon RX 7800 XT",
+            PciVendorId = "1002",
+            PciDeviceId = "747E",
+            PciSubsystemId = "53271849",
+            Revision = 0xC8,
+            DedicatedMemoryBytes = 16 * Gb,
+            MemoryVendor = HWSuite.Core.Gpu.GpuDrivers.AmdMemoryVendor(1),
+            DriverPackage = HWSuite.Core.Gpu.GpuDrivers.Package("1002", "32.0.32015.7029", "26.10.1"),
+            Direct3DFeatureLevel = "12_2",
+            ShaderModel = "6.8",
+            RaytracingTier = "1.1",
+            LargestBarBytes = 16 * Gb,
+        };
+        gpu.Apis.AddRange(["OpenCL", "DirectCompute", "DirectML", "Vulkan", "OpenGL"]);
+        var inventory = new HardwareInventory();
+        inventory.Gpus.Add(gpu);
+        gpu.Reference = GpuDatabase.Find(gpu.Name, gpu.DedicatedMemoryBytes);
+        gpu.Subvendor = HWSuite.Core.Pci.PciIds.CardMaker(0x1849);
+
+        var rows = ReportModel.Build(inventory, Strings.For("pt-BR")).Single(x => x.Title == "Vídeo").Groups.Single().Rows.ToDictionary(r => r.Label, r => r.Value);
+        Assert.Equal("ASRock", rows["Fabricante da placa"]);
+        Assert.Equal("1002:747E / 53271849 · rev C8", rows["ID PCI (fornecedor:dispositivo / subsistema)"]); // GPU-Z: 1002 747E - 1849 5327, rev C8
+        Assert.Equal("Samsung", rows["Fabricante da memória"]);
+        Assert.Equal("AMD Software: Adrenalin Edition 26.10.1", rows["Pacote do driver"]);
+        Assert.Equal("12 (12_2) · Shader Model 6.8", rows["DirectX"]);
+        Assert.Equal("Tier 1.1", rows["Ray tracing (DXR)"]);
+        Assert.Equal("OpenCL · DirectCompute · DirectML · Vulkan · OpenGL", rows["APIs"]);
+        Assert.Equal("Ativado (janela de 16 GB)", rows["Resizable BAR"]);
+        Assert.Equal("233,3 GPixel/s · 583,2 GTexel/s", rows["Taxa de preenchimento (referência)"]); // reference boost 2430 MHz
+    }
+
+    [Theory]
+    [InlineData("32.0.15.6094", "560.94")]
+    [InlineData("31.0.15.5222", "552.22")]
+    [InlineData("10.0", null)]
+    [InlineData(null, null)]
+    public void Nvidia_release_from_the_windows_driver_version(string? version, string? expected)
+    {
+        Assert.Equal(expected, HWSuite.Core.Gpu.GpuDrivers.NvidiaRelease(version));
+    }
+
+    [Fact]
+    public void Driver_package_names_and_card_makers()
+    {
+        Assert.Equal("NVIDIA 560.94", HWSuite.Core.Gpu.GpuDrivers.Package("10DE", "32.0.15.6094", null));
+        Assert.Null(HWSuite.Core.Gpu.GpuDrivers.Package("8086", "32.0.101.6078", null));
+        Assert.Equal("SK Hynix", HWSuite.Core.Gpu.GpuDrivers.AmdMemoryVendor(6));
+        Assert.Null(HWSuite.Core.Gpu.GpuDrivers.AmdMemoryVendor(99));
+        Assert.Equal("Sapphire", HWSuite.Core.Pci.PciIds.CardMaker(0x1DA2));
+        Assert.Null(HWSuite.Core.Pci.PciIds.CardMaker(0x0001));
+        Assert.Equal((628d, 28_300), GpuDatabase.Die("GA102"));
+        Assert.Equal((276d, 12_000), GpuDatabase.Die("GA106 / GA107")); // shared entry: first chip
+    }
+
+    [Fact]
+    public void Collector_fills_subvendor_and_reference()
+    {
+        var provider = new FixedGpu(new GpuInfo { Name = "AMD Radeon RX 7800 XT", PciSubsystemId = "53271849", DedicatedMemoryBytes = 16 * Gb });
+        var inventory = new HWSuite.Core.Collection.InventoryCollector([provider]).Collect();
+        var gpu = Assert.Single(inventory.Gpus);
+        Assert.Equal("ASRock", gpu.Subvendor);
+        Assert.Equal("RX 7800 XT", gpu.Reference!.Model);
+    }
+
+    private sealed class FixedGpu(GpuInfo gpu) : HWSuite.Core.Collection.IInventoryProvider
+    {
+        public string Name => "fixed";
+
+        public bool IsSupported => true;
+
+        public void Contribute(HardwareInventory inventory, HWSuite.Core.Collection.ProviderContext context) => inventory.Gpus.Add(gpu);
     }
 }
