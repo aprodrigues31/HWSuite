@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.10.0] - 2026-10-22
+
 ### Adicionado
 - **Clocks da placa lidos do driver AMD** (Overdrive 8): clock real da memória com a velocidade por pino e a banda calculadas a partir dele (na RX 7800 XT da ASRock: 2.438 MHz, 19,5 Gbps, 624,1 GB/s, iguais ao GPU-Z), e o limite de frequência da GPU no Adrenalin. O modo `--raw` mostra a tabela completa do Overdrive 8.
 
@@ -110,7 +112,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.9.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.10.0
 [0.9.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.9.0
 [0.8.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.8.0
 [0.7.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.7.0
