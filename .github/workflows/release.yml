@@ -75,6 +75,23 @@ jobs:
           Copy-Item LICENSE, CHANGELOG.md gui/
           Compress-Archive -Path gui/* -DestinationPath "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip"
 
+      - name: Installer
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress | Out-Null
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" "/DGuiDir=$PWD\gui" "/DCliExe=$PWD\release\hwsuite.exe" "/O$PWD" installer/hwsuite.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          # Silent install and uninstall on the runner: the app must land in the per-user folder.
+          $setup = "hwsuite-setup-${{ steps.version.outputs.version }}.exe"
+          Start-Process -FilePath (Resolve-Path $setup) -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait
+          $installed = "$env:LOCALAPPDATA\Programs\HWSuite"
+          if (-not (Test-Path "$installed\HWSuite.Gui.exe") -or -not (Test-Path "$installed\hwsuite.exe")) { throw "Installer did not install the app" }
+          & "$installed\hwsuite.exe" --version
+          Start-Process -FilePath "$installed\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES' -Wait
+          Start-Sleep -Seconds 3
+          if (Test-Path "$installed\HWSuite.Gui.exe") { throw "Uninstaller left the app behind" }
+
       - name: Release notes from CHANGELOG
         shell: pwsh
         run: |
@@ -90,4 +107,4 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
+        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md

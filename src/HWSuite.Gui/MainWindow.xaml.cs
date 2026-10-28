@@ -105,6 +105,28 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    private Uri? _updateLink;
+
+    /// <summary>"HWSuite 0.14.0 is available" with a button to the installer (or the release page).</summary>
+    public void ShowUpdate(Core.Updates.ReleaseInfo release)
+    {
+        ArgumentNullException.ThrowIfNull(release);
+        var s = App.Text;
+        _updateLink = release.Installer ?? release.Page;
+        UpdateBar.Title = s.Format("app.update.title", release.Version);
+        UpdateBar.Message = s.Format("app.update.message", Core.BuildInfo.Current.Version);
+        UpdateButton.Content = s[release.Installer is null ? "app.update.page" : "app.update.download"];
+        UpdateBar.IsOpen = true;
+    }
+
+    private void UpdateButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (_updateLink is not null)
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_updateLink.AbsoluteUri) { UseShellExecute = true })?.Dispose();
+        }
+    }
+
     /// <summary>Explains what limits the sensors and offers the one action that fixes it.</summary>
     private void UpdateAccessBar(AccessStatus access)
     {

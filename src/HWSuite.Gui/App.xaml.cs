@@ -86,6 +86,22 @@ public partial class App : Application
         {
             RunSelfTest(commandLine[selfTest + 1]);
         }
+        else if (Settings.Current.CheckForUpdates)
+        {
+            _ = CheckForUpdatesAsync();
+        }
+    }
+
+    /// <summary>One request to GitHub a few seconds after start; a newer release shows a bar in the window.</summary>
+    private async Task CheckForUpdatesAsync()
+    {
+        await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(true);
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
+        var latest = await Core.Updates.UpdateChecker.LatestAsync(http).ConfigureAwait(true);
+        if (latest is not null && Core.Updates.UpdateChecker.IsNewer(latest.Version, Core.BuildInfo.Current.Version))
+        {
+            MainWindow?.ShowUpdate(latest);
+        }
     }
 
     /// <summary>

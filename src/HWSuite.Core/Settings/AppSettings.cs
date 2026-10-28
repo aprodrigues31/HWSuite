@@ -39,6 +39,9 @@ public sealed record AppSettings
     /// <summary>Folder for CSV logs; null means Documents\HWSuite\logs.</summary>
     public string? LogFolder { get; init; }
 
+    /// <summary>Look for a newer release on GitHub when the app starts.</summary>
+    public bool CheckForUpdates { get; init; } = true;
+
     /// <summary>Alert when the +12 V, +5 V or +3.3 V rails leave the ATX tolerance (motherboard readings).</summary>
     public bool PsuAlertsEnabled { get; init; } = true;
 

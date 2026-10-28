@@ -217,6 +217,30 @@ jobs:
         shell: pwsh
         run: Compress-Archive -Path artifacts/gui/* -DestinationPath "artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip"
 
+      - name: Installer - build and install/uninstall check
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress | Out-Null
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          & $iscc "/DAppVersion=${{ steps.version.outputs.label }}" "/DGuiDir=$PWD\artifacts\gui" "/DCliExe=$PWD\artifacts\publish\hwsuite.exe" "/O$PWD\artifacts" installer/hwsuite.iss
+          if ($LASTEXITCODE -ne 0) { throw "ISCC failed ($LASTEXITCODE)" }
+          $setup = "artifacts/hwsuite-setup-${{ steps.version.outputs.label }}.exe"
+          Start-Process -FilePath (Resolve-Path $setup) -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait
+          $installed = "$env:LOCALAPPDATA\Programs\HWSuite"
+          if (-not (Test-Path "$installed\HWSuite.Gui.exe") -or -not (Test-Path "$installed\hwsuite.exe")) { throw "Installer did not install the app" }
+          & "$installed\hwsuite.exe" --version
+          Start-Process -FilePath "$installed\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES' -Wait
+          Start-Sleep -Seconds 3
+          if (Test-Path "$installed\HWSuite.Gui.exe") { throw "Uninstaller left the app behind" }
+          Write-Host "Installer OK: $((Get-Item $setup).Length / 1MB) MB"
+
+      - uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: hwsuite-setup-${{ steps.version.outputs.label }}
+          path: artifacts/hwsuite-setup-${{ steps.version.outputs.label }}.exe
+          if-no-files-found: warn
+
       - uses: actions/upload-artifact@v5
         if: always()
         with:

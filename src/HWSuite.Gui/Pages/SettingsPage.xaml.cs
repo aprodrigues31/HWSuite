@@ -31,6 +31,7 @@ public sealed partial class SettingsPage : Page
         }
 
         CloseToTraySwitch.Header = s["settings.closeToTray"];
+        UpdatesSwitch.Header = s["settings.checkUpdates"];
         StartupSwitch.Header = s["settings.startWithWindows"];
         AlertsTitle.Text = s["settings.alerts"];
         AlertsSwitch.Header = s["settings.alertsEnabled"];
@@ -55,6 +56,7 @@ public sealed partial class SettingsPage : Page
         IntervalBox.Value = settings.IntervalSeconds;
         ThemeChoice.SelectedIndex = Array.IndexOf(Themes, settings.Theme);
         CloseToTraySwitch.IsOn = settings.CloseToTray;
+        UpdatesSwitch.IsOn = settings.CheckForUpdates;
         AlertsSwitch.IsOn = settings.AlertsEnabled;
         LogSwitch.IsOn = settings.LogEnabled;
         LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
@@ -261,6 +263,14 @@ public sealed partial class SettingsPage : Page
 
         PumpBox.SelectedIndex = Math.Max(0, _pumpIds.IndexOf(selected));
         PumpHint.Text = fans.Count == 0 ? s["app.pump.hint"] + " " + s["app.pump.noSensors"] : s["app.pump.hint"];
+    }
+
+    private void UpdatesSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            App.Settings.Update(s => s with { CheckForUpdates = UpdatesSwitch.IsOn });
+        }
     }
 
     private void PsuSwitch_Toggled(object sender, RoutedEventArgs e)

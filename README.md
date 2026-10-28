@@ -22,7 +22,7 @@ Tudo funciona **sem privilégio de administrador**. O que um provedor não conse
 
 ## Aplicativo de desktop
 
-O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor selecionado, e o inventário completo do hardware. Não precisa instalar: baixe `hwsuite-gui-<versão>-win-x64.zip` em [Releases](https://github.com/aprodrigues31/HWSuite/releases), extraia a pasta inteira e execute o `HWSuite.Gui.exe`. Se faltarem privilégio de administrador ou o driver PawnIO, uma barra no topo oferece resolver com um clique.
+O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor selecionado, e o inventário completo do hardware. Baixe em [Releases](https://github.com/aprodrigues31/HWSuite/releases) o instalador `hwsuite-setup-<versão>.exe`, que instala por usuário, sem pedir administrador, com atalho no Menu Iniciar, ou a versão portátil `hwsuite-gui-<versão>-win-x64.zip`: extraia a pasta inteira e execute o `HWSuite.Gui.exe`. O aplicativo avisa quando sai uma versão nova. Se faltarem privilégio de administrador ou o driver PawnIO, uma barra no topo oferece resolver com um clique.
 
 Ao fechar a janela, o HWSuite continua na área de notificação mostrando as temperaturas e avisa quando um sensor passa do limite configurado. Em **Configurações** ficam o intervalo de atualização, o tema, os alertas, o log CSV e a opção de iniciar com o Windows (cria uma tarefa agendada apontando para a pasta atual do app; se mover a pasta, desligue e ligue a opção de novo).
 
