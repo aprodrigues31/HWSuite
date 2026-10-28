@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: 0.11.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória, link PCIe, telemetria extra de placas AMD, S.M.A.R.T. de discos SATA/USB, banco de dados de GPUs no estilo GPU-Z, clocks da placa lidos do driver AMD e detecção de GPU falsificada.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
+> **Status: 0.12.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória, link PCIe, telemetria extra de placas AMD, S.M.A.R.T. de discos SATA/USB, banco de dados de GPUs no estilo GPU-Z, clocks da placa lidos do driver AMD, detecção de GPU falsificada e backup da BIOS de vídeo.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
 
 ## O que a fase 1 já faz
 
@@ -110,7 +110,7 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 1. **Inventário sem driver** — esta versão.
 2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0); ✅ aplicativo de desktop com sensores, gráfico e inventário (0.4.0). ✅ área de notificação, alertas e configurações (0.5.0).
 3. **Detalhe:** ✅ perfis de placa-mãe, SPD/XMP da memória e link PCIe (0.6.0); ✅ telemetria AMD pela ADL: link PCIe ao vivo e limites do driver (0.7.0). ✅ S.M.A.R.T. de SATA/USB com avaliação de saúde (0.8.0). A seguir: baterias e nobreaks, controlador de tensão (VRM), EXPO.
-4. **Paridade:** ✅ banco de dados de GPUs e campos do GPU-Z (0.9.0), clocks da placa pelo driver AMD (0.10.0), detecção de GPU falsificada (0.11.0). A seguir: backup do BIOS de vídeo, benchmark, fontes/AIOs, NPU.
+4. **Paridade:** ✅ banco de dados de GPUs e campos do GPU-Z (0.9.0), clocks da placa pelo driver AMD (0.10.0), detecção de GPU falsificada (0.11.0), backup da BIOS de vídeo das placas AMD (0.12.0). A seguir: clocks da BIOS de vídeo, benchmark, fontes/AIOs, NPU.
 
 ## Licença
 

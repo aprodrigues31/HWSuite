@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.12.0] - 2026-10-28
+
 ### Adicionado
 - **Backup da BIOS de vídeo** (placas AMD): a cópia que o firmware UEFI publica na tabela ACPI VFCT é lida sem driver e sem administrador, conferida (assinatura 55 AA, soma de verificação, tabelas ATOM) e salva em `.rom` pelo botão "Salvar BIOS de vídeo" da página Hardware (em Documentos\HWSuite) ou por `hwsuite vbios [-o pasta|arquivo.rom]`. O relatório mostra a linha "Cópia da BIOS de vídeo" com tamanho, soma de verificação, part number e data.
 
@@ -120,7 +122,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.11.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.12.0
 [0.11.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.11.0
 [0.10.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.10.0
 [0.9.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.9.0
