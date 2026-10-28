@@ -22,6 +22,7 @@ public sealed partial class InventoryPage : Page
         var s = App.Text;
         PageTitle.Text = s["app.nav.inventory"];
         SaveButton.Content = s["app.saveReport"];
+        SaveVbiosButton.Content = s["app.saveVbios"];
         Loaded += async (_, _) => await LoadAsync();
     }
 
@@ -35,6 +36,7 @@ public sealed partial class InventoryPage : Page
 
         Render(s_cached);
         SaveButton.IsEnabled = true;
+        SaveVbiosButton.Visibility = s_cached.Gpus.Any(g => g.VideoBios is not null) ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void Render(HardwareInventory inventory)
@@ -107,5 +109,29 @@ public sealed partial class InventoryPage : Page
 
         StatusText.Text = App.Text.Format("app.reportSaved", path);
         Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
+    }
+
+    /// <summary>Writes each available video BIOS to Documents\HWSuite and shows it in Explorer.</summary>
+    private void SaveVbiosButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (s_cached is null)
+        {
+            return;
+        }
+
+        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite");
+        Directory.CreateDirectory(folder);
+        string? last = null;
+        foreach (var gpu in s_cached.Gpus.Where(g => g.VideoBios is not null))
+        {
+            last = Path.Combine(folder, Core.Gpu.VideoBios.FileName(gpu.Reference?.Model ?? gpu.Name, gpu.VideoBios!));
+            File.WriteAllBytes(last, gpu.VideoBios!.Image);
+        }
+
+        if (last is not null)
+        {
+            StatusText.Text = App.Text.Format("app.vbiosSaved", last);
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{last}\"") { UseShellExecute = true })?.Dispose();
+        }
     }
 }

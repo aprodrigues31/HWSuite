@@ -17,6 +17,7 @@ public enum CliCommand
     Report,
     Sensors,
     Driver,
+    Vbios,
 }
 
 public enum DriverAction
@@ -79,6 +80,11 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("sensors", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Sensors };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("vbios", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Vbios };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("driver", StringComparison.OrdinalIgnoreCase))

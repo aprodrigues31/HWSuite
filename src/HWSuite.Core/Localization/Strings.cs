@@ -110,6 +110,14 @@ public sealed class Strings
         ["field.gpuMemorySpec"] = "Memory (reference)",
         ["field.gpuPower"] = "Board power (reference)",
         ["field.gpuReleased"] = "Released",
+        ["field.vbiosCopy"] = "Video BIOS copy",
+        ["vbios.size"] = "{0} from the {1} table",
+        ["vbios.checksumOk"] = "checksum OK",
+        ["vbios.checksumBad"] = "checksum does not match",
+        ["vbios.none"] = "No video BIOS copy available. The firmware publishes one (ACPI VFCT table) only for AMD cards that start the display at boot, with UEFI boot (CSM off). NVIDIA and Intel cards are not supported yet.",
+        ["vbios.saved"] = "{0}: video BIOS saved to {1} ({2})",
+        ["app.saveVbios"] = "Save video BIOS",
+        ["app.vbiosSaved"] = "Video BIOS saved to {0}",
         ["field.authenticity"] = "Authenticity",
         ["field.gpuById"] = "Model by PCI id",
         ["gpu.authentic"] = "no signs of a counterfeit (PCI id, DirectX features, PCIe and memory match the model)",
@@ -268,6 +276,8 @@ public sealed class Strings
               hwsuite sensors [options]     Show live sensors (temperatures, voltages, fans, power).
               hwsuite driver <status|install|uninstall> [--yes]
                                             Check, install or remove the PawnIO driver.
+              hwsuite vbios [-o <folder|file.rom>]
+                                            Save the video BIOS (AMD cards, from the ACPI VFCT table).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -399,6 +409,14 @@ public sealed class Strings
         ["field.gpuMemorySpec"] = "Memória (referência)",
         ["field.gpuPower"] = "Consumo da placa (referência)",
         ["field.gpuReleased"] = "Lançamento",
+        ["field.vbiosCopy"] = "Cópia da BIOS de vídeo",
+        ["vbios.size"] = "{0} pela tabela {1}",
+        ["vbios.checksumOk"] = "soma de verificação OK",
+        ["vbios.checksumBad"] = "soma de verificação não confere",
+        ["vbios.none"] = "Nenhuma cópia da BIOS de vídeo disponível. O firmware publica uma (tabela ACPI VFCT) só para placas AMD que iniciam o vídeo no boot, com boot UEFI (CSM desligado). Placas NVIDIA e Intel ainda não são suportadas.",
+        ["vbios.saved"] = "{0}: BIOS de vídeo salva em {1} ({2})",
+        ["app.saveVbios"] = "Salvar BIOS de vídeo",
+        ["app.vbiosSaved"] = "BIOS de vídeo salva em {0}",
         ["field.authenticity"] = "Autenticidade",
         ["field.gpuById"] = "Modelo pelo ID PCI",
         ["gpu.authentic"] = "nenhum sinal de falsificação (ID PCI, recursos do DirectX, PCIe e memória conferem com o modelo)",
@@ -557,6 +575,8 @@ public sealed class Strings
               hwsuite sensors [opções]      Mostra os sensores ao vivo (temperaturas, tensões, ventoinhas, consumo).
               hwsuite driver <status|install|uninstall> [--yes]
                                             Verifica, instala ou remove o driver PawnIO.
+              hwsuite vbios [-o <pasta|arquivo.rom>]
+                                            Salva a BIOS de vídeo (placas AMD, pela tabela ACPI VFCT).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

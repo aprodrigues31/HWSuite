@@ -213,6 +213,9 @@ public sealed class GpuInfo
     /// <summary>The card's own default memory clock in MHz (AMD Overdrive 8).</summary>
     public int? CardMemoryClockMhz { get; set; }
 
+    /// <summary>A copy of the card's video BIOS the firmware published (AMD, ACPI VFCT), for saving.</summary>
+    public Gpu.VideoBiosCopy? VideoBios { get; set; }
+
     /// <summary>Counterfeit check against the model the name claims (<see cref="Gpu.GpuAuthenticity"/>).</summary>
     public Gpu.AuthenticityResult? Authenticity { get; set; }
 }

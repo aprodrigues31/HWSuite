@@ -37,6 +37,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
 
         var registry = ReadDisplayClass();
         var amdCards = AdlTelemetrySource.Cards();
+        var biosImages = VfctReader.Read();
         foreach (var gpu in EnumerateAdapters())
         {
             if (registry.FirstOrDefault(r => r.Matches(gpu)) is { } entry)
@@ -59,7 +60,29 @@ public sealed class DxgiGpuProvider : IInventoryProvider
                 (gpu.CardGpuClockMhz, gpu.CardMemoryClockMhz) = Core.Gpu.Overdrive8.DefaultClocks(card.Overdrive);
             }
 
+            AttachVideoBios(gpu, biosImages);
             inventory.Gpus.Add(gpu);
+        }
+    }
+
+    /// <summary>The VFCT image whose PCI ids match the card (subsystem too, when two cards share a model).</summary>
+    private static void AttachVideoBios(GpuInfo gpu, IReadOnlyList<Core.Gpu.VfctImage> images)
+    {
+        if (!ushort.TryParse(gpu.PciVendorId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var vendor)
+            || !ushort.TryParse(gpu.PciDeviceId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var device))
+        {
+            return;
+        }
+
+        var matches = images.Where(i => i.VendorId == vendor && i.DeviceId == device).ToList();
+        if (matches.Count > 1 && uint.TryParse(gpu.PciSubsystemId, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var subsystem))
+        {
+            matches = [.. matches.Where(i => i.SubsystemVendorId == (subsystem & 0xFFFF) && i.SubsystemId == subsystem >> 16)];
+        }
+
+        if (matches.Count == 1)
+        {
+            gpu.VideoBios = Core.Gpu.VideoBios.Describe(matches[0].Rom, "ACPI VFCT");
         }
     }
 

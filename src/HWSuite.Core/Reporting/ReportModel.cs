@@ -139,6 +139,7 @@ public static class ReportModel
             (s["field.driver"], Join(c, " / ", g.DriverVersion, DateText.Display(g.DriverDate, c))),
             (s["field.driverPackage"], g.DriverPackage),
             (s["field.vbios"], g.BiosVersion),
+            (s["field.vbiosCopy"], g.VideoBios is { } bios ? VideoBiosText(bios, s) : null),
             (s["field.directx"], g.Direct3DFeatureLevel is { } fl
                 ? s.Format("gpu.directx", fl, g.ShaderModel ?? "—")
                 : null),
@@ -285,6 +286,20 @@ public static class ReportModel
         }
 
         return parts.Count > 0 ? string.Join(" · ", parts) : null;
+    }
+
+    /// <summary>"128 KB from the ACPI VFCT table · checksum OK · 113-APM6766SL-100 · 2023/07/13 01:28".</summary>
+    public static string VideoBiosText(Gpu.VideoBiosCopy bios, Strings s)
+    {
+        ArgumentNullException.ThrowIfNull(bios);
+        ArgumentNullException.ThrowIfNull(s);
+        var parts = new List<string>
+        {
+            s.Format("vbios.size", Bytes(bios.SizeBytes, s.Culture), bios.Source),
+            s[bios.ChecksumOk ? "vbios.checksumOk" : "vbios.checksumBad"],
+        };
+        parts.AddRange(new[] { bios.PartNumber, bios.BuildDate }.OfType<string>());
+        return string.Join(" · ", parts);
     }
 
     /// <summary>

@@ -9,6 +9,7 @@ namespace HWSuite.Providers.Windows;
 internal static unsafe partial class Native
 {
     public const uint RsmbSignature = 0x52534D42; // 'RSMB'
+    public const uint AcpiSignature = 0x41435049; // 'ACPI'
     public const uint FileShareReadWrite = 0x1 | 0x2;
     public const uint OpenExisting = 3;
     public const uint IoctlStorageQueryProperty = 0x002D_1400;
