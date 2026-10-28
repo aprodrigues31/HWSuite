@@ -19,6 +19,7 @@ public sealed class HardwareInventory
     public List<ProcessorInfo> Processors { get; } = [];
     public MemoryInfo? Memory { get; set; }
     public List<GpuInfo> Gpus { get; } = [];
+    public List<NpuInfo> Npus { get; } = [];
     public List<DiskInfo> Disks { get; } = [];
 
     /// <summary>What each provider reported about itself: skipped, partial data, failures.</summary>
@@ -218,6 +219,23 @@ public sealed class GpuInfo
 
     /// <summary>Counterfeit check against the model the name claims (<see cref="Gpu.GpuAuthenticity"/>).</summary>
     public Gpu.AuthenticityResult? Authenticity { get; set; }
+}
+
+/// <summary>A neural processing unit (Windows "Neural processors" device class).</summary>
+public sealed class NpuInfo
+{
+    public string? Name { get; set; }
+    public string? Vendor { get; set; }
+    public string? PciVendorId { get; set; }
+    public string? PciDeviceId { get; set; }
+    public string? DriverVersion { get; set; }
+    public string? DriverDate { get; set; }
+
+    /// <summary>NPU generation, e.g. "AMD XDNA 2 (Strix / Krackan / Strix Halo)".</summary>
+    public string? Family { get; set; }
+
+    /// <summary>Peak INT8 TOPS the maker quotes for this NPU (and processor series), when known.</summary>
+    public double? Tops { get; set; }
 }
 
 public sealed class DiskInfo

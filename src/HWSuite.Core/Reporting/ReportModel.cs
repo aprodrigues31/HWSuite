@@ -150,6 +150,15 @@ public static class ReportModel
             .. AuthenticityRows(g, s),
         ]))]);
 
+        Section("section.npu", [.. inv.Npus.Select(n => Group(n.Name,
+        [
+            (s["field.vendor"], n.Vendor),
+            (s["field.npuFamily"], n.Family),
+            (s["field.npuTops"], n.Tops is { } tops ? s.Format("npu.tops", tops.ToString("0.#", c)) : null),
+            (s["field.pciId"], n.PciVendorId is null ? null : $"{n.PciVendorId}:{n.PciDeviceId}"),
+            (s["field.driver"], Join(c, " / ", n.DriverVersion, DateText.Display(n.DriverDate, c))),
+        ]))]);
+
         Section("section.disks", [.. inv.Disks.Select(d => Group($"#{d.Index} {d.Model}".Trim(),
             (s["field.vendor"], d.Vendor),
             (s["field.size"], d.SizeBytes is { } size ? Bytes(size, c) : null),

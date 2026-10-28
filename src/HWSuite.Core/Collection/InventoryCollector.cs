@@ -90,6 +90,11 @@ public sealed class InventoryCollector
     {
         VirtualMachineDetector.Reconcile(inventory);
 
+        foreach (var npu in inventory.Npus)
+        {
+            Npu.NpuDatabase.Identify(npu, inventory.Processors.FirstOrDefault()?.Name);
+        }
+
         foreach (var gpu in inventory.Gpus)
         {
             gpu.Reference ??= Gpu.GpuDatabase.Find(gpu.Name, gpu.DedicatedMemoryBytes);

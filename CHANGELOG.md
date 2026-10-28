@@ -9,6 +9,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **NPU (acelerador de IA):** nova seção no relatório e na página Hardware com nome, fabricante, geração, ID PCI, driver e o desempenho de IA informado pelo fabricante (TOPS INT8). Reconhece AMD XDNA (Ryzen 7040: 10 TOPS; 8040: 16) e XDNA 2 (Ryzen AI 300, Krackan, Strix Halo: 50), Intel NPU 3 (Meteor Lake: 11; Arrow Lake: 13), NPU 4 (Lunar Lake: 48) e NPU 5 (Panther Lake: 50), e Qualcomm Hexagon (Snapdragon X: 45). Lê a categoria "Processadores neurais" do Windows, sem administrador; em PCs sem NPU a seção não aparece.
 - **Saúde da fonte pelas tensões da placa-mãe:** alertas quando +12 V, +5 V ou +3,3 V saem da faixa ATX (±5%: 11,40–12,60 V, 4,75–5,25 V, 3,135–3,465 V), ligados por padrão e com chave em Configurações → Fonte e water cooler. Nos stress tests de processador e de placa de vídeo, o painel mostra cada linha com o valor atual, o mínimo e o máximo durante o teste, e o resultado final avisa se alguma linha saiu da faixa. Serve para qualquer fonte, já que a maioria não tem conexão de dados; usa as linhas que o perfil da placa identifica.
 - **Bomba do water cooler:** em Configurações, escolha o conector de ventoinha em que a bomba está ligada (a lista mostra a rotação atual de cada um) e a rotação mínima. A bomba aparece como "Bomba (water cooler)" nos sensores, no log e nos alertas, e um alerta avisa se ela desacelerar ou parar.
 
