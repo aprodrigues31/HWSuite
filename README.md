@@ -43,9 +43,11 @@ hwsuite report --lang en                  Relatório em inglês
 hwsuite bench                             Uma thread e depois todas, 10 s cada
 hwsuite bench --duration 30               Execução mais longa, para ver o efeito do calor
 hwsuite bench --stress                    Stress test: todas as threads até Ctrl+C, conferindo cada resultado
+hwsuite bench --gpu                       Benchmark da placa de vídeo (GFLOPS, compute shader do Direct3D 11)
+hwsuite bench --gpu --stress              Stress test da placa de vídeo até Ctrl+C
 ```
 
-A nota é da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. Cada resultado vai para `Documentos\HWSuite\benchmark.csv`, que a página **Benchmark** do aplicativo também mostra.
+A nota do processador é da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. A da placa de vídeo é em GFLOPS (FP32). Os resultados vão para `Documentos\HWSuite\benchmark.csv` e `gpu-benchmark.csv`, que a página **Benchmark** do aplicativo também mostra.
 
 ### Sensores em tempo real
 

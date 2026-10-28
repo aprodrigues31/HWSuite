@@ -6,6 +6,7 @@
     <ScrollViewer>
         <StackPanel Padding="20,12,20,16" Spacing="12" MaxWidth="820" HorizontalAlignment="Left">
             <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Name="CpuHeader" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock x:Name="ProcessorText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
             <StackPanel Orientation="Horizontal" Spacing="12">
@@ -73,6 +74,59 @@
 
             <TextBlock x:Name="HistoryTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
             <StackPanel x:Name="HistoryList" Spacing="2" />
+
+            <TextBlock x:Name="GpuHeader" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,0" />
+            <TextBlock x:Name="GpuText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <Button x:Name="GpuStartButton" Click="GpuStartButton_Click" Style="{StaticResource AccentButtonStyle}" MinWidth="120" IsEnabled="False" />
+                <ComboBox x:Name="GpuDurationBox" MinWidth="120" />
+                <Button x:Name="GpuStressButton" Click="GpuStressButton_Click" MinWidth="120" IsEnabled="False" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <ProgressBar x:Name="GpuProgress" Minimum="0" Maximum="1" Value="0" />
+                <TextBlock x:Name="GpuStatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Padding="16,12" CornerRadius="8" BorderThickness="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <StackPanel Spacing="4">
+                    <TextBlock x:Name="GpuResultLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Name="GpuResultValue" Style="{StaticResource TitleLargeTextBlockStyle}" Text="—" />
+                </StackPanel>
+            </Border>
+
+            <Border x:Name="GpuStressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="8" BorderThickness="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="GpuStressStatusText" TextWrapping="Wrap" />
+                    <Grid ColumnSpacing="24" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="GpuElapsedLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="GpuRateLabel" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="GpuErrorsLabel" Grid.Column="2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="GpuTempLabel" Grid.Column="3" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="GpuElapsedValue" Grid.Row="1" Style="{StaticResource SubtitleTextBlockStyle}" Text="0:00:00" />
+                        <TextBlock x:Name="GpuRateValue" Grid.Row="1" Grid.Column="1" Style="{StaticResource SubtitleTextBlockStyle}" Text="—" />
+                        <TextBlock x:Name="GpuErrorsValue" Grid.Row="1" Grid.Column="2" Style="{StaticResource SubtitleTextBlockStyle}" Text="0" />
+                        <TextBlock x:Name="GpuTempValue" Grid.Row="1" Grid.Column="3" Style="{StaticResource SubtitleTextBlockStyle}" Text="—" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="GpuNoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            <TextBlock x:Name="GpuHistoryTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
+            <StackPanel x:Name="GpuHistoryList" Spacing="2" />
         </StackPanel>
     </ScrollViewer>
 </Page>

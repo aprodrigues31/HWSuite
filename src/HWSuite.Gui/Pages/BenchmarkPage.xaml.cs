@@ -46,11 +46,14 @@ public sealed partial class BenchmarkPage : Page
         }
 
         DurationBox.SelectedIndex = 1;
+        CpuHeader.Text = s["app.bench.cpuSection"];
+        InitializeGpu();
         Loaded += async (_, _) =>
         {
             s_processor ??= await Task.Run(ProviderCatalog.ProcessorName);
             ProcessorText.Text = $"{s_processor} · {CpuBenchmark.Version}";
             ShowHistory();
+            await LoadGpuAsync();
         };
     }
 
