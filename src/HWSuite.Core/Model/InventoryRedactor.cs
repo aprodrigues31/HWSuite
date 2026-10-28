@@ -28,6 +28,11 @@ public static class InventoryRedactor
             }
         }
 
+        foreach (var battery in inventory.Batteries)
+        {
+            battery.SerialNumber = null;
+        }
+
         foreach (var disk in inventory.Disks)
         {
             disk.SerialNumber = null;

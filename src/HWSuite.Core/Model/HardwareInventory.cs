@@ -20,6 +20,7 @@ public sealed class HardwareInventory
     public MemoryInfo? Memory { get; set; }
     public List<GpuInfo> Gpus { get; } = [];
     public List<NpuInfo> Npus { get; } = [];
+    public List<BatteryInfo> Batteries { get; } = [];
     public List<DiskInfo> Disks { get; } = [];
 
     /// <summary>What each provider reported about itself: skipped, partial data, failures.</summary>
@@ -219,6 +220,37 @@ public sealed class GpuInfo
 
     /// <summary>Counterfeit check against the model the name claims (<see cref="Gpu.GpuAuthenticity"/>).</summary>
     public Gpu.AuthenticityResult? Authenticity { get; set; }
+}
+
+/// <summary>
+/// A battery Windows knows about: a laptop's, or a UPS connected by USB (<see cref="IsUps"/>). Capacities are
+/// mWh, or percentages when <see cref="Relative"/> (common on UPSes).
+/// </summary>
+public sealed class BatteryInfo
+{
+    public string? Name { get; set; }
+    public string? Manufacturer { get; set; }
+    public string? SerialNumber { get; set; }
+    public string? ManufactureDate { get; set; }
+    public string? Chemistry { get; set; }
+    public bool Rechargeable { get; set; }
+    public bool IsUps { get; set; }
+    public bool Relative { get; set; }
+    public uint? DesignCapacity { get; set; }
+    public uint? FullChargeCapacity { get; set; }
+    public uint? RemainingCapacity { get; set; }
+    public int? CycleCount { get; set; }
+    public uint? VoltageMv { get; set; }
+
+    /// <summary>mW: positive while charging, negative while discharging.</summary>
+    public int? RateMw { get; set; }
+
+    public bool OnLine { get; set; }
+    public bool Charging { get; set; }
+    public bool Discharging { get; set; }
+    public bool Critical { get; set; }
+    public TimeSpan? EstimatedTime { get; set; }
+    public double? TemperatureCelsius { get; set; }
 }
 
 /// <summary>A neural processing unit (Windows "Neural processors" device class).</summary>

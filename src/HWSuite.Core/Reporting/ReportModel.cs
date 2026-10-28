@@ -159,6 +159,8 @@ public static class ReportModel
             (s["field.driver"], Join(c, " / ", n.DriverVersion, DateText.Display(n.DriverDate, c))),
         ]))]);
 
+        Section("section.battery", [.. inv.Batteries.Select(b => Group(b.Name ?? s[b.IsUps ? "battery.ups" : "battery.laptop"], BatteryRows(b, s)))]);
+
         Section("section.disks", [.. inv.Disks.Select(d => Group($"#{d.Index} {d.Model}".Trim(),
             (s["field.vendor"], d.Vendor),
             (s["field.size"], d.SizeBytes is { } size ? Bytes(size, c) : null),
@@ -295,6 +297,36 @@ public static class ReportModel
         }
 
         return parts.Count > 0 ? string.Join(" · ", parts) : null;
+    }
+
+    /// <summary>Kind, charge and state, run time, health (capacity left versus new), capacities, cycles, electrical values.</summary>
+    private static (string Label, string? Value)[] BatteryRows(BatteryInfo b, Strings s)
+    {
+        var c = s.Culture;
+        var unit = b.Relative ? "%" : "mWh";
+        string? Capacity(uint? value) => value?.ToString("N0", c);
+        var state = b.OnLine
+            ? s[b.Charging ? "battery.charging" : "battery.online"]
+            : s[b.Discharging ? "battery.discharging" : "battery.offline"];
+        var health = Power.Batteries.HealthPercent(b);
+        return
+        [
+            (s["field.batteryKind"], s[b.IsUps ? "battery.ups" : "battery.laptop"]),
+            (s["field.manufacturer"], b.Manufacturer),
+            (s["field.serial"], b.SerialNumber),
+            (s["field.manufactured"], DateText.Display(b.ManufactureDate, c)),
+            (s["field.chemistry"], b.Chemistry),
+            (s["field.charge"], Power.Batteries.ChargePercent(b) is { } pct ? string.Create(c, $"{pct:0}% · {state}") : state),
+            (s["field.runtime"], b.EstimatedTime is { } t ? s.Format("battery.runtime", (int)t.TotalHours, t.Minutes) : null),
+            (s["field.batteryHealth"], health is { } h ? s.Format("battery.health", h.ToString("0", c), (100 - h).ToString("0", c)) : null),
+            (s["field.capacities"], b.DesignCapacity is null && b.FullChargeCapacity is null ? null
+                : $"{Capacity(b.DesignCapacity) ?? "—"} / {Capacity(b.FullChargeCapacity) ?? "—"} / {Capacity(b.RemainingCapacity) ?? "—"} {unit}"),
+            (s["field.cycles"], b.CycleCount?.ToString("N0", c)),
+            (s["field.electrical"], b.VoltageMv is null && b.RateMw is null ? null
+                : string.Join(" · ", new[] { b.VoltageMv is { } mv ? string.Create(c, $"{mv / 1000.0:0.00} V") : null, b.RateMw is { } mw ? string.Create(c, $"{mw / 1000.0:+0.0;-0.0} W") : null }.OfType<string>())),
+            (s["field.temperature"], b.TemperatureCelsius is { } temp ? string.Create(c, $"{temp:0.#} °C") : null),
+            (s["field.status"], b.Critical ? s["battery.critical"] : null),
+        ];
     }
 
     /// <summary>"56.5 KB from the ACPI VFCT table · checksum OK · 113-APM6766SL-100 · ASRock R23D-E3 SL 16GB 228W · ATOMBIOS 022.002.001.019.000001 · 8/2/2023".</summary>
