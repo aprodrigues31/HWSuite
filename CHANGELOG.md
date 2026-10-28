@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.14.0] - 2026-10-28
+
 ### Adicionado
 - **Instalador para Windows** (`hwsuite-setup-<versão>.exe`): instala por usuário, sem pedir administrador, em `%LOCALAPPDATA%\Programs\HWSuite`, com atalho no Menu Iniciar (e na área de trabalho, se marcado), o aplicativo e o `hwsuite.exe` de linha de comando. Desinstala por "Adicionar ou remover programas", removendo também a tarefa de iniciar com o Windows. Os zips portáteis continuam disponíveis.
 - **Aviso de nova versão:** ao abrir, o aplicativo faz uma consulta ao GitHub e, se houver versão mais nova, mostra uma barra com o botão "Baixar instalador". Pode ser desligado em Configurações.
@@ -145,7 +147,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.13.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.14.0
 [0.13.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.13.0
 [0.12.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.12.0
 [0.11.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.11.0
