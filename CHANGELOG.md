@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.13.0] - 2026-10-28
+
 ### Adicionado
 - **Benchmark do processador** (estilo CPU-Z): a mesma carga em um núcleo (1 thread) e depois em todos os núcleos (todas as threads), com nota em pontos e o ganho com todas as threads. A carga fica no cache de cada núcleo (inteiros, leituras e gravações dependentes, ponto flutuante), então mede os núcleos e não a memória. Fica na nova página **Benchmark** do aplicativo (5, 10 ou 30 s por teste, com cancelamento) e em `hwsuite bench [--duration s]`. Os resultados vão para `Documentos\HWSuite\benchmark.csv` e as execuções anteriores aparecem para comparação.
 - **Stress test** (estabilidade): o botão "Stress test" da página Benchmark (ou `hwsuite bench --stress`) roda a carga em todas as threads sem limite de tempo, até clicar em Parar. Cada lote de trabalho é conferido com um resultado de referência, e qualquer diferença conta como erro de cálculo (sinal de overclock, undervolt, memória ou temperatura instáveis). A tela mostra tempo, pontos por segundo (uma queda indica redução de clock por calor), erros e a temperatura do processador com a máxima. O Windows não entra em suspensão durante o teste, e a página continua rodando enquanto se olha a página Sensores.
@@ -134,7 +136,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.12.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.13.0
 [0.12.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.12.0
 [0.11.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.11.0
 [0.10.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.10.0
