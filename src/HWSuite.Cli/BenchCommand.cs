@@ -14,6 +14,11 @@ internal static class BenchCommand
 
     public static int Run(CliOptions options, Strings s)
     {
+        if (options.Gpu)
+        {
+            return GpuBenchCommand.Run(options, s);
+        }
+
         if (options.Stress)
         {
             return Stress(s);

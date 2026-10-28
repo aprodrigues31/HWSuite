@@ -133,6 +133,20 @@ public sealed class Strings
         ["app.stress.temperature"] = "CPU temperature (max.)",
         ["app.stress.firstError"] = "first error after {0}",
         ["app.stress.explain"] = "Every batch of work is checked against a reference result: a stable system never shows an error. Points per second falling over time means the processor is slowing down because of heat or power limits.",
+        ["gpubench.title"] = "HWSuite graphics card benchmark ({0}) · {1} · {2} s",
+        ["gpubench.result"] = "FP32 throughput: {0} GFLOPS",
+        ["gpubench.previous"] = "Previous runs (date, GFLOPS, card):",
+        ["gpubench.noAdapter"] = "No Direct3D 11 graphics card found.",
+        ["gpubench.note"] = "GFLOPS: billions of 32-bit floating-point operations per second, measured with fused multiply-adds in a Direct3D 11 compute shader. Makers quote the theoretical peak (shaders x 2 x boost clock); a real workload reaches part of it.",
+        ["gpustress.title"] = "HWSuite graphics card stress test ({0}) · {1} · until Ctrl+C. Watch the GPU temperature and hot spot (hwsuite sensors in another window).",
+        ["gpustress.line"] = "{0}  {1} GFLOPS  errors: {2}  batches checked: {3}",
+        ["gpustress.passed"] = "No computation errors: the graphics card stayed stable for the whole test.",
+        ["gpustress.failed"] = "Computation errors detected: the graphics card is unstable (overclock, undervolt or heat). Revert the last change and test again.",
+        ["app.bench.cpuSection"] = "Processor",
+        ["app.bench.gpuSection"] = "Graphics card",
+        ["app.gpubench.result"] = "FP32 throughput",
+        ["app.gpubench.none"] = "No Direct3D 11 graphics card found.",
+        ["app.gpustress.temperature"] = "GPU temperature (max.)",
         ["app.nav.bench"] = "Benchmark",
         ["app.bench.start"] = "Start",
         ["app.bench.cancel"] = "Cancel",
@@ -312,6 +326,8 @@ public sealed class Strings
               hwsuite bench [--duration <seconds>]
                                             Processor benchmark: one thread, then all (default 10 s each).
               hwsuite bench --stress        Stability test on all threads until Ctrl+C, checking every result.
+              hwsuite bench --gpu [--stress]
+                                            The same for the graphics card (Direct3D 11 compute shader).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -466,6 +482,20 @@ public sealed class Strings
         ["app.stress.temperature"] = "Temperatura do processador (máx.)",
         ["app.stress.firstError"] = "primeiro erro após {0}",
         ["app.stress.explain"] = "Cada lote de trabalho é conferido com um resultado de referência: um sistema estável nunca mostra erro. Pontos por segundo caindo com o tempo indicam que o processador está reduzindo o clock por calor ou limite de energia.",
+        ["gpubench.title"] = "Benchmark de placa de vídeo do HWSuite ({0}) · {1} · {2} s",
+        ["gpubench.result"] = "Desempenho FP32: {0} GFLOPS",
+        ["gpubench.previous"] = "Execuções anteriores (data, GFLOPS, placa):",
+        ["gpubench.noAdapter"] = "Nenhuma placa de vídeo com Direct3D 11 encontrada.",
+        ["gpubench.note"] = "GFLOPS: bilhões de operações de ponto flutuante de 32 bits por segundo, medidas com multiplicações-somas (FMA) num compute shader do Direct3D 11. Os fabricantes informam o pico teórico (shaders x 2 x clock de boost); uma carga real alcança parte dele.",
+        ["gpustress.title"] = "Stress test de placa de vídeo do HWSuite ({0}) · {1} · até Ctrl+C. Acompanhe a temperatura e o hot spot da GPU (hwsuite sensors em outra janela).",
+        ["gpustress.line"] = "{0}  {1} GFLOPS  erros: {2}  lotes conferidos: {3}",
+        ["gpustress.passed"] = "Nenhum erro de cálculo: a placa de vídeo ficou estável durante todo o teste.",
+        ["gpustress.failed"] = "Erros de cálculo detectados: a placa de vídeo está instável (overclock, undervolt ou calor). Desfaça a última mudança e teste de novo.",
+        ["app.bench.cpuSection"] = "Processador",
+        ["app.bench.gpuSection"] = "Placa de vídeo",
+        ["app.gpubench.result"] = "Desempenho FP32",
+        ["app.gpubench.none"] = "Nenhuma placa de vídeo com Direct3D 11 encontrada.",
+        ["app.gpustress.temperature"] = "Temperatura da GPU (máx.)",
         ["app.nav.bench"] = "Benchmark",
         ["app.bench.start"] = "Iniciar",
         ["app.bench.cancel"] = "Cancelar",
@@ -645,6 +675,8 @@ public sealed class Strings
               hwsuite bench [--duration <segundos>]
                                             Benchmark do processador: uma thread e depois todas (10 s cada).
               hwsuite bench --stress        Teste de estabilidade em todas as threads até Ctrl+C, conferindo cada resultado.
+              hwsuite bench --gpu [--stress]
+                                            O mesmo para a placa de vídeo (compute shader do Direct3D 11).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

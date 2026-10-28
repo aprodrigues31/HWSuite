@@ -55,12 +55,12 @@ public static class BenchmarkHistory
         return entries;
     }
 
-    private static string Quote(string value) =>
+    internal static string Quote(string value) =>
         value.Contains(',', StringComparison.Ordinal) || value.Contains('"', StringComparison.Ordinal)
             ? "\"" + value.Replace("\"", "\"\"", StringComparison.Ordinal) + "\""
             : value;
 
-    private static List<string> Split(string line)
+    internal static List<string> Split(string line)
     {
         var fields = new List<string>();
         var current = new StringBuilder();
