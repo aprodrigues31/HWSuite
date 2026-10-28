@@ -1,21 +1,39 @@
 using HWSuite.Core.Benchmark;
+using HWSuite.Core.Sensors;
 using HWSuite.Hosting;
+using HWSuite.Providers.Windows;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Navigation;
 
 namespace HWSuite.Gui.Pages;
 
-/// <summary>Processor benchmark (one thread, then all threads), with the saved runs for comparison.</summary>
+/// <summary>
+/// Processor benchmark (one thread, then all threads) with the saved runs for comparison, and the stress
+/// test (all threads until stopped, every result checked). The page stays cached, so a running test keeps
+/// going and keeps its display while the user looks at the Sensors page.
+/// </summary>
 public sealed partial class BenchmarkPage : Page
 {
     private static readonly int[] Durations = [5, 10, 30];
     private static string? s_processor;
     private CancellationTokenSource? _running;
+    private CancellationTokenSource? _stress;
+    private double? _maxTemperature;
 
     public BenchmarkPage()
     {
         InitializeComponent();
+        NavigationCacheMode = NavigationCacheMode.Required;
         var s = App.Text;
+        StressButton.Content = s["app.stress.start"];
+        ElapsedLabel.Text = s["app.stress.elapsed"];
+        RateLabel.Text = s["app.stress.rate"];
+        ErrorsLabel.Text = s["app.stress.errors"];
+        TempLabel.Text = s["app.stress.temperature"];
+        StressExplain.Text = s["app.stress.explain"];
         PageTitle.Text = s["app.nav.bench"];
         StartButton.Content = s["app.bench.start"];
         SingleLabel.Text = s["app.bench.single"];
@@ -34,7 +52,6 @@ public sealed partial class BenchmarkPage : Page
             ProcessorText.Text = $"{s_processor} · {CpuBenchmark.Version}";
             ShowHistory();
         };
-        Unloaded += (_, _) => _running?.Cancel();
     }
 
     private async void StartButton_Click(object sender, RoutedEventArgs e)
@@ -51,6 +68,7 @@ public sealed partial class BenchmarkPage : Page
         _running = cancel;
         StartButton.Content = s["app.bench.cancel"];
         DurationBox.IsEnabled = false;
+        StressButton.IsEnabled = false;
         SingleValue.Text = MultiValue.Text = "—";
         ScalingText.Text = "";
 
@@ -86,6 +104,66 @@ public sealed partial class BenchmarkPage : Page
             _running = null;
             StartButton.Content = s["app.bench.start"];
             DurationBox.IsEnabled = true;
+            StressButton.IsEnabled = true;
+        }
+    }
+
+    private async void StressButton_Click(object sender, RoutedEventArgs e)
+    {
+        var s = App.Text;
+        if (_stress is not null)
+        {
+            await _stress.CancelAsync();
+            return;
+        }
+
+        using var cancel = new CancellationTokenSource();
+        _stress = cancel;
+        _maxTemperature = null;
+        StressButton.Content = s["app.stress.stop"];
+        StartButton.IsEnabled = DurationBox.IsEnabled = false;
+        StressPanel.Visibility = Visibility.Visible;
+        StressStatusText.Text = s.Format("app.stress.running", Environment.ProcessorCount);
+        ErrorsValue.ClearValue(TextBlock.ForegroundProperty);
+        ErrorsValue.Text = "0";
+        RateValue.Text = "—";
+        Progress.IsIndeterminate = true;
+        StatusText.Text = "";
+
+        var ui = DispatcherQueue;
+        KeepAwake.Start(); // UI thread: the same thread clears it below
+        try
+        {
+            var final = await Task.Run(() => CpuStressTest.Run(st => ui.TryEnqueue(() => ShowStress(st)), cancel: cancel.Token));
+            ShowStress(final);
+            StressStatusText.Text = s[final.Errors == 0 ? "stress.passed" : "stress.failed"];
+        }
+        finally
+        {
+            KeepAwake.Stop();
+            _stress = null;
+            Progress.IsIndeterminate = false;
+            StressButton.Content = s["app.stress.start"];
+            StartButton.IsEnabled = DurationBox.IsEnabled = true;
+        }
+    }
+
+    private void ShowStress(StressStatus st)
+    {
+        var s = App.Text;
+        ElapsedValue.Text = $"{(int)st.Elapsed.TotalHours}:{st.Elapsed.Minutes:00}:{st.Elapsed.Seconds:00}";
+        RateValue.Text = CpuBenchmark.Points(st.PointsPerSecond, s.Culture);
+        ErrorsValue.Text = st.Errors.ToString("N0", s.Culture)
+            + (st.FirstErrorAt is { } first ? " (" + s.Format("app.stress.firstError", $"{(int)first.TotalHours}:{first.Minutes:00}:{first.Seconds:00}") + ")" : "");
+        if (st.Errors > 0)
+        {
+            ErrorsValue.Foreground = new SolidColorBrush(Colors.Red);
+        }
+
+        if (App.Monitor.Latest is { } snapshot && SensorSummary.CpuTemperature(snapshot) is { } temperature)
+        {
+            _maxTemperature = Math.Max(_maxTemperature ?? temperature, temperature);
+            TempValue.Text = string.Create(s.Culture, $"{temperature:0} °C ({_maxTemperature:0} °C)");
         }
     }
 

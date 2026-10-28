@@ -52,6 +52,9 @@ public sealed record CliOptions
 
     public string? LogPath { get; init; }
 
+    /// <summary>bench: run the stability test until Ctrl+C instead of the timed benchmark.</summary>
+    public bool Stress { get; init; }
+
     /// <summary>Show the chip's own numbered motherboard inputs, without board profiles.</summary>
     public bool Raw { get; init; }
 
@@ -148,6 +151,7 @@ public sealed record CliOptions
                 "-w" or "--watch" when options.Command == CliCommand.Sensors => options with { Watch = true },
                 "--log" when options.Command == CliCommand.Sensors => options with { LogPath = Value(arg) },
                 "--raw" when options.Command == CliCommand.Sensors => options with { Raw = true },
+                "--stress" when options.Command == CliCommand.Bench => options with { Stress = true },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
                 "--duration" when options.Command is CliCommand.Sensors or CliCommand.Bench => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },

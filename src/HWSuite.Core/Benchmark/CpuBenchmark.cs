@@ -22,8 +22,8 @@ public static class CpuBenchmark
 {
     public const string Version = "CPU v1";
 
-    private const int TableSize = 16 * 1024; // 64 KB of uint per thread: fits in L2, not in L1
-    private const double PointsPerUnit = 0.01;
+    internal const int TableSize = 16 * 1024; // 64 KB of uint per thread: fits in L2, not in L1
+    internal const double PointsPerUnit = 0.01;
 
     /// <summary>Runs both tests. <paramref name="progress"/> gets 0..1 and the phase ("single" or "multi").</summary>
     public static BenchmarkResult Run(TimeSpan perTest, IProgress<(double Fraction, string Phase)>? progress = null, int? threads = null, CancellationToken cancel = default)
@@ -97,15 +97,26 @@ public static class CpuBenchmark
     }
 
     /// <summary>Per-thread working set: the table and the generator state.</summary>
-    private sealed class State(ulong seed)
+    internal sealed class State(ulong seed)
     {
         public readonly uint[] Table = Enumerable.Range(0, TableSize).Select(i => (uint)(i * 2654435761u)).ToArray();
         public ulong X = seed | 1;
+
+        /// <summary>Back to the starting point, so the same units give the same checksum again.</summary>
+        public void Reset(ulong seed)
+        {
+            for (var i = 0; i < Table.Length; i++)
+            {
+                Table[i] = (uint)(i * 2654435761u);
+            }
+
+            X = seed | 1;
+        }
     }
 
     /// <summary>One unit of work (about 10 microseconds on a current desktop core). Returns a checksum so nothing is optimized away.</summary>
     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-    private static ulong Unit(State state)
+    internal static ulong Unit(State state)
     {
         var table = state.Table;
         var x = state.X;

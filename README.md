@@ -42,6 +42,7 @@ hwsuite report --lang en                  Relatório em inglês
 ```text
 hwsuite bench                             Uma thread e depois todas, 10 s cada
 hwsuite bench --duration 30               Execução mais longa, para ver o efeito do calor
+hwsuite bench --stress                    Stress test: todas as threads até Ctrl+C, conferindo cada resultado
 ```
 
 A nota é da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. Cada resultado vai para `Documentos\HWSuite\benchmark.csv`, que a página **Benchmark** do aplicativo também mostra.

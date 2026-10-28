@@ -14,6 +14,11 @@ internal static class BenchCommand
 
     public static int Run(CliOptions options, Strings s)
     {
+        if (options.Stress)
+        {
+            return Stress(s);
+        }
+
         var c = s.Culture;
         var processor = ProviderCatalog.ProcessorName();
         var seconds = options.DurationSeconds ?? DefaultSeconds;
@@ -76,6 +81,51 @@ internal static class BenchCommand
 
         return 0;
     }
+
+    /// <summary>"hwsuite bench --stress": all threads until Ctrl+C, a status line every 5 s, exit code 1 on errors.</summary>
+    private static int Stress(Strings s)
+    {
+        var c = s.Culture;
+        Console.WriteLine(s.Format("stress.title", CpuBenchmark.Version, ProviderCatalog.ProcessorName() ?? "?", Environment.ProcessorCount));
+        using var cancel = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) =>
+        {
+            e.Cancel = true;
+            cancel.Cancel();
+        };
+
+        if (OperatingSystem.IsWindows())
+        {
+            Providers.Windows.KeepAwake.Start();
+        }
+
+        var ticks = 0;
+        var status = CpuStressTest.Run(
+            st =>
+            {
+                if (++ticks % 5 == 0)
+                {
+                    Console.WriteLine(Line(st, s));
+                }
+            },
+            cancel: cancel.Token);
+
+        if (OperatingSystem.IsWindows())
+        {
+            Providers.Windows.KeepAwake.Stop();
+        }
+
+        Console.WriteLine();
+        Console.WriteLine(Line(status, s));
+        Console.WriteLine(s[status.Errors == 0 ? "stress.passed" : "stress.failed"]);
+        return status.Errors == 0 ? 0 : 1;
+    }
+
+    private static string Line(StressStatus st, Strings s) =>
+        s.Format("stress.line", Elapsed(st.Elapsed), CpuBenchmark.Points(st.PointsPerSecond, s.Culture), st.Errors.ToString("N0", s.Culture), st.Batches.ToString("N0", s.Culture));
+
+    /// <summary>"1:05:09" (hours:minutes:seconds).</summary>
+    internal static string Elapsed(TimeSpan t) => $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}";
 
     internal static string HistoryPath() =>
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "benchmark.csv");

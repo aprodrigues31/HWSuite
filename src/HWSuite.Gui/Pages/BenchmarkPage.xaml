@@ -11,6 +11,7 @@
             <StackPanel Orientation="Horizontal" Spacing="12">
                 <Button x:Name="StartButton" Click="StartButton_Click" Style="{StaticResource AccentButtonStyle}" MinWidth="120" />
                 <ComboBox x:Name="DurationBox" MinWidth="120" />
+                <Button x:Name="StressButton" Click="StressButton_Click" MinWidth="120" />
             </StackPanel>
 
             <StackPanel Spacing="4">
@@ -39,6 +40,34 @@
                     </StackPanel>
                 </Border>
             </Grid>
+
+            <Border x:Name="StressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="8" BorderThickness="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="StressStatusText" TextWrapping="Wrap" />
+                    <Grid ColumnSpacing="24" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock x:Name="ElapsedLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="RateLabel" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="ErrorsLabel" Grid.Column="2" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="TempLabel" Grid.Column="3" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        <TextBlock x:Name="ElapsedValue" Grid.Row="1" Style="{StaticResource SubtitleTextBlockStyle}" Text="0:00:00" />
+                        <TextBlock x:Name="RateValue" Grid.Row="1" Grid.Column="1" Style="{StaticResource SubtitleTextBlockStyle}" Text="—" />
+                        <TextBlock x:Name="ErrorsValue" Grid.Row="1" Grid.Column="2" Style="{StaticResource SubtitleTextBlockStyle}" Text="0" />
+                        <TextBlock x:Name="TempValue" Grid.Row="1" Grid.Column="3" Style="{StaticResource SubtitleTextBlockStyle}" Text="—" />
+                    </Grid>
+                    <TextBlock x:Name="StressExplain" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
 
             <TextBlock x:Name="NoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 

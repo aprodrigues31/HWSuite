@@ -120,6 +120,19 @@ public sealed class Strings
         ["bench.previous"] = "Previous runs (date, one thread, all threads, processor):",
         ["bench.cancelled"] = "Benchmark cancelled.",
         ["bench.note"] = "Points are HWSuite's own scale (not CPU-Z's): compare them with other HWSuite runs. The workload stays in each core's cache, so it measures the cores, not the memory.",
+        ["stress.title"] = "HWSuite stress test ({0}) · {1} · {2} threads until Ctrl+C. Watch the temperatures (hwsuite sensors in another window).",
+        ["stress.line"] = "{0}  {1} points/s  errors: {2}  batches checked: {3}",
+        ["stress.passed"] = "No computation errors: the processor stayed stable for the whole test.",
+        ["stress.failed"] = "Computation errors detected: the system is unstable (overclock, undervolt, memory timings or heat). Revert the last change and test again.",
+        ["app.stress.start"] = "Stress test",
+        ["app.stress.stop"] = "Stop",
+        ["app.stress.running"] = "Stress test running on all {0} threads, with no time limit. Press Stop to end it.",
+        ["app.stress.elapsed"] = "Time",
+        ["app.stress.rate"] = "Points per second",
+        ["app.stress.errors"] = "Errors",
+        ["app.stress.temperature"] = "CPU temperature (max.)",
+        ["app.stress.firstError"] = "first error after {0}",
+        ["app.stress.explain"] = "Every batch of work is checked against a reference result: a stable system never shows an error. Points per second falling over time means the processor is slowing down because of heat or power limits.",
         ["app.nav.bench"] = "Benchmark",
         ["app.bench.start"] = "Start",
         ["app.bench.cancel"] = "Cancel",
@@ -298,6 +311,7 @@ public sealed class Strings
                                             Save the video BIOS (AMD cards, from the ACPI VFCT table).
               hwsuite bench [--duration <seconds>]
                                             Processor benchmark: one thread, then all (default 10 s each).
+              hwsuite bench --stress        Stability test on all threads until Ctrl+C, checking every result.
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -439,6 +453,19 @@ public sealed class Strings
         ["bench.previous"] = "Execuções anteriores (data, uma thread, todas as threads, processador):",
         ["bench.cancelled"] = "Benchmark cancelado.",
         ["bench.note"] = "Os pontos são da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. A carga fica no cache de cada núcleo, então mede os núcleos, não a memória.",
+        ["stress.title"] = "Stress test do HWSuite ({0}) · {1} · {2} threads até Ctrl+C. Acompanhe as temperaturas (hwsuite sensors em outra janela).",
+        ["stress.line"] = "{0}  {1} pontos/s  erros: {2}  lotes conferidos: {3}",
+        ["stress.passed"] = "Nenhum erro de cálculo: o processador ficou estável durante todo o teste.",
+        ["stress.failed"] = "Erros de cálculo detectados: o sistema está instável (overclock, undervolt, temporizações da memória ou calor). Desfaça a última mudança e teste de novo.",
+        ["app.stress.start"] = "Stress test",
+        ["app.stress.stop"] = "Parar",
+        ["app.stress.running"] = "Stress test rodando em todas as {0} threads, sem limite de tempo. Clique em Parar para encerrar.",
+        ["app.stress.elapsed"] = "Tempo",
+        ["app.stress.rate"] = "Pontos por segundo",
+        ["app.stress.errors"] = "Erros",
+        ["app.stress.temperature"] = "Temperatura do processador (máx.)",
+        ["app.stress.firstError"] = "primeiro erro após {0}",
+        ["app.stress.explain"] = "Cada lote de trabalho é conferido com um resultado de referência: um sistema estável nunca mostra erro. Pontos por segundo caindo com o tempo indicam que o processador está reduzindo o clock por calor ou limite de energia.",
         ["app.nav.bench"] = "Benchmark",
         ["app.bench.start"] = "Iniciar",
         ["app.bench.cancel"] = "Cancelar",
@@ -617,6 +644,7 @@ public sealed class Strings
                                             Salva a BIOS de vídeo (placas AMD, pela tabela ACPI VFCT).
               hwsuite bench [--duration <segundos>]
                                             Benchmark do processador: uma thread e depois todas (10 s cada).
+              hwsuite bench --stress        Teste de estabilidade em todas as threads até Ctrl+C, conferindo cada resultado.
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

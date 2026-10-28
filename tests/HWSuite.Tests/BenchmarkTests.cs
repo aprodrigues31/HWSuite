@@ -62,6 +62,33 @@ public class BenchmarkTests
         Assert.Equal(5, options.DurationSeconds);
     }
 
+    [Fact]
+    public void A_stable_stress_run_has_no_errors_and_reports_ticks()
+    {
+        using var cancel = new CancellationTokenSource(TimeSpan.FromMilliseconds(600));
+        var ticks = new List<StressStatus>();
+        var final = CpuStressTest.Run(st => { lock (ticks) { ticks.Add(st); } }, threads: 2, tick: TimeSpan.FromMilliseconds(100), cancel: cancel.Token);
+
+        Assert.Equal(0, final.Errors);
+        Assert.Null(final.FirstErrorAt);
+        Assert.True(final.Batches > 0);
+        Assert.NotEmpty(ticks);
+        Assert.Contains(ticks, t => t.PointsPerSecond > 0);
+    }
+
+    [Fact]
+    public void A_wrong_result_is_counted_as_an_error()
+    {
+        using var cancel = new CancellationTokenSource(TimeSpan.FromMilliseconds(400));
+        var final = CpuStressTest.Run(null, 2, TimeSpan.FromMilliseconds(100), (n, sum) => n == 3 ? sum ^ 1 : sum, cancel.Token);
+
+        Assert.Equal(1, final.Errors);
+        Assert.NotNull(final.FirstErrorAt);
+    }
+
+    [Fact]
+    public void Cli_parses_stress() => Assert.True(CliOptions.Parse(["bench", "--stress"]).Stress);
+
     private sealed class InlineProgress(Action<(double Fraction, string Phase)> report) : IProgress<(double Fraction, string Phase)>
     {
         private readonly Lock _gate = new();
