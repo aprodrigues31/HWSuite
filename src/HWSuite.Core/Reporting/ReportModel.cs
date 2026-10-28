@@ -268,6 +268,11 @@ public static class ReportModel
             rows.Add((s.Format("field.xmpProfile", spd.XmpVersion ?? "", profile.Name.Replace("XMP ", "", StringComparison.Ordinal)), Profile(spd.MemoryType, profile, c)));
         }
 
+        foreach (var profile in spd.ExpoProfiles)
+        {
+            rows.Add((s.Format("field.expoProfile", spd.ExpoVersion ?? "", profile.Name.Replace("EXPO ", "", StringComparison.Ordinal)), Profile(spd.MemoryType, profile, c)));
+        }
+
         return [.. rows];
     }
 

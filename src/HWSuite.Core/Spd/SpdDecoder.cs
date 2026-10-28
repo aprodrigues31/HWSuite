@@ -28,6 +28,10 @@ public static class SpdDecoder
     /// module instead of 512/1024. <paramref name="peek"/> reads one byte; it is used to skip the
     /// XMP block when its header is absent. Unread bytes can be left as 0.
     /// </summary>
+    internal const int ExpoOffset = 0x340;
+    private const int ExpoHeaderSize = 10;
+    private const int ExpoProfileSize = 40;
+
     public static IReadOnlyList<(int From, int To)> RangesToRead(byte memoryType, Func<int, byte> peek)
     {
         ArgumentNullException.ThrowIfNull(peek);
@@ -45,7 +49,16 @@ public static class SpdDecoder
                 List<(int, int)> ddr5 = [(0, 39), (235, 235), (512, 554), (640, 642)];
                 if (peek(640) == 0x0C && peek(641) == 0x4A)
                 {
-                    ddr5.Add((704, 895)); // three XMP 3.0 profiles
+                    ddr5.Add((704, 831)); // XMP 3.0 profiles 1 and 2
+                    if (peek(ExpoOffset) != (byte)'E' || peek(ExpoOffset + 1) != (byte)'X')
+                    {
+                        ddr5.Add((832, 895)); // profile 3, unless the EXPO block is there
+                    }
+                }
+
+                if (peek(ExpoOffset) == (byte)'E' && peek(ExpoOffset + 1) == (byte)'X')
+                {
+                    ddr5.Add((ExpoOffset, ExpoOffset + ExpoHeaderSize + (2 * ExpoProfileSize) - 1)); // AMD EXPO header and both profiles
                 }
 
                 return ddr5;
@@ -200,7 +213,8 @@ public static class SpdDecoder
         if (s[640] == 0x0C && s[641] == 0x4A)
         {
             info.XmpVersion = Revision(s[642]);
-            for (var p = 0; p < 3; p++)
+            var hasExpo = s.Length >= ExpoOffset + 4 && s.Slice(ExpoOffset, 4).SequenceEqual("EXPO"u8);
+            for (var p = 0; p < (hasExpo ? 2 : 3); p++) // hybrid XMP+EXPO modules keep EXPO where XMP profile 3 would be
             {
                 var b = 704 + (p * 64);
                 var xtck = U16(s, b + 5);
@@ -213,8 +227,28 @@ public static class SpdDecoder
             }
         }
 
+        // AMD EXPO: "EXPO" at 0x340, version, then two 40-byte profiles (VDD, VDDQ, VPP, -, tCK, tAA, tRCD, tRP, tRAS, tRC...).
+        if (s.Length >= ExpoOffset + ExpoHeaderSize + (2 * ExpoProfileSize) && s.Slice(ExpoOffset, 4).SequenceEqual("EXPO"u8))
+        {
+            info.ExpoVersion = Revision(s[ExpoOffset + 4]);
+            for (var p = 0; p < 2; p++)
+            {
+                var b = ExpoOffset + ExpoHeaderSize + (p * ExpoProfileSize);
+                var etck = U16(s, b + 4);
+                if (etck < 100)
+                {
+                    continue; // profile slot not used
+                }
+
+                info.ExpoProfiles.Add(Ddr5Profile($"EXPO {p + 1}", etck, s, b + 6, Ddr5Voltage(s[b])));
+            }
+        }
+
         return info;
     }
+
+    /// <summary>DDR5 voltage byte: volts in the top 3 bits, hundredths in steps of 5 below (0x25 = 1.25 V).</summary>
+    internal static double? Ddr5Voltage(byte value) => value == 0 ? null : (value >> 5) + ((value & 0x1F) * 0.05);
 
     /// <summary>tAA, tRCD, tRP, tRAS, tRC as consecutive 16-bit picosecond values starting at <paramref name="first"/>.</summary>
     private static SpdTimingProfile Ddr5Profile(string name, int tckPs, ReadOnlySpan<byte> s, int first, double? voltage)

@@ -65,7 +65,11 @@ public class SpdTests
         s[offset + 1] = (byte)(value >> 8);
     }
 
-    /// <summary>DDR5 UDIMM, JEDEC DDR5-4800 40-39-39, XMP 3.0 profile DDR5-6000 30-38-38-78.</summary>
+    /// <summary>
+    /// DDR5 UDIMM, JEDEC DDR5-4800 40-39-39, XMP 3.0 profile DDR5-6000 30-38-38-78, and (hybrid module)
+    /// AMD EXPO profiles DDR5-6000 38-38-38-78 at 1.25 V and DDR5-5600 40-40-40-84 at 1.20 V. The EXPO values
+    /// are the ones in a published XMP+EXPO module dump (DDRXMPEditor sample), re-entered here byte by byte.
+    /// </summary>
     internal static byte[] Ddr5()
     {
         var s = new byte[1024];
@@ -93,6 +97,25 @@ public class SpdTests
         U16(s, b + 17, 12654);
         U16(s, b + 19, 25974);
         U16(s, b + 21, 38628);
+
+        Encoding.ASCII.GetBytes("EXPO").CopyTo(s, 0x340);
+        s[0x344] = 0x10;
+        s[0x345] = 0x33;
+        s[0x346] = 0x11;
+        void Expo(int p, byte vdd, int tck, int taa, int tras, int trc)
+        {
+            var e = 0x340 + 10 + (p * 40);
+            (s[e], s[e + 1], s[e + 2]) = (vdd, vdd, 0x30);
+            U16(s, e + 4, tck);
+            U16(s, e + 6, taa);
+            U16(s, e + 8, taa);
+            U16(s, e + 10, taa);
+            U16(s, e + 12, tras);
+            U16(s, e + 14, trc);
+        }
+
+        Expo(0, 0x25, 333, 12654, 25974, 38628);
+        Expo(1, 0x24, 357, 14280, 29988, 44268);
         return s;
     }
 
@@ -148,6 +171,29 @@ public class SpdTests
         Assert.Equal("3.0", spd.XmpVersion);
         Assert.Equal(new SpdTimingProfile("XMP 1", 6000, 30, 38, 38, 78, 116, null), Assert.Single(spd.XmpProfiles));
     }
+
+    [Fact]
+    public void Ddr5_amd_expo_profiles()
+    {
+        var spd = SpdDecoder.Decode(Ddr5())!;
+        Assert.Equal("1.0", spd.ExpoVersion);
+        Assert.Equal(2, spd.ExpoProfiles.Count);
+        Assert.Equal(new SpdTimingProfile("EXPO 1", 6000, 38, 38, 38, 78, 116, 1.25), spd.ExpoProfiles[0]);
+        Assert.Equal(new SpdTimingProfile("EXPO 2", 5600, 40, 40, 40, 84, 124, 1.2), spd.ExpoProfiles[1]);
+
+        var noExpo = Ddr5();
+        noExpo[0x340] = 0;
+        Assert.Empty(SpdDecoder.Decode(noExpo)!.ExpoProfiles);
+        Assert.DoesNotContain(SpdDecoder.RangesToRead(SpdDecoder.TypeDdr5, i => noExpo[i]), r => r == (0x340, 0x340 + 89)); // no EXPO read
+        Assert.Contains(SpdDecoder.RangesToRead(SpdDecoder.TypeDdr5, i => noExpo[i]), r => r == (832, 895)); // XMP profile 3 instead
+    }
+
+    [Theory]
+    [InlineData(0x25, 1.25)]
+    [InlineData(0x24, 1.20)]
+    [InlineData(0x30, 1.80)] // typical VPP
+    [InlineData(0x22, 1.10)]
+    public void Ddr5_voltage_byte(int raw, double volts) => Assert.Equal(volts, SpdDecoder.Ddr5Voltage((byte)raw)!.Value, 3);
 
     [Theory]
     [InlineData(0.625, 3200)]
@@ -274,6 +320,7 @@ public class SpdTests
         var actual = SpdDecoder.Decode(partial)!;
         Assert.Equal(expected.Jedec, actual.Jedec);
         Assert.True(expected.XmpProfiles.SequenceEqual(actual.XmpProfiles));
+        Assert.True(expected.ExpoProfiles.SequenceEqual(actual.ExpoProfiles));
         Assert.True(actual.XmpProfiles.Count > 0);
         Assert.Equal(expected.PartNumber, actual.PartNumber);
         Assert.Equal(expected.SerialNumber, actual.SerialNumber);
@@ -281,7 +328,7 @@ public class SpdTests
         Assert.Equal(expected.Ranks, actual.Ranks);
         Assert.Equal(expected.SizeBytes, actual.SizeBytes);
         Assert.Equal(expected.Ecc, actual.Ecc);
-        Assert.True(ranges.Sum(r => r.To - r.From + 1) < (ddr5 ? 360 : 200));
+        Assert.True(ranges.Sum(r => r.To - r.From + 1) < (ddr5 ? 400 : 200));
     }
 
     [Fact]

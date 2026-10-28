@@ -163,6 +163,11 @@ public sealed class SpdInfo
     public SpdTimingProfile? Jedec { get; set; }
     public string? XmpVersion { get; set; }
     public List<SpdTimingProfile> XmpProfiles { get; } = [];
+
+    /// <summary>AMD EXPO version ("1.0") when the DDR5 module carries EXPO profiles.</summary>
+    public string? ExpoVersion { get; set; }
+
+    public List<SpdTimingProfile> ExpoProfiles { get; } = [];
 }
 
 public sealed class GpuInfo
