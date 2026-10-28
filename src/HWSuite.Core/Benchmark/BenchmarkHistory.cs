@@ -30,15 +30,15 @@ public static class BenchmarkHistory
     }
 
     /// <summary>Saved runs, newest first; lines it cannot read are skipped.</summary>
-    public static IReadOnlyList<BenchmarkEntry> Read(string path)
-    {
-        if (!File.Exists(path))
-        {
-            return [];
-        }
+    public static IReadOnlyList<BenchmarkEntry> Read(string path) =>
+        File.Exists(path) ? Parse(File.ReadLines(path)) : [];
 
+    /// <summary>Runs in CSV text (header line first), newest first.</summary>
+    public static IReadOnlyList<BenchmarkEntry> Parse(IEnumerable<string> lines)
+    {
+        ArgumentNullException.ThrowIfNull(lines);
         var entries = new List<BenchmarkEntry>();
-        foreach (var line in File.ReadLines(path).Skip(1))
+        foreach (var line in lines.Skip(1))
         {
             var f = Split(line);
             if (f.Count == 6

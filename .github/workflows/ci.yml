@@ -80,6 +80,17 @@ jobs:
           Get-Content artifacts/reports/sensors.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
 
+      - name: Processor benchmark on the runner
+        shell: pwsh
+        run: |
+          # A real measurement for the reference table (runner CPUs are cloud vCPUs, labelled as such).
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- bench --duration 5 --lang pt-BR | Tee-Object artifacts/reports/bench.txt
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item "$([Environment]::GetFolderPath('MyDocuments'))\HWSuite\benchmark.csv" artifacts/reports/benchmark.csv
+          "### Benchmark do processador no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/reports/bench.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
       - name: PawnIO installer signature (official download)
         shell: pwsh
         run: |

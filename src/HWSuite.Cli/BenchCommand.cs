@@ -64,6 +64,18 @@ internal static class BenchCommand
         Console.WriteLine(s.Format("bench.single", CpuBenchmark.Points(result.SingleThread, c)));
         Console.WriteLine(s.Format("bench.multi", result.Threads, CpuBenchmark.Points(result.MultiThread, c), result.Scaling.ToString("0.0", c)));
 
+        var comparison = BenchmarkComparison.Build(result, processor, BenchmarkComparison.Builtin(), BenchmarkComparison.Local(BenchmarkComparison.LocalFolder));
+        Console.WriteLine();
+        Console.WriteLine(comparison.Verdict == ComparisonVerdict.NoReference
+            ? s["app.compare.noReference"]
+            : s.Format($"app.compare.{comparison.Verdict}", comparison.SinglePercent!.Value.ToString("0", c), comparison.MultiPercent!.Value.ToString("0", c), comparison.SameModelRuns));
+        Console.WriteLine(s["bench.compare"]);
+        foreach (var row in comparison.Rows)
+        {
+            var name = row.Source == ReferenceSource.Current ? s.Format("app.compare.you", row.Processor) : row.Processor;
+            Console.WriteLine($"  {CpuBenchmark.Points(row.MultiThread, c),10}  {CpuBenchmark.Points(row.SingleThread, c),8}  {name}");
+        }
+
         try
         {
             BenchmarkHistory.Append(history, result, processor);

@@ -72,6 +72,17 @@
 
             <TextBlock x:Name="NoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
+            <StackPanel x:Name="ComparisonPanel" Spacing="8" Visibility="Collapsed">
+                <TextBlock x:Name="ComparisonTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
+                <TextBlock x:Name="VerdictText" TextWrapping="Wrap" FontWeight="SemiBold" />
+                <Grid x:Name="ComparisonGrid" ColumnSpacing="12" RowSpacing="4" />
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <Button x:Name="SubmitButton" Click="SubmitButton_Click" IsEnabled="False" />
+                    <Button x:Name="ReferencesButton" Click="ReferencesButton_Click" />
+                </StackPanel>
+                <TextBlock x:Name="ComparisonNote" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+
             <TextBlock x:Name="HistoryTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
             <StackPanel x:Name="HistoryList" Spacing="2" />
 

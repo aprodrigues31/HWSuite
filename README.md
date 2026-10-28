@@ -49,6 +49,8 @@ hwsuite bench --gpu --stress              Stress test da placa de vídeo até Ct
 
 A nota do processador é da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. A da placa de vídeo é em GFLOPS (FP32). Os resultados vão para `Documentos\HWSuite\benchmark.csv` e `gpu-benchmark.csv`, que a página **Benchmark** do aplicativo também mostra.
 
+Para saber se o processador está rendendo o esperado, a página compara o resultado com outros processadores medidos com o mesmo teste. Ela usa os resultados embutidos, enviados pelo botão **Enviar resultado**, que abre uma issue no GitHub para você revisar e enviar. Também usa qualquer `benchmark.csv` de outro PC copiado para `Documentos\HWSuite\referencias`, como os PCs de clientes.
+
 ### Sensores em tempo real
 
 ```text

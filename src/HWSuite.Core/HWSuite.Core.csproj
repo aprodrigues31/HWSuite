@@ -6,4 +6,8 @@
   <ItemGroup>
     <InternalsVisibleTo Include="HWSuite.Tests" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Benchmark results measured with this test on real machines (see BenchmarkComparison). -->
+    <EmbeddedResource Include="Benchmark\Data\cpu-reference.csv" LogicalName="HWSuite.Core.cpu-reference.csv" />
+  </ItemGroup>
 </Project>

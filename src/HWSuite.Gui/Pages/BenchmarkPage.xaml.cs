@@ -47,12 +47,14 @@ public sealed partial class BenchmarkPage : Page
 
         DurationBox.SelectedIndex = 1;
         CpuHeader.Text = s["app.bench.cpuSection"];
+        InitializeComparison();
         InitializeGpu();
         Loaded += async (_, _) =>
         {
             s_processor ??= await Task.Run(ProviderCatalog.ProcessorName);
             ProcessorText.Text = $"{s_processor} · {CpuBenchmark.Version}";
             ShowHistory();
+            ShowComparison(_lastResult);
             await LoadGpuAsync();
         };
     }
@@ -89,6 +91,8 @@ public sealed partial class BenchmarkPage : Page
             MultiValue.Text = CpuBenchmark.Points(result.MultiThread, s.Culture);
             ScalingText.Text = s.Format("app.bench.scaling", result.Scaling.ToString("0.0", s.Culture));
             var path = HistoryPath();
+            _lastResult = result;
+            ShowComparison(result);
             BenchmarkHistory.Append(path, result, s_processor);
             StatusText.Text = s.Format("bench.saved", path);
             ShowHistory();
