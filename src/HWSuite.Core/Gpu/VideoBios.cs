@@ -1,4 +1,5 @@
 using System.Buffers.Binary;
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
@@ -25,8 +26,14 @@ public sealed class VideoBiosCopy
     /// <summary>AMD part number, e.g. "113-APM6766SL-100".</summary>
     public string? PartNumber { get; init; }
 
-    /// <summary>Build date as written in the image, e.g. "2023/07/13 01:28".</summary>
+    /// <summary>Build date and time, ISO 8601 ("2023-08-02T00:05:24"), from the "08/02/23,00:05:24" in the image.</summary>
     public string? BuildDate { get; init; }
+
+    /// <summary>The board maker's boot message, e.g. "ASRock R23D-E3 SL 16GB 228W".</summary>
+    public string? BoardName { get; init; }
+
+    /// <summary>ATOM BIOS build, e.g. "022.002.001.019.000001".</summary>
+    public string? AtomVersion { get; init; }
 
     /// <summary>The image itself; left out of the JSON report.</summary>
     [JsonIgnore]
@@ -94,7 +101,7 @@ public static partial class VideoBios
         var checksumOk = declared > 0 && declared <= rom.Length && Sum(rom.AsSpan(0, declared)) == 0;
 
         var headerOffset = BinaryPrimitives.ReadUInt16LittleEndian(rom.AsSpan(0x48));
-        var isAtom = headerOffset + 8 <= rom.Length && rom.AsSpan(headerOffset + 4, 4).SequenceEqual("ATOM"u8);
+        var isAtom = headerOffset + 18 <= rom.Length && rom.AsSpan(headerOffset + 4, 4).SequenceEqual("ATOM"u8);
 
         return new VideoBiosCopy
         {
@@ -104,6 +111,8 @@ public static partial class VideoBios
             IsAtomBios = isAtom,
             PartNumber = isAtom ? PartNumber(rom) : null,
             BuildDate = isAtom ? BuildDate(rom) : null,
+            BoardName = isAtom ? BootMessage(rom, headerOffset) : null,
+            AtomVersion = isAtom ? AtomBuild(rom) : null,
             Image = rom,
         };
     }
@@ -117,25 +126,65 @@ public static partial class VideoBios
         return name + ".rom";
     }
 
-    /// <summary>AMD part numbers ("113-...") sit in the first kilobytes of the image, as an ASCII string.</summary>
+    /// <summary>
+    /// AMD part number, located as the Linux amdgpu driver does: when byte 0x2F counts strings, the
+    /// offset at 0x6E points at it; otherwise the "113-..." string in the first kilobytes.
+    /// </summary>
     private static string? PartNumber(byte[] rom)
     {
-        var text = Encoding.Latin1.GetString(rom, 0, Math.Min(rom.Length, 0x800));
-        var match = PartNumberPattern().Match(text);
+        if (rom[0x2F] != 0 && BinaryPrimitives.ReadUInt16LittleEndian(rom.AsSpan(0x6E)) is var at && at > 0 && at < rom.Length
+            && AsciiAt(rom, at, 64) is { } text && PartNumberPattern().Match(text) is { Success: true, Index: 0 } direct)
+        {
+            return direct.Value;
+        }
+
+        var head = Encoding.Latin1.GetString(rom, 0, Math.Min(rom.Length, 0x800));
+        var match = PartNumberPattern().Match(head);
         return match.Success ? match.Value : null;
     }
 
-    /// <summary>The ATOM image keeps its build date at 0x50 ("2023/07/13 01:28" or "07/13/23 01:28").</summary>
+    /// <summary>The build date at 0x50: "08/02/23,00:05:24" (month/day/year) or "2023/08/02 00:05".</summary>
     private static string? BuildDate(byte[] rom)
     {
-        if (rom.Length < 0x60)
+        if (AsciiAt(rom, 0x50, 20) is not { } text || DatePattern().Match(text) is not { Success: true } m)
         {
             return null;
         }
 
-        var text = Encoding.Latin1.GetString(rom, 0x50, 16);
-        var match = DatePattern().Match(text);
-        return match.Success ? match.Value.Trim() : null;
+        var (year, month, day) = m.Groups["y4"].Success
+            ? (int.Parse(m.Groups["y4"].Value, CultureInfo.InvariantCulture), int.Parse(m.Groups["m4"].Value, CultureInfo.InvariantCulture), int.Parse(m.Groups["d4"].Value, CultureInfo.InvariantCulture))
+            : (2000 + int.Parse(m.Groups["y"].Value, CultureInfo.InvariantCulture), int.Parse(m.Groups["m"].Value, CultureInfo.InvariantCulture), int.Parse(m.Groups["d"].Value, CultureInfo.InvariantCulture));
+        if (month is < 1 or > 12 || day is < 1 or > 31)
+        {
+            return null;
+        }
+
+        var time = m.Groups["time"].Success ? m.Groups["time"].Value : "00:00";
+        return string.Create(CultureInfo.InvariantCulture, $"{year:0000}-{month:00}-{day:00}T{(time.Length == 5 ? time + ":00" : time)}");
+    }
+
+    /// <summary>The boot message the ATOM header points at (offset +16), without line breaks and padding.</summary>
+    private static string? BootMessage(byte[] rom, int header)
+    {
+        var at = BinaryPrimitives.ReadUInt16LittleEndian(rom.AsSpan(header + 16));
+        return at > 0 && at < rom.Length && AsciiAt(rom, at, 96)?.Trim() is { Length: > 2 } text ? text : null;
+    }
+
+    private static string? AtomBuild(byte[] rom)
+    {
+        var head = Encoding.Latin1.GetString(rom, 0, Math.Min(rom.Length, 0x800));
+        var match = AtomVersionPattern().Match(head);
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    /// <summary>Printable ASCII from <paramref name="at"/> up to the first NUL (at most <paramref name="max"/> bytes).</summary>
+    private static string? AsciiAt(byte[] rom, int at, int max)
+    {
+        var span = rom.AsSpan(at, Math.Min(max, rom.Length - at));
+        var end = span.IndexOf((byte)0);
+        span = end < 0 ? span : span[..end];
+        var text = Encoding.Latin1.GetString(span).Replace("\r", "", StringComparison.Ordinal).Replace("\n", "", StringComparison.Ordinal);
+        return text.Length > 0 && text.All(c => c is >= ' ' and <= '~') ? text : null;
     }
 
     private static byte Sum(ReadOnlySpan<byte> bytes)
@@ -152,8 +201,11 @@ public static partial class VideoBios
     [GeneratedRegex(@"113-[A-Z0-9][A-Z0-9_\-\.]{4,30}")]
     private static partial Regex PartNumberPattern();
 
-    [GeneratedRegex(@"^(\d{4}/\d{2}/\d{2}|\d{2}/\d{2}/\d{2})( \d{2}:\d{2})?")]
+    [GeneratedRegex(@"^(?:(?<y4>\d{4})/(?<m4>\d{2})/(?<d4>\d{2})|(?<m>\d{2})/(?<d>\d{2})/(?<y>\d{2}))(?:[ ,](?<time>\d{2}:\d{2}(?::\d{2})?))?")]
     private static partial Regex DatePattern();
+
+    [GeneratedRegex(@"ATOMBIOSBK-AMD VER(\d+(?:\.\d+)+)")]
+    private static partial Regex AtomVersionPattern();
 
     [GeneratedRegex(@"[^A-Za-z0-9_\-\.]+")]
     private static partial Regex Unsafe();

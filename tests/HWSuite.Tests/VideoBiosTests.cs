@@ -10,17 +10,26 @@ namespace HWSuite.Tests;
 
 public class VideoBiosTests
 {
-    /// <summary>A small ATOM option ROM: 55 AA, length in 512-byte blocks, date at 0x50, ATOM header, part number, checksum.</summary>
+    /// <summary>
+    /// A small ATOM option ROM laid out like the user's ASRock RX 7800 XT image (VFCT copy of 2026-10-28):
+    /// 55 AA and the length in 512-byte blocks, string count at 0x2F and part number offset at 0x6E,
+    /// build date at 0x50, ATOM header pointed to by 0x48 with the boot message offset at +16, checksum.
+    /// </summary>
     private static byte[] Rom(int blocks = 2, bool fixChecksum = true)
     {
         var rom = new byte[blocks * 512];
         rom[0] = 0x55;
         rom[1] = 0xAA;
         rom[2] = (byte)blocks;
-        BinaryPrimitives.WriteUInt16LittleEndian(rom.AsSpan(0x48), 0x100);
-        Encoding.ASCII.GetBytes("2023/07/13 01:28").CopyTo(rom, 0x50);
-        Encoding.ASCII.GetBytes("ATOM").CopyTo(rom, 0x104);
-        Encoding.ASCII.GetBytes("113-APM6766SL-100\0NAVI32 XL").CopyTo(rom, 0x200);
+        rom[0x2F] = 4;
+        BinaryPrimitives.WriteUInt16LittleEndian(rom.AsSpan(0x6E), 0x26C - 0x100);
+        BinaryPrimitives.WriteUInt16LittleEndian(rom.AsSpan(0x48), 0x394 - 0x100);
+        Encoding.ASCII.GetBytes("08/02/23,00:05:24").CopyTo(rom, 0x50);
+        Encoding.ASCII.GetBytes("113-APM6766SL-100\0NAVI32\0PCI_EXPRESS").CopyTo(rom, 0x26C - 0x100);
+        Encoding.ASCII.GetBytes("\r\nASRock R23D-E3 SL 16GB 228W        \0").CopyTo(rom, 0x297 - 0x100);
+        Encoding.ASCII.GetBytes("ATOMBIOSBK-AMD VER022.002.001.019.000001\0").CopyTo(rom, 0x31A - 0x100);
+        Encoding.ASCII.GetBytes("ATOM").CopyTo(rom, 0x394 - 0x100 + 4);
+        BinaryPrimitives.WriteUInt16LittleEndian(rom.AsSpan(0x394 - 0x100 + 16), 0x297 - 0x100);
         if (fixChecksum)
         {
             byte sum = 0;
@@ -88,7 +97,9 @@ public class VideoBiosTests
         Assert.True(copy.IsAtomBios);
         Assert.Equal(1024, copy.SizeBytes);
         Assert.Equal("113-APM6766SL-100", copy.PartNumber);
-        Assert.Equal("2023/07/13 01:28", copy.BuildDate);
+        Assert.Equal("2023-08-02T00:05:24", copy.BuildDate);
+        Assert.Equal("ASRock R23D-E3 SL 16GB 228W", copy.BoardName);
+        Assert.Equal("022.002.001.019.000001", copy.AtomVersion);
         Assert.Equal("RX-7800-XT-113-APM6766SL-100.rom", VideoBios.FileName("RX 7800 XT", copy));
 
         Assert.False(VideoBios.Describe(Rom(fixChecksum: false), "ACPI VFCT")!.ChecksumOk);
@@ -102,7 +113,7 @@ public class VideoBiosTests
         var inventory = new HardwareInventory();
         inventory.Gpus.Add(gpu);
         var rows = ReportModel.Build(inventory, Strings.For("pt-BR")).Single(x => x.Title == "Vídeo").Groups.Single().Rows.ToDictionary(r => r.Label, r => r.Value);
-        Assert.Equal("1 KB pela tabela ACPI VFCT · soma de verificação OK · 113-APM6766SL-100 · 2023/07/13 01:28", rows["Cópia da BIOS de vídeo"]);
+        Assert.Equal("1 KB pela tabela ACPI VFCT · soma de verificação OK · 113-APM6766SL-100 · ASRock R23D-E3 SL 16GB 228W · ATOMBIOS 022.002.001.019.000001 · 02/08/2023", rows["Cópia da BIOS de vídeo"]);
 
         var json = System.Text.Json.JsonSerializer.Serialize(inventory, JsonReportWriter.Options);
         Assert.Contains("113-APM6766SL-100", json, StringComparison.Ordinal);

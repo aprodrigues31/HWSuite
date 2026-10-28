@@ -8,6 +8,12 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Corrigido
+- **BIOS de vídeo:** a data de compilação no formato da AMD ("08/02/23,00:05:24", mês/dia/ano) agora é lida corretamente; o part number é localizado como faz o driver amdgpu do Linux.
+
+### Adicionado
+- A linha "Cópia da BIOS de vídeo" também mostra o nome que o fabricante gravou na BIOS (por exemplo "ASRock R23D-E3 SL 16GB 228W") e a versão da ATOMBIOS.
+
 ## [0.12.0] - 2026-10-28
 
 ### Adicionado

@@ -288,7 +288,7 @@ public static class ReportModel
         return parts.Count > 0 ? string.Join(" · ", parts) : null;
     }
 
-    /// <summary>"128 KB from the ACPI VFCT table · checksum OK · 113-APM6766SL-100 · 2023/07/13 01:28".</summary>
+    /// <summary>"56.5 KB from the ACPI VFCT table · checksum OK · 113-APM6766SL-100 · ASRock R23D-E3 SL 16GB 228W · ATOMBIOS 022.002.001.019.000001 · 8/2/2023".</summary>
     public static string VideoBiosText(Gpu.VideoBiosCopy bios, Strings s)
     {
         ArgumentNullException.ThrowIfNull(bios);
@@ -298,7 +298,13 @@ public static class ReportModel
             s.Format("vbios.size", Bytes(bios.SizeBytes, s.Culture), bios.Source),
             s[bios.ChecksumOk ? "vbios.checksumOk" : "vbios.checksumBad"],
         };
-        parts.AddRange(new[] { bios.PartNumber, bios.BuildDate }.OfType<string>());
+        parts.AddRange(new[]
+        {
+            bios.PartNumber,
+            bios.BoardName,
+            bios.AtomVersion is { } version ? "ATOMBIOS " + version : null,
+            bios.BuildDate is { Length: >= 10 } date ? DateText.Display(date[..10], s.Culture) : null,
+        }.OfType<string>());
         return string.Join(" · ", parts);
     }
 
