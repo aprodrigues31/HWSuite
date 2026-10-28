@@ -146,7 +146,8 @@ public sealed class SensorMonitor : IDisposable
                 return;
             }
 
-            var snapshot = source.Read();
+            // The pump's fan header gets its name before anyone (history, alerts, log, pages) sees the reading.
+            var snapshot = PowerRails.NamePump(source.Read(), _settings.PumpSensorId, App.Text);
             History.Add(snapshot);
             Latest = snapshot;
 

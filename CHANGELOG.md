@@ -8,6 +8,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Saúde da fonte pelas tensões da placa-mãe:** alertas quando +12 V, +5 V ou +3,3 V saem da faixa ATX (±5%: 11,40–12,60 V, 4,75–5,25 V, 3,135–3,465 V), ligados por padrão e com chave em Configurações → Fonte e water cooler. Nos stress tests de processador e de placa de vídeo, o painel mostra cada linha com o valor atual, o mínimo e o máximo durante o teste, e o resultado final avisa se alguma linha saiu da faixa. Serve para qualquer fonte, já que a maioria não tem conexão de dados; usa as linhas que o perfil da placa identifica.
+- **Bomba do water cooler:** em Configurações, escolha o conector de ventoinha em que a bomba está ligada (a lista mostra a rotação atual de cada um) e a rotação mínima. A bomba aparece como "Bomba (water cooler)" nos sensores, no log e nos alertas, e um alerta avisa se ela desacelerar ou parar.
+
 ## [0.13.0] - 2026-10-28
 
 ### Adicionado

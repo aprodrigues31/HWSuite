@@ -20,6 +20,9 @@ public sealed class SettingsService
     /// <summary>The alert rules in effect: the user's list, or the defaults until the user edits them.</summary>
     public IReadOnlyList<AlertRule> Rules => Current.Alerts ?? AlertRule.Defaults(App.Text);
 
+    /// <summary>The user's rules plus the ones derived from settings (power supply rails, pump), which are not edited as rules.</summary>
+    public IReadOnlyList<AlertRule> EffectiveRules => [.. Rules, .. Core.Sensors.PowerRails.DerivedRules(Current, App.Text)];
+
     public static string DefaultLogFolder => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "logs");
 

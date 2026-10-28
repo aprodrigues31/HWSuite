@@ -15,6 +15,7 @@ public sealed partial class BenchmarkPage
     private CancellationTokenSource? _gpuRunning;
     private CancellationTokenSource? _gpuStress;
     private double? _gpuMaxTemperature;
+    private readonly Dictionary<string, (double Now, double Min, double Max)> _gpuRails = [];
 
     private GpuAdapter? Adapter => s_adapters is { Count: > 0 } list ? list[0] : null;
 
@@ -131,6 +132,8 @@ public sealed partial class BenchmarkPage
         using var cancel = new CancellationTokenSource();
         _gpuStress = cancel;
         _gpuMaxTemperature = null;
+        _gpuRails.Clear();
+        GpuRailsText.Text = "";
         GpuStressButton.Content = s["app.stress.stop"];
         GpuStartButton.IsEnabled = GpuDurationBox.IsEnabled = false;
         GpuStressPanel.Visibility = Visibility.Visible;
@@ -151,7 +154,8 @@ public sealed partial class BenchmarkPage
                 return GpuBenchmark.Stress(runner, st => ui.TryEnqueue(() => ShowGpuStress(st)), cancel: cancel.Token);
             });
             ShowGpuStress(final);
-            GpuStressStatusText.Text = s[final.Errors == 0 ? "gpustress.passed" : "gpustress.failed"];
+            GpuStressStatusText.Text = s[final.Errors == 0 ? "gpustress.passed" : "gpustress.failed"]
+                + (PowerRails.AllWithin(_gpuRails) ? "" : " " + s["app.psu.stressBad"]);
         }
         catch (Exception ex) when (ex is InvalidOperationException or DllNotFoundException or System.Runtime.InteropServices.COMException)
         {
@@ -183,6 +187,12 @@ public sealed partial class BenchmarkPage
         {
             _gpuMaxTemperature = Math.Max(_gpuMaxTemperature ?? temperature, temperature);
             GpuTempValue.Text = string.Create(s.Culture, $"{temperature:0} °C ({_gpuMaxTemperature:0} °C)");
+        }
+
+        if (App.Monitor.Latest is { } latest)
+        {
+            PowerRails.Track(_gpuRails, latest);
+            GpuRailsText.Text = _gpuRails.Count > 0 ? s["app.psu.stressRails"] + " " + PowerRails.Summary(_gpuRails, s) : "";
         }
     }
 

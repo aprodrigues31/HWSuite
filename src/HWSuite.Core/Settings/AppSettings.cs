@@ -39,10 +39,23 @@ public sealed record AppSettings
     /// <summary>Folder for CSV logs; null means Documents\HWSuite\logs.</summary>
     public string? LogFolder { get; init; }
 
+    /// <summary>Alert when the +12 V, +5 V or +3.3 V rails leave the ATX tolerance (motherboard readings).</summary>
+    public bool PsuAlertsEnabled { get; init; } = true;
+
+    /// <summary>The fan sensor the liquid cooler's pump is plugged into (sensor id), or null.</summary>
+    public string? PumpSensorId { get; init; }
+
+    /// <summary>Alert when the pump turns slower than this.</summary>
+    public int PumpMinRpm { get; init; } = DefaultPumpMinRpm;
+
+    public const int DefaultPumpMinRpm = 500;
+
     public AppSettings Normalized() => this with
     {
         IntervalSeconds = Math.Clamp(IntervalSeconds, MinInterval, MaxInterval),
         Theme = Enum.IsDefined(Theme) ? Theme : AppTheme.System,
+        PumpMinRpm = Math.Clamp(PumpMinRpm, 100, 5000),
+        PumpSensorId = string.IsNullOrWhiteSpace(PumpSensorId) ? null : PumpSensorId,
         LogFolder = string.IsNullOrWhiteSpace(LogFolder) ? null : LogFolder,
     };
 }

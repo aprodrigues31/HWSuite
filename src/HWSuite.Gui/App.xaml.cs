@@ -59,8 +59,8 @@ public partial class App : Application
         }
 
         _ui = DispatcherQueue.GetForCurrentThread();
-        Monitor.Configure(Settings.Current, Settings.Rules, Settings.LogFolder);
-        Settings.Changed += (_, s) => Monitor.Configure(s, Settings.Rules, Settings.LogFolder);
+        Monitor.Configure(Settings.Current, Settings.EffectiveRules, Settings.LogFolder);
+        Settings.Changed += (_, s) => Monitor.Configure(s, Settings.EffectiveRules, Settings.LogFolder);
         Monitor.Alerted += OnAlerted;
         Monitor.Updated += OnUpdated;
         Monitor.Failed += (_, ex) => _lastError ??= ex.ToString();

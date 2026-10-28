@@ -39,6 +39,11 @@ public sealed partial class SettingsPage : Page
         LogTitle.Text = s["settings.logging"];
         LogSwitch.Header = s["settings.logEnabled"];
         OpenFolderButton.Content = s["settings.openFolder"];
+        PsuTitle.Text = s["app.psu.title"];
+        PsuSwitch.Header = s["app.psu.alerts"];
+        PsuHint.Text = s["app.psu.hint"];
+        PumpBox.Header = s["app.pump.header"];
+        PumpMinBox.Header = s["app.pump.min"];
 
         Load();
     }
@@ -53,6 +58,9 @@ public sealed partial class SettingsPage : Page
         AlertsSwitch.IsOn = settings.AlertsEnabled;
         LogSwitch.IsOn = settings.LogEnabled;
         LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
+        PsuSwitch.IsOn = settings.PsuAlertsEnabled;
+        PumpMinBox.Value = settings.PumpMinRpm;
+        LoadPumpChoices(settings.PumpSensorId);
 
         // The task is the source of truth (it may have been removed in Task Scheduler).
         var elevated = App.Monitor.Access.IsElevated;
@@ -226,4 +234,57 @@ public sealed partial class SettingsPage : Page
     /// <summary>Unit for single-sensor rules, taken from the live reading of that sensor.</summary>
     private static SensorKind KindOf(AlertRule rule) =>
         App.Monitor.Latest?.Readings.FirstOrDefault(r => r.Id == rule.Target.SensorId)?.Kind ?? SensorKind.Other;
+
+    private readonly List<string?> _pumpIds = [];
+
+    /// <summary>"None" plus every fan reading the monitor has, with its current speed; the saved choice stays listed even if absent now.</summary>
+    private void LoadPumpChoices(string? selected)
+    {
+        var s = App.Text;
+        PumpBox.Items.Clear();
+        _pumpIds.Clear();
+        PumpBox.Items.Add(s["app.pump.none"]);
+        _pumpIds.Add(null);
+        var fans = App.Monitor.Latest?.Readings.Where(r => r.Kind == SensorKind.Fan).ToList() ?? [];
+        foreach (var fan in fans)
+        {
+            var speed = fan.Value is { } rpm ? string.Create(s.Culture, $" · {rpm:N0} RPM") : "";
+            PumpBox.Items.Add($"{fan.Name} · {fan.Hardware}{speed}");
+            _pumpIds.Add(fan.Id);
+        }
+
+        if (selected is not null && !_pumpIds.Contains(selected))
+        {
+            PumpBox.Items.Add(selected);
+            _pumpIds.Add(selected);
+        }
+
+        PumpBox.SelectedIndex = Math.Max(0, _pumpIds.IndexOf(selected));
+        PumpHint.Text = fans.Count == 0 ? s["app.pump.hint"] + " " + s["app.pump.noSensors"] : s["app.pump.hint"];
+    }
+
+    private void PsuSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (!_loading)
+        {
+            App.Settings.Update(s => s with { PsuAlertsEnabled = PsuSwitch.IsOn });
+        }
+    }
+
+    private void PumpBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading && PumpBox.SelectedIndex >= 0 && PumpBox.SelectedIndex < _pumpIds.Count)
+        {
+            var id = _pumpIds[PumpBox.SelectedIndex];
+            App.Settings.Update(s => s with { PumpSensorId = id });
+        }
+    }
+
+    private void PumpMinBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (!_loading && !double.IsNaN(args.NewValue))
+        {
+            App.Settings.Update(s => s with { PumpMinRpm = (int)args.NewValue });
+        }
+    }
 }

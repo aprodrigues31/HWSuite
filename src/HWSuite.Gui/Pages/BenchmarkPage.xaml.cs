@@ -22,6 +22,7 @@ public sealed partial class BenchmarkPage : Page
     private CancellationTokenSource? _running;
     private CancellationTokenSource? _stress;
     private double? _maxTemperature;
+    private readonly Dictionary<string, (double Now, double Min, double Max)> _rails = [];
 
     public BenchmarkPage()
     {
@@ -127,6 +128,8 @@ public sealed partial class BenchmarkPage : Page
         using var cancel = new CancellationTokenSource();
         _stress = cancel;
         _maxTemperature = null;
+        _rails.Clear();
+        RailsText.Text = "";
         StressButton.Content = s["app.stress.stop"];
         StartButton.IsEnabled = DurationBox.IsEnabled = false;
         StressPanel.Visibility = Visibility.Visible;
@@ -143,7 +146,8 @@ public sealed partial class BenchmarkPage : Page
         {
             var final = await Task.Run(() => CpuStressTest.Run(st => ui.TryEnqueue(() => ShowStress(st)), cancel: cancel.Token));
             ShowStress(final);
-            StressStatusText.Text = s[final.Errors == 0 ? "stress.passed" : "stress.failed"];
+            StressStatusText.Text = s[final.Errors == 0 ? "stress.passed" : "stress.failed"]
+                + (PowerRails.AllWithin(_rails) ? "" : " " + s["app.psu.stressBad"]);
         }
         finally
         {
@@ -171,6 +175,12 @@ public sealed partial class BenchmarkPage : Page
         {
             _maxTemperature = Math.Max(_maxTemperature ?? temperature, temperature);
             TempValue.Text = string.Create(s.Culture, $"{temperature:0} °C ({_maxTemperature:0} °C)");
+        }
+
+        if (App.Monitor.Latest is { } latest)
+        {
+            PowerRails.Track(_rails, latest);
+            RailsText.Text = _rails.Count > 0 ? s["app.psu.stressRails"] + " " + PowerRails.Summary(_rails, s) : "";
         }
     }
 

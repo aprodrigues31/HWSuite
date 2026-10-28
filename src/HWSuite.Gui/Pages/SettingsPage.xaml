@@ -46,6 +46,22 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock x:Name="PsuTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="PsuSwitch" Toggled="PsuSwitch_Toggled" />
+                        <TextBlock x:Name="PsuHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <ComboBox x:Name="PumpBox" MinWidth="320" SelectionChanged="PumpBox_SelectionChanged" />
+                        <NumberBox x:Name="PumpMinBox" Minimum="100" Maximum="5000" SmallChange="50" LargeChange="100"
+                                   SpinButtonPlacementMode="Compact" ValueChanged="PumpMinBox_ValueChanged" VerticalAlignment="Bottom" />
+                    </StackPanel>
+                    <TextBlock x:Name="PumpHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+
             <TextBlock x:Name="LogTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Style="{StaticResource Card}">
                 <StackPanel Spacing="10">
