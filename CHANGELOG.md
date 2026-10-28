@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Detecção de GPU falsificada** (estilo GPU-Z): cada placa reconhecida é conferida com o modelo que o nome diz. O programa compara o fabricante e o ID PCI com os IDs dos chips verdadeiros (tabela gerada da pci.ids, com variantes de notebook e workstation), o nível de recursos DirectX 12 e o ray tracing (todos os modelos do banco são DirectX 12 Ultimate), a geração PCIe que a placa suporta, a quantidade de memória e, nas AMD, a velocidade da memória. A linha "Autenticidade" mostra "nenhum sinal de falsificação" ou os sinais encontrados. Com o driver genérico da Microsoft, a linha "Modelo pelo ID PCI" diz que modelo é a placa.
+
 ## [0.10.0] - 2026-10-22
 
 ### Adicionado

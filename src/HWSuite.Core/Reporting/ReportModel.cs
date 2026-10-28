@@ -146,6 +146,7 @@ public static class ReportModel
                 : g.RaytracingTier is { } rt ? s.Format("gpu.raytracingTier", rt) : s["value.no"]),
             (s["field.apis"], g.Apis.Count > 0 ? string.Join(" · ", g.Apis) : null),
             .. ReferenceRows(g, s),
+            .. AuthenticityRows(g, s),
         ]))]);
 
         Section("section.disks", [.. inv.Disks.Select(d => Group($"#{d.Index} {d.Model}".Trim(),
@@ -286,6 +287,32 @@ public static class ReportModel
         return parts.Count > 0 ? string.Join(" · ", parts) : null;
     }
 
+    /// <summary>
+    /// "Authenticity: no signs of a counterfeit", or the signs found in one row. Without a recognized name,
+    /// the models the PCI id belongs to (a card running on the generic Microsoft driver, for example).
+    /// </summary>
+    private static (string Label, string? Value)[] AuthenticityRows(GpuInfo g, Strings s)
+    {
+        if (g.Authenticity is not { } a)
+        {
+            return [];
+        }
+
+        if (g.Reference is null)
+        {
+            return a.ModelsById.Count > 0 ? [(s["field.gpuById"], string.Join(" / ", a.ModelsById))] : [];
+        }
+
+        if (a.Findings.Count == 0)
+        {
+            return a.Checked ? [(s["field.authenticity"], s["gpu.authentic"])] : [];
+        }
+
+        var c = s.Culture;
+        var signs = a.Findings.Select(f => s.Format(f.Key, [.. f.Args.Select(x => x is long bytes ? Bytes(bytes, c) : x)]));
+        return [(s["field.authenticity"], s.Format("gpu.suspect", string.Join("; ", signs)))];
+    }
+
     /// <summary>Reference specifications (GPU-Z style), plus a warning when the card reports less memory than the model has.</summary>
     private static (string Label, string? Value)[] ReferenceRows(GpuInfo g, Strings s)
     {
@@ -307,13 +334,6 @@ public static class ReportModel
             (s["field.gpuPower"], string.Create(c, $"{r.PowerW} W")),
             (s["field.gpuReleased"], DateText.Display(r.Released, c)),
         };
-
-        // Dedicated memory well below the model's (25 % margin for reserved memory) is a sign of a
-        // relabeled or counterfeit card, or of a different variant than the name says.
-        if (g.DedicatedMemoryBytes is long dedicated and > 0 && dedicated < r.MemoryGb * 1024L * 1024 * 1024 * 0.75)
-        {
-            rows.Add((s["field.gpuCheck"], s.Format("gpu.memoryMismatch", Bytes(dedicated, c), r.MemoryGb)));
-        }
 
         return [.. rows];
     }

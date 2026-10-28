@@ -69,6 +69,10 @@ public class GpuDatabaseTests
         var inventory = new HardwareInventory();
         inventory.Gpus.Add(new GpuInfo { Name = "AMD Radeon RX 7800 XT", DedicatedMemoryBytes = 16 * Gb, Reference = GpuDatabase.Find("AMD Radeon RX 7800 XT") });
         inventory.Gpus.Add(new GpuInfo { Name = "NVIDIA GeForce RTX 4090", DedicatedMemoryBytes = 4 * Gb, Reference = GpuDatabase.Find("NVIDIA GeForce RTX 4090") });
+        foreach (var gpu in inventory.Gpus)
+        {
+            gpu.Authenticity = GpuAuthenticity.Check(gpu);
+        }
 
         var groups = ReportModel.Build(inventory, Strings.For("pt-BR")).Single(x => x.Title == "Vídeo").Groups;
         var amd = groups[0].Rows.ToDictionary(r => r.Label, r => r.Value);
@@ -77,10 +81,10 @@ public class GpuDatabaseTests
         Assert.Equal("1.800 MHz / 2.430 MHz", amd["Clock base / boost (referência)"]);
         Assert.Equal("16 GB GDDR6 · 256 bits · 19,5 Gbps · 624 GB/s", amd["Memória (referência)"]);
         Assert.Equal("263 W", amd["Consumo da placa (referência)"]);
-        Assert.False(amd.ContainsKey("Conferência"));
+        Assert.False(amd.ContainsKey("Autenticidade")); // no PCI id or other data to check against
 
         var fake = groups[1].Rows.ToDictionary(r => r.Label, r => r.Value);
-        Assert.StartsWith("a placa informa 4 GB, mas este modelo tem 24 GB", fake["Conferência"], StringComparison.Ordinal);
+        Assert.Equal("possível placa remarcada ou falsificada: a placa informa 4 GB, mas o modelo tem 24 GB (ou é outra variante)", fake["Autenticidade"]);
     }
 
     [Fact]
