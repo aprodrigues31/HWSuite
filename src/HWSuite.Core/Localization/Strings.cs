@@ -110,6 +110,24 @@ public sealed class Strings
         ["field.gpuMemorySpec"] = "Memory (reference)",
         ["field.gpuPower"] = "Board power (reference)",
         ["field.gpuReleased"] = "Released",
+        ["bench.title"] = "HWSuite processor benchmark ({0}) · {1}",
+        ["bench.running"] = "Running {0} s on one thread, then {0} s on all {1} threads. Close other programs for a steady result (Ctrl+C cancels).",
+        ["bench.phase.single"] = "One thread",
+        ["bench.phase.multi"] = "All threads",
+        ["bench.single"] = "One thread:        {0} points",
+        ["bench.multi"] = "All {0} threads:   {1} points ({2}x)",
+        ["bench.saved"] = "Result saved to {0}",
+        ["bench.previous"] = "Previous runs (date, one thread, all threads, processor):",
+        ["bench.cancelled"] = "Benchmark cancelled.",
+        ["bench.note"] = "Points are HWSuite's own scale (not CPU-Z's): compare them with other HWSuite runs. The workload stays in each core's cache, so it measures the cores, not the memory.",
+        ["app.nav.bench"] = "Benchmark",
+        ["app.bench.start"] = "Start",
+        ["app.bench.cancel"] = "Cancel",
+        ["app.bench.single"] = "One thread",
+        ["app.bench.multi"] = "All threads ({0})",
+        ["app.bench.scaling"] = "{0}x faster with all threads",
+        ["app.bench.history"] = "Previous runs",
+        ["app.bench.points"] = "{0} points",
         ["field.vbiosCopy"] = "Video BIOS copy",
         ["vbios.size"] = "{0} from the {1} table",
         ["vbios.checksumOk"] = "checksum OK",
@@ -278,6 +296,8 @@ public sealed class Strings
                                             Check, install or remove the PawnIO driver.
               hwsuite vbios [-o <folder|file.rom>]
                                             Save the video BIOS (AMD cards, from the ACPI VFCT table).
+              hwsuite bench [--duration <seconds>]
+                                            Processor benchmark: one thread, then all (default 10 s each).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -409,6 +429,24 @@ public sealed class Strings
         ["field.gpuMemorySpec"] = "Memória (referência)",
         ["field.gpuPower"] = "Consumo da placa (referência)",
         ["field.gpuReleased"] = "Lançamento",
+        ["bench.title"] = "Benchmark de processador do HWSuite ({0}) · {1}",
+        ["bench.running"] = "Rodando {0} s em uma thread e depois {0} s em todas as {1} threads. Feche outros programas para um resultado estável (Ctrl+C cancela).",
+        ["bench.phase.single"] = "Uma thread",
+        ["bench.phase.multi"] = "Todas as threads",
+        ["bench.single"] = "Uma thread:          {0} pontos",
+        ["bench.multi"] = "Todas as {0} threads: {1} pontos ({2}x)",
+        ["bench.saved"] = "Resultado salvo em {0}",
+        ["bench.previous"] = "Execuções anteriores (data, uma thread, todas as threads, processador):",
+        ["bench.cancelled"] = "Benchmark cancelado.",
+        ["bench.note"] = "Os pontos são da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. A carga fica no cache de cada núcleo, então mede os núcleos, não a memória.",
+        ["app.nav.bench"] = "Benchmark",
+        ["app.bench.start"] = "Iniciar",
+        ["app.bench.cancel"] = "Cancelar",
+        ["app.bench.single"] = "Uma thread",
+        ["app.bench.multi"] = "Todas as threads ({0})",
+        ["app.bench.scaling"] = "{0}x mais rápido com todas as threads",
+        ["app.bench.history"] = "Execuções anteriores",
+        ["app.bench.points"] = "{0} pontos",
         ["field.vbiosCopy"] = "Cópia da BIOS de vídeo",
         ["vbios.size"] = "{0} pela tabela {1}",
         ["vbios.checksumOk"] = "soma de verificação OK",
@@ -577,6 +615,8 @@ public sealed class Strings
                                             Verifica, instala ou remove o driver PawnIO.
               hwsuite vbios [-o <pasta|arquivo.rom>]
                                             Salva a BIOS de vídeo (placas AMD, pela tabela ACPI VFCT).
+              hwsuite bench [--duration <segundos>]
+                                            Benchmark do processador: uma thread e depois todas (10 s cada).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

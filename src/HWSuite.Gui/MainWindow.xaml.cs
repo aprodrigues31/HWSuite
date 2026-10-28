@@ -33,6 +33,7 @@ public sealed partial class MainWindow : Window
 
         NavSensors.Content = s["app.nav.sensors"];
         NavInventory.Content = s["app.nav.inventory"];
+        NavBench.Content = s["app.nav.bench"];
         NavSettings.Content = s["app.nav.settings"];
         NavAbout.Content = s["app.nav.about"];
         Nav.SelectedItem = NavSensors;
@@ -92,6 +93,7 @@ public sealed partial class MainWindow : Window
         var page = ((args.SelectedItem as NavigationViewItem)?.Tag as string) switch
         {
             "inventory" => typeof(InventoryPage),
+            "bench" => typeof(BenchmarkPage),
             "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),
             _ => typeof(SensorsPage),

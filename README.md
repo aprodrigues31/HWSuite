@@ -37,6 +37,15 @@ hwsuite report --lang en                  Relatório em inglês
 
 `--redact` remove números de série, UUID e nome da máquina antes de compartilhar o relatório.
 
+### Benchmark do processador
+
+```text
+hwsuite bench                             Uma thread e depois todas, 10 s cada
+hwsuite bench --duration 30               Execução mais longa, para ver o efeito do calor
+```
+
+A nota é da escala do próprio HWSuite (não do CPU-Z): compare com outras execuções do HWSuite. Cada resultado vai para `Documentos\HWSuite\benchmark.csv`, que a página **Benchmark** do aplicativo também mostra.
+
 ### Sensores em tempo real
 
 ```text
@@ -110,7 +119,7 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 1. **Inventário sem driver** — esta versão.
 2. **Sensores (MVP público):** ✅ sensores em tempo real, mínimo/máximo e log CSV na linha de comando (0.3.0); ✅ aplicativo de desktop com sensores, gráfico e inventário (0.4.0). ✅ área de notificação, alertas e configurações (0.5.0).
 3. **Detalhe:** ✅ perfis de placa-mãe, SPD/XMP da memória e link PCIe (0.6.0); ✅ telemetria AMD pela ADL: link PCIe ao vivo e limites do driver (0.7.0). ✅ S.M.A.R.T. de SATA/USB com avaliação de saúde (0.8.0). A seguir: baterias e nobreaks, controlador de tensão (VRM), EXPO.
-4. **Paridade:** ✅ banco de dados de GPUs e campos do GPU-Z (0.9.0), clocks da placa pelo driver AMD (0.10.0), detecção de GPU falsificada (0.11.0), backup da BIOS de vídeo das placas AMD (0.12.0). A seguir: clocks da BIOS de vídeo, benchmark, fontes/AIOs, NPU.
+4. **Paridade:** ✅ banco de dados de GPUs e campos do GPU-Z (0.9.0), clocks da placa pelo driver AMD (0.10.0), detecção de GPU falsificada (0.11.0), backup da BIOS de vídeo das placas AMD (0.12.0). A seguir: benchmark do processador, fontes/AIOs, NPU.
 
 ## Licença
 

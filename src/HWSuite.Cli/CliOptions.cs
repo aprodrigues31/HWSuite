@@ -18,6 +18,7 @@ public enum CliCommand
     Sensors,
     Driver,
     Vbios,
+    Bench,
 }
 
 public enum DriverAction
@@ -82,6 +83,11 @@ public sealed record CliOptions
             options = options with { Command = CliCommand.Sensors };
             i = 1;
         }
+        else if (args.Count > 0 && args[0].Equals("bench", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Bench };
+            i = 1;
+        }
         else if (args.Count > 0 && args[0].Equals("vbios", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Vbios };
@@ -143,7 +149,7 @@ public sealed record CliOptions
                 "--log" when options.Command == CliCommand.Sensors => options with { LogPath = Value(arg) },
                 "--raw" when options.Command == CliCommand.Sensors => options with { Raw = true },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
-                "--duration" when options.Command == CliCommand.Sensors => options with { DurationSeconds = Seconds(arg) },
+                "--duration" when options.Command is CliCommand.Sensors or CliCommand.Bench => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },
                 "--result" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { ResultPath = Value(arg) },
                 _ => throw new CliUsageException("cli.unknownArgument", arg),

@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Benchmark do processador** (estilo CPU-Z): a mesma carga em uma thread e depois em todas, com nota em pontos e o ganho com todas as threads. A carga fica no cache de cada núcleo (inteiros, leituras e gravações dependentes, ponto flutuante), então mede os núcleos e não a memória. Fica na nova página **Benchmark** do aplicativo (5, 10 ou 30 s por teste, com cancelamento) e em `hwsuite bench [--duration s]`. Os resultados vão para `Documentos\HWSuite\benchmark.csv` e as execuções anteriores aparecem para comparação.
+
 ### Corrigido
 - **BIOS de vídeo:** a data de compilação no formato da AMD ("08/02/23,00:05:24", mês/dia/ano) agora é lida corretamente; o part number é localizado como faz o driver amdgpu do Linux.
 

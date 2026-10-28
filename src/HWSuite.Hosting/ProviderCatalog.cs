@@ -12,6 +12,10 @@ namespace HWSuite.Hosting;
 /// </summary>
 public static class ProviderCatalog
 {
+    /// <summary>Processor name from CPUID alone (fast), for benchmark results.</summary>
+    public static string? ProcessorName() =>
+        new InventoryCollector([new CpuidProvider()]).Collect().Processors.FirstOrDefault()?.Name?.Trim();
+
     public static IReadOnlyList<IInventoryProvider> Default() =>
     [
         new WindowsOsProvider(),
