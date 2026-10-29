@@ -85,9 +85,10 @@ public static class CpuBenchmark
         Volatile.Write(ref endTicks, now + (long)((warmUp + duration).TotalSeconds * Stopwatch.Frequency));
         go.Set();
 
-        while (workers.Any(w => w.IsAlive))
+        // A worker can end between the check and the join, so pick it once and join it whatever its state.
+        while (workers.FirstOrDefault(w => w.IsAlive) is { } alive)
         {
-            workers.First(w => w.IsAlive).Join(100);
+            alive.Join(100);
             tick();
         }
 
