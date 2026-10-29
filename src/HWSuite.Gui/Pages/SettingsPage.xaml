@@ -29,7 +29,13 @@
                         ValueChanged="IntervalBox_ValueChanged" />
                     <RadioButtons x:Name="ThemeChoice" SelectionChanged="ThemeChoice_SelectionChanged" />
                     <ToggleSwitch x:Name="CloseToTraySwitch" Toggled="CloseToTraySwitch_Toggled" />
-                    <ToggleSwitch x:Name="UpdatesSwitch" Toggled="UpdatesSwitch_Toggled" />
+                    <StackPanel Spacing="6">
+                        <ToggleSwitch x:Name="UpdatesSwitch" Toggled="UpdatesSwitch_Toggled" />
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button x:Name="CheckUpdatesButton" Click="CheckUpdatesButton_Click" />
+                            <TextBlock x:Name="CheckUpdatesText" VerticalAlignment="Center" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
                     <StackPanel Spacing="4">
                         <ToggleSwitch x:Name="StartupSwitch" Toggled="StartupSwitch_Toggled" />
                         <TextBlock x:Name="StartupHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Visibility="Collapsed" />

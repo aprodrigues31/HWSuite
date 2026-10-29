@@ -96,12 +96,29 @@ public partial class App : Application
     private async Task CheckForUpdatesAsync()
     {
         await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(true);
+        await FindUpdateAsync().ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Asks GitHub for the latest release. Returns it with whether it is newer (the window then shows the
+    /// update bar), or null when GitHub could not be reached. Used at start and by the "check now" buttons.
+    /// </summary>
+    public static async Task<(Core.Updates.ReleaseInfo Release, bool Newer)?> FindUpdateAsync()
+    {
         using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(10) };
         var latest = await Core.Updates.UpdateChecker.LatestAsync(http).ConfigureAwait(true);
-        if (latest is not null && Core.Updates.UpdateChecker.IsNewer(latest.Version, Core.BuildInfo.Current.Version))
+        if (latest is null)
+        {
+            return null;
+        }
+
+        var newer = Core.Updates.UpdateChecker.IsNewer(latest.Version, Core.BuildInfo.Current.Version);
+        if (newer)
         {
             MainWindow?.ShowUpdate(latest);
         }
+
+        return (latest, newer);
     }
 
     /// <summary>

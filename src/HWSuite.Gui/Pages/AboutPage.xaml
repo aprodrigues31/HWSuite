@@ -6,6 +6,11 @@
     <StackPanel Padding="20,12,20,16" Spacing="12" MaxWidth="760" HorizontalAlignment="Left">
         <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
         <TextBlock x:Name="AboutText" TextWrapping="Wrap" />
+        <StackPanel Orientation="Horizontal" Spacing="12">
+            <Button x:Name="CheckButton" Click="CheckButton_Click" />
+            <ProgressRing x:Name="Checking" IsActive="False" Width="20" Height="20" />
+        </StackPanel>
+        <TextBlock x:Name="UpdateText" TextWrapping="Wrap" />
         <HyperlinkButton x:Name="RepoLink" NavigateUri="https://github.com/aprodrigues31/HWSuite" Content="github.com/aprodrigues31/HWSuite" />
     </StackPanel>
 </Page>

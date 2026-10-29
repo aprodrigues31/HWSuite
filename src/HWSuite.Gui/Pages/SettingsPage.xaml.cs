@@ -32,6 +32,7 @@ public sealed partial class SettingsPage : Page
 
         CloseToTraySwitch.Header = s["settings.closeToTray"];
         UpdatesSwitch.Header = s["settings.checkUpdates"];
+        CheckUpdatesButton.Content = s["app.update.check"];
         StartupSwitch.Header = s["settings.startWithWindows"];
         AlertsTitle.Text = s["settings.alerts"];
         AlertsSwitch.Header = s["settings.alertsEnabled"];
@@ -263,6 +264,27 @@ public sealed partial class SettingsPage : Page
 
         PumpBox.SelectedIndex = Math.Max(0, _pumpIds.IndexOf(selected));
         PumpHint.Text = fans.Count == 0 ? s["app.pump.hint"] + " " + s["app.pump.noSensors"] : s["app.pump.hint"];
+    }
+
+    private async void CheckUpdatesButton_Click(object sender, RoutedEventArgs e)
+    {
+        var s = App.Text;
+        CheckUpdatesButton.IsEnabled = false;
+        CheckUpdatesText.Text = s["app.update.checking"];
+        try
+        {
+            var result = await App.FindUpdateAsync();
+            CheckUpdatesText.Text = result switch
+            {
+                null => s["app.update.failed"],
+                { Newer: true } r => s.Format("app.update.title", r.Release.Version),
+                _ => s.Format("app.update.latest", Core.BuildInfo.Current.Version),
+            };
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
     }
 
     private void UpdatesSwitch_Toggled(object sender, RoutedEventArgs e)

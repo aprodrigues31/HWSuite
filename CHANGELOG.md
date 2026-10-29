@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- Botão **"Verificar atualizações"** em Configurações e em Sobre: consulta o GitHub na hora e diz se há versão nova (abrindo a barra com o botão de download) ou se você já está na mais recente.
+
 ## [0.14.0] - 2026-10-28
 
 ### Adicionado
