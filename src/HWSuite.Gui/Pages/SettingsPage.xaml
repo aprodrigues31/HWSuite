@@ -31,6 +31,10 @@
                         <ComboBox x:Name="LanguageBox" MinWidth="220" SelectionChanged="LanguageBox_SelectionChanged" />
                         <TextBlock x:Name="LanguageHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                     </StackPanel>
+                    <StackPanel Spacing="4">
+                        <RadioButtons x:Name="SkinChoice" SelectionChanged="SkinChoice_SelectionChanged" />
+                        <TextBlock x:Name="SkinHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
                     <RadioButtons x:Name="ThemeChoice" SelectionChanged="ThemeChoice_SelectionChanged" />
                     <ToggleSwitch x:Name="CloseToTraySwitch" Toggled="CloseToTraySwitch_Toggled" />
                     <StackPanel Spacing="6">

@@ -35,9 +35,38 @@ public partial class App : Application
     private readonly List<DispatcherQueueTimer> _timers = [];
     private string? _lastError;
 
+    /// <summary>Opens with this skin without saving it (CI screenshots of every skin): --skin light.</summary>
+    public const string SkinArgument = "--skin";
+
     public App()
     {
         InitializeComponent();
+
+        // The skin decides light or dark controls, which Windows only lets an app choose before its first window.
+        Skin = Hud.HudSkins.Of(ArgumentAfter(SkinArgument) ?? Settings.Current.Skin);
+        RequestedTheme = Skin.Dark ? ApplicationTheme.Dark : ApplicationTheme.Light;
+    }
+
+    /// <summary>The skin of this session (a change in Settings applies at the next start).</summary>
+    public static Hud.HudSkin Skin { get; private set; } = Hud.HudSkins.Hud;
+
+    private static string? ArgumentAfter(string name)
+    {
+        var args = Environment.GetCommandLineArgs();
+        var i = Array.FindIndex(args, a => a.Equals(name, StringComparison.OrdinalIgnoreCase));
+        return i >= 0 && i + 1 < args.Length ? args[i + 1] : null;
+    }
+
+    /// <summary>Starts a new HWSuite and closes this one (same rights: an elevated app stays elevated).</summary>
+    public static void Restart()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, RelaunchArgument)
+        {
+            UseShellExecute = false,
+            WorkingDirectory = AppContext.BaseDirectory,
+        })?.Dispose();
+        DriverInstalledThisSession = false; // coming straight back: a portable copy keeps the driver it installed
+        Quit();
     }
 
     // Settings first: the UI language is one of them.
@@ -79,6 +108,7 @@ public partial class App : Application
             SensorMonitor.SourceFactory = _ => new MinMaxTrackingSource(new DemoSensorSource(elapsedAtStart: TimeSpan.FromMinutes(5)));
         }
 
+        Hud.HudSkins.Apply(Skin);
         Hud.HudAccents.Apply(Settings.Current.Accent);
         Monitor.Configure(Settings.Current, Settings.EffectiveRules, Settings.LogFolder);
         Settings.Changed += (_, s) => Monitor.Configure(s, Settings.EffectiveRules, Settings.LogFolder);
@@ -212,7 +242,12 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "tuneup", "history", "settings", "about"];
+        // Another skin (--skin): a few pages are enough to review it, saved as <skin>-NN-<page>.png.
+        var other = Skin.Id != Hud.HudSkins.Hud.Id;
+        string[] pages = other
+            ? ["dashboard", "sensors", "charts", "inventory", "tuneup", "settings"]
+            : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "tuneup", "history", "settings", "about"];
+        var prefix = other ? Skin.Id + "-" : "";
         var saved = 0;
         try
         {
@@ -222,7 +257,7 @@ public partial class App : Application
             {
                 MainWindow!.Navigate(pages[i]);
                 await Task.Delay(TimeSpan.FromSeconds(pages[i] == "report" ? 20 : 4)).ConfigureAwait(true); // the report reads the hardware first
-                await MainWindow.SaveScreenshotAsync(Path.Combine(folder, $"{i + 1:00}-{pages[i]}.png")).ConfigureAwait(true);
+                await MainWindow.SaveScreenshotAsync(Path.Combine(folder, $"{prefix}{i + 1:00}-{pages[i]}.png")).ConfigureAwait(true);
                 saved++;
             }
         }

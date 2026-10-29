@@ -76,8 +76,8 @@
                 <StackPanel x:Name="ResultPanel" Spacing="12" Visibility="Collapsed">
                     <Border x:Name="VerdictBanner" Padding="18,14" CornerRadius="2">
                         <StackPanel Spacing="2">
-                            <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="#FF031016" TextWrapping="Wrap" />
-                            <TextBlock x:Name="VerdictText" Foreground="#FF031016" TextWrapping="Wrap" />
+                            <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="VerdictText" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
                     <StackPanel Orientation="Horizontal" Spacing="10">

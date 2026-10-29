@@ -99,10 +99,10 @@
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Spacing="2">
-                                        <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="#FF031016" TextWrapping="Wrap" />
-                                        <TextBlock x:Name="VerdictText" Foreground="#FF031016" TextWrapping="Wrap" />
+                                        <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextWrapping="Wrap" />
+                                        <TextBlock x:Name="VerdictText" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <TextBlock x:Name="VerdictCounts" Grid.Column="1" FontFamily="{StaticResource HudMonoStrongFont}" Foreground="#FF031016" VerticalAlignment="Center" />
+                                    <TextBlock x:Name="VerdictCounts" Grid.Column="1" FontFamily="{StaticResource HudMonoStrongFont}" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
                             <StackPanel Orientation="Horizontal" Spacing="10">

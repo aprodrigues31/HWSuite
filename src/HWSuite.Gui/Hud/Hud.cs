@@ -9,17 +9,11 @@ using Windows.UI;
 
 namespace HWSuite.Gui.Hud;
 
-/// <summary>The accent colors offered in Settings (the HUD's one bright color).</summary>
+/// <summary>The accent colors offered in Settings (the HUD's one bright color), in the current skin's shades.</summary>
 public static class HudAccents
 {
-    public static readonly IReadOnlyList<(string Id, Color Color)> All =
-    [
-        ("cyan", Color.FromArgb(255, 0x4F, 0xE3, 0xFF)),
-        ("violet", Color.FromArgb(255, 0x9D, 0x7C, 0xFF)),
-        ("green", Color.FromArgb(255, 0x39, 0xF5, 0xB0)),
-        ("magenta", Color.FromArgb(255, 0xFF, 0x4F, 0xD8)),
-        ("amber", Color.FromArgb(255, 0xFF, 0xB5, 0x47)),
-    ];
+    public static IReadOnlyList<(string Id, Color Color)> All =>
+        [.. HudSkins.Current.Accents.Select(a => (a.Id, HudSkins.Parse(a.Color)))];
 
     public static Color Of(string? id) => All.FirstOrDefault(a => a.Id == id).Color is { A: > 0 } c ? c : All[0].Color;
 
@@ -31,7 +25,7 @@ public static class HudAccents
     {
         var color = Of(id);
         var resources = Application.Current.Resources;
-        foreach (var dictionary in Dictionaries(resources))
+        foreach (var dictionary in ThemeDictionaries(resources))
         {
             SetBrush(dictionary, "HudAccentBrush", color);
             SetBrush(dictionary, "HudAccentDimBrush", WithAlpha(color, 0x26));
@@ -54,7 +48,8 @@ public static class HudAccents
         }
     }
 
-    private static IEnumerable<ResourceDictionary> Dictionaries(ResourceDictionary root)
+    /// <summary>The HUD theme dictionary (the one holding the HUD brushes).</summary>
+    public static IEnumerable<ResourceDictionary> ThemeDictionaries(ResourceDictionary root)
     {
         foreach (var merged in root.MergedDictionaries)
         {
@@ -99,6 +94,9 @@ public static class HudUi
     public static Brush Text => Brush("HudTextBrush");
 
     public static Brush TextDim => Brush("HudTextDimBrush");
+
+    /// <summary>Text on an accent or status fill (dark on the HUD skin, white on the light ones).</summary>
+    public static Brush OnFill => Brush("TextOnAccentFillColorPrimaryBrush");
 
     public static Brush Tag => Brush("HudTagBrush");
 

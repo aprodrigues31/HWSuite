@@ -19,12 +19,8 @@ public sealed partial class ChartsPage : Page
     private const int MaxSensors = 8;
     private static readonly int[] WindowMinutes = [1, 5, 15, 60, 0]; // minutes; 0 = everything
 
-    private static readonly Color[] Palette =
-    [
-        Color.FromArgb(255, 0x35, 0xE0, 0xF0), Color.FromArgb(255, 0xFF, 0xB5, 0x47), Color.FromArgb(255, 0xFF, 0x5C, 0x8A),
-        Color.FromArgb(255, 0x7C, 0xF0, 0x9A), Color.FromArgb(255, 0xB4, 0x8C, 0xFF), Color.FromArgb(255, 0x5A, 0xA9, 0xFF),
-        Color.FromArgb(255, 0xFF, 0x8A, 0x4C), Color.FromArgb(255, 0xD8, 0xDE, 0xE4),
-    ];
+    /// <summary>Line colors, readable on the current skin's background.</summary>
+    private static readonly Color[] Palette = [.. HudSkins.Current.ChartColors.Select(HudSkins.Parse)];
 
     /// <summary>Most sensor chips shown at once; the filters narrow the rest down.</summary>
     private const int MaxChips = 120;

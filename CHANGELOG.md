@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Skins**: em Configurações › Geral dá para escolher a aparência do HWSuite: **HUD escuro** (o original), **Claro suave** e **Metal futurista** (prata escovado, nem claro nem escuro). Cada skin tem as próprias cores de destaque e de gráfico, legíveis no seu fundo. O skin é aplicado ao reiniciar o HWSuite, e o programa oferece reiniciar na hora.
+
 ### Alterado
 - A manutenção do Windows ganhou item próprio no menu lateral, **Manutenção**, logo abaixo de Rede (antes era uma aba de Relatório).
 - Limpeza de disco e Otimizar unidades agora têm a lista de unidades com caixas de seleção (com tipo SSD/HDD, modelo e espaço livre), para escolher uma ou várias. A limpeza do Windows age na unidade do Windows; em cada unidade escolhida, a Lixeira (se marcada) e os arquivos do CHKDSK. Na linha de comando: `--cleanup-drives`, `--optimize-drives` e `--drives`.

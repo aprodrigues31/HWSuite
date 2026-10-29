@@ -36,11 +36,13 @@ public sealed partial class MainWindow : Window
         var bar = AppWindow.TitleBar;
         bar.ButtonBackgroundColor = Colors.Transparent;
         bar.ButtonInactiveBackgroundColor = Colors.Transparent;
-        bar.ButtonForegroundColor = Windows.UI.Color.FromArgb(255, 0xE8, 0xF7, 0xFF);
-        bar.ButtonInactiveForegroundColor = Windows.UI.Color.FromArgb(255, 0x6F, 0xA9, 0xBC);
-        bar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x30, 0x4F, 0xE3, 0xFF);
-        bar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, 0xE8, 0xF7, 0xFF);
-        bar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x50, 0x4F, 0xE3, 0xFF);
+        var accent = Hud.HudAccents.Of(App.Settings.Current.Accent);
+        var text = Hud.HudSkins.Parse(App.Skin.TitleButtons);
+        bar.ButtonForegroundColor = text;
+        bar.ButtonInactiveForegroundColor = Hud.HudSkins.Parse(App.Skin.TitleButtonsInactive);
+        bar.ButtonHoverBackgroundColor = Hud.HudAccents.WithAlpha(accent, 0x30);
+        bar.ButtonHoverForegroundColor = text;
+        bar.ButtonPressedBackgroundColor = Hud.HudAccents.WithAlpha(accent, 0x50);
         TitleVersion.Text = $"// {BuildInfo.Current.Display}".ToUpper(s.Culture);
         TitleMode.Text = App.IsDemo ? "// DEMO" : Core.Settings.DataLocation.IsPortable ? "// " + s["kit.portableTag"].ToUpper(s.Culture) : "";
 

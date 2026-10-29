@@ -259,12 +259,17 @@ jobs:
       - name: Desktop app - screenshots (demo data)
         # Every page rendered with the demo readings, published to the ci-screens branch for review.
         continue-on-error: true
-        timeout-minutes: 5
+        timeout-minutes: 9
         shell: pwsh
         run: |
           $folder = Join-Path $PWD 'artifacts/screens'
           $app = Start-Process -FilePath (Resolve-Path artifacts/gui/HWSuite.Gui.exe) -ArgumentList '--demo', '--capture', "`"$folder`"" -PassThru
           if (-not $app.WaitForExit(150000)) { $app.Kill(); Write-Output "::warning title=Screenshots::capture did not finish in 150 s" }
+          # The other skins: a few pages each (light-NN-page.png, metal-NN-page.png).
+          foreach ($skin in 'light', 'metal') {
+            $app = Start-Process -FilePath (Resolve-Path artifacts/gui/HWSuite.Gui.exe) -ArgumentList '--demo', '--skin', $skin, '--capture', "`"$folder`"" -PassThru
+            if (-not $app.WaitForExit(90000)) { $app.Kill(); Write-Output "::warning title=Screenshots::$skin capture did not finish in 90 s" }
+          }
           Get-ChildItem $folder -ErrorAction SilentlyContinue | ForEach-Object { Write-Host "$($_.Name) $($_.Length)" }
           if (Test-Path "$folder/capture-error.txt") { Write-Output "::warning title=Screenshot error::$((Get-Content "$folder/capture-error.txt" -Raw) -replace "`r?`n", ' | ')" }
           if ("${{ github.event_name }}" -ne 'pull_request' -and (Get-ChildItem $folder -Filter *.png -ErrorAction SilentlyContinue)) {

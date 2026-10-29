@@ -29,7 +29,14 @@ public sealed partial class SettingsPage : Page
         LanguageBox.Items.Add("Português (Brasil)");
         LanguageBox.Items.Add("English");
         LanguageHint.Text = s["settings.language.restart"];
-        // The HUD is always dark; what can be chosen is its accent color (applied at once).
+        // The skin (whole look, applied at the next start) and its accent color (applied at once).
+        SkinChoice.Header = s["settings.skin"];
+        foreach (var skin in Hud.HudSkins.All)
+        {
+            SkinChoice.Items.Add(SkinItem(skin));
+        }
+
+        SkinHint.Text = s["settings.skin.hint"];
         ThemeChoice.Header = s["settings.accent"];
         foreach (var (id, _) in Hud.HudAccents.All)
         {
@@ -77,6 +84,7 @@ public sealed partial class SettingsPage : Page
         var settings = App.Settings.Current;
         IntervalBox.Value = settings.IntervalSeconds;
         ThemeChoice.SelectedIndex = Math.Max(0, Hud.HudAccents.All.ToList().FindIndex(a => a.Id == settings.Accent));
+        SkinChoice.SelectedIndex = Math.Max(0, Hud.HudSkins.All.ToList().FindIndex(k => k.Id == (settings.Skin ?? Hud.HudSkins.Hud.Id)));
         LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, settings.Language));
         CloseToTraySwitch.IsOn = settings.CloseToTray;
         UpdatesSwitch.IsOn = settings.CheckForUpdates;
@@ -111,6 +119,57 @@ public sealed partial class SettingsPage : Page
         }
 
         App.Settings.Update(s => s with { IntervalSeconds = (int)Math.Round(args.NewValue) });
+    }
+
+    /// <summary>The skin's name with three swatches: background, panel and accent.</summary>
+    private static StackPanel SkinItem(Hud.HudSkin skin)
+    {
+        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
+        foreach (var hex in new[] { skin.Colors["HudBackgroundBrush"], skin.Colors["HudPanelBrush"], skin.Accents[0].Color })
+        {
+            row.Children.Add(new Microsoft.UI.Xaml.Shapes.Rectangle
+            {
+                Width = 18,
+                Height = 18,
+                Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(Hud.HudSkins.Parse(hex)),
+                Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
+                StrokeThickness = 1,
+                VerticalAlignment = VerticalAlignment.Center,
+            });
+        }
+
+        row.Children.Add(new TextBlock { Text = App.Text[$"skin.{skin.Id}"], Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
+        return row;
+    }
+
+    private async void SkinChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || SkinChoice.SelectedIndex < 0)
+        {
+            return;
+        }
+
+        var skin = Hud.HudSkins.All[SkinChoice.SelectedIndex];
+        App.Settings.Update(s => s with { Skin = skin.Id });
+        if (skin.Id == App.Skin.Id)
+        {
+            return;
+        }
+
+        var t = App.Text;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = t["settings.skin.restartTitle"],
+            Content = new TextBlock { Text = t.Format("settings.skin.restartBody", t[$"skin.{skin.Id}"]), TextWrapping = TextWrapping.Wrap },
+            PrimaryButtonText = t["settings.skin.restartNow"],
+            CloseButtonText = t["settings.skin.restartLater"],
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            App.Restart();
+        }
     }
 
     private void ThemeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)

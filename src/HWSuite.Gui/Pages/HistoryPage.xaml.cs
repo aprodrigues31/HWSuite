@@ -194,7 +194,7 @@ public sealed partial class HistoryPage : Page
                     Text = (record.Test is { } t ? s[t.Passed ? "batch.test.passed" : "batch.test.failed"] : s[$"mnt.verdict.{record.Overall}"]).ToUpper(c),
                     FontFamily = HudUi.Font("HudMonoStrongFont"),
                     FontSize = 11,
-                    Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0x03, 0x10, 0x16)),
+                    Foreground = HudUi.OnFill,
                 },
             };
             Grid.SetColumn(badge, 3);

@@ -260,7 +260,7 @@ public sealed partial class ReportPage : Page
                 Text = s[$"mnt.verdict.{check.Verdict}"].ToUpper(s.Culture),
                 FontFamily = HudUi.Font("HudMonoStrongFont"),
                 FontSize = 11,
-                Foreground = new SolidColorBrush(Windows.UI.Color.FromArgb(255, 0x03, 0x10, 0x16)),
+                Foreground = HudUi.OnFill,
             },
         };
         grid.Children.Add(badge);

@@ -54,6 +54,9 @@ public sealed record AppSettings
     /// <summary>Alert when the pump turns slower than this.</summary>
     public int PumpMinRpm { get; init; } = DefaultPumpMinRpm;
 
+    /// <summary>Look of the interface ("hud", "light", "metal"); null is "hud". Applied when the app starts.</summary>
+    public string? Skin { get; init; }
+
     /// <summary>Accent color of the interface ("cyan", "violet", "green", "magenta", "amber"); null is cyan.</summary>
     public string? Accent { get; init; }
 
