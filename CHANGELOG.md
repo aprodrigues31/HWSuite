@@ -9,6 +9,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Winget:** manifestos do pacote `aprodrigues31.HWSuite`, um workflow para o primeiro envio ao repositório da comunidade do Windows Package Manager e o envio automático de cada nova versão no workflow de release (com o *secret* `WINGET_TOKEN`).
 - Botão **"Verificar atualizações"** em Configurações e em Sobre: consulta o GitHub na hora e diz se há versão nova (abrindo a barra com o botão de download) ou se você já está na mais recente.
 
 ## [0.14.0] - 2026-10-28

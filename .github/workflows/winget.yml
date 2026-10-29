@@ -1,0 +1,33 @@
+name: Winget (first submission)
+
+# Opens the pull request that adds HWSuite to the Windows Package Manager community repository
+# (microsoft/winget-pkgs), from the manifests in winget/manifests. Needed once: later releases are
+# submitted by release.yml with "wingetcreate update".
+#
+# Requires the repository secret WINGET_TOKEN: a GitHub token of the repository owner with the
+# public_repo scope (classic token). wingetcreate forks winget-pkgs under that account if needed.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Manifest version folder to submit (winget/manifests/a/aprodrigues31/HWSuite/<version>)
+        required: true
+        default: 0.14.0
+
+jobs:
+  submit:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Submit with wingetcreate
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if (-not $env:WINGET_TOKEN) { throw "Add the WINGET_TOKEN repository secret first (see README, section Winget)." }
+          $dir = "winget/manifests/a/aprodrigues31/HWSuite/${{ inputs.version }}"
+          if (-not (Test-Path $dir)) { throw "No manifests in $dir" }
+          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
+          .\wingetcreate.exe submit --prtitle "New package: aprodrigues31.HWSuite version ${{ inputs.version }}" --token $env:WINGET_TOKEN $dir
+          if ($LASTEXITCODE -ne 0) { throw "wingetcreate submit failed ($LASTEXITCODE)" }

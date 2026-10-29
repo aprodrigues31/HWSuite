@@ -26,6 +26,17 @@ O `HWSuite.Gui.exe` (WinUI 3) mostra os sensores ao vivo, com gráfico do sensor
 
 Ao fechar a janela, o HWSuite continua na área de notificação mostrando as temperaturas e avisa quando um sensor passa do limite configurado. Em **Configurações** ficam o intervalo de atualização, o tema, os alertas, o log CSV e a opção de iniciar com o Windows (cria uma tarefa agendada apontando para a pasta atual do app; se mover a pasta, desligue e ligue a opção de novo).
 
+### Winget
+
+Depois que o pacote for aceito no repositório da comunidade do Windows Package Manager:
+
+```text
+winget install aprodrigues31.HWSuite
+winget upgrade aprodrigues31.HWSuite
+```
+
+Para quem mantém o projeto: os manifestos ficam em `winget/manifests`. O envio usa o *secret* `WINGET_TOKEN`, um token clássico do GitHub com o escopo `public_repo`. O workflow **Winget (first submission)** faz o primeiro envio; depois disso, cada versão publicada pelo workflow **Release** abre sozinha o pedido de atualização.
+
 ## Uso
 
 ```text
