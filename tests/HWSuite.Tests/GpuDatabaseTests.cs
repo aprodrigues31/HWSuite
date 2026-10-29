@@ -138,7 +138,7 @@ public class GpuDatabaseTests
     public void Driver_package_names_and_card_makers()
     {
         Assert.Equal("NVIDIA 560.94", HWSuite.Core.Gpu.GpuDrivers.Package("10DE", "32.0.15.6094", null));
-        Assert.Null(HWSuite.Core.Gpu.GpuDrivers.Package("8086", "32.0.101.6078", null));
+        Assert.Equal("Intel Graphics 101.6078", HWSuite.Core.Gpu.GpuDrivers.Package("8086", "32.0.101.6078", null));
         Assert.Equal("SK Hynix", HWSuite.Core.Gpu.GpuDrivers.AmdMemoryVendor(6));
         Assert.Null(HWSuite.Core.Gpu.GpuDrivers.AmdMemoryVendor(99));
         Assert.Equal("Sapphire", HWSuite.Core.Pci.PciIds.CardMaker(0x1DA2));

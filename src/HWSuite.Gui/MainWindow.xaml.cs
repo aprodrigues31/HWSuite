@@ -42,7 +42,7 @@ public sealed partial class MainWindow : Window
         bar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, 0xE8, 0xF7, 0xFF);
         bar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x50, 0x4F, 0xE3, 0xFF);
         TitleVersion.Text = $"// {BuildInfo.Current.Display}".ToUpper(s.Culture);
-        TitleMode.Text = App.IsDemo ? "// DEMO" : "";
+        TitleMode.Text = App.IsDemo ? "// DEMO" : Core.Settings.DataLocation.IsPortable ? "// " + s["kit.portableTag"].ToUpper(s.Culture) : "";
 
         AppWindow.Closing += AppWindow_Closing;
         Activated += (_, _) => _isShown = AppWindow.IsVisible;
@@ -358,6 +358,7 @@ public sealed partial class MainWindow : Window
         if (result.Succeeded)
         {
             AccessBar.Severity = InfoBarSeverity.Success;
+            App.DriverInstalledThisSession = true;
             App.Monitor.Start(); // reopen the hardware so CPU and motherboard sensors appear
             AccessBar.Message = s["app.driverInstalled"];
             await Task.Delay(TimeSpan.FromSeconds(3));

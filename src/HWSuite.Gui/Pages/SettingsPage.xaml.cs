@@ -45,6 +45,11 @@ public sealed partial class SettingsPage : Page
         AlertsHint.Text = s["settings.alertsHint"];
         RestoreButton.Content = s["settings.alertsRestore"];
         FilesTitle.Text = s["files.title"];
+        PerClientCheck.Content = s["files.perClient"];
+        KitTitle.Text = s["kit.title"];
+        KitText.Text = s["kit.body"];
+        KitButton.Content = s["kit.create"];
+        RemoveDriverCheck.Content = s["kit.removeDriver"];
         ReportsLabel.Text = s["files.reports.label"];
         ReportsBrowseButton.Content = s["files.browse"];
         ReportsResetButton.Content = s["files.askNext"];
@@ -86,9 +91,13 @@ public sealed partial class SettingsPage : Page
         // The task is the source of truth (it may have been removed in Task Scheduler).
         var elevated = App.Monitor.Access.IsElevated;
         StartupSwitch.IsOn = StartupTask.IsRegistered();
-        StartupSwitch.IsEnabled = elevated;
-        StartupHint.Text = App.Text["settings.startWithWindowsNeedsAdmin"];
-        StartupHint.Visibility = elevated ? Visibility.Collapsed : Visibility.Visible;
+        // A portable copy (a pen drive at a client's) never registers itself to start with Windows.
+        var portable = Core.Settings.DataLocation.IsPortable;
+        StartupSwitch.IsEnabled = elevated && !portable;
+        StartupHint.Text = App.Text[portable ? "kit.noStartup" : "settings.startWithWindowsNeedsAdmin"];
+        StartupHint.Visibility = elevated && !portable ? Visibility.Collapsed : Visibility.Visible;
+        PerClientCheck.IsChecked = settings.ReportsPerClient;
+        RemoveDriverCheck.IsChecked = settings.RemoveDriverOnExit;
 
         BuildRules();
         _loading = false;
@@ -355,8 +364,8 @@ public sealed partial class SettingsPage : Page
     {
         var s = App.Text;
         var settings = App.Settings.Current;
-        ReportsFolderText.Text = settings.ReportsFolder is { Length: > 0 } folder ? folder : s["files.reports.notSet"];
-        LogoFileText.Text = settings.LogoFile switch
+        ReportsFolderText.Text = App.Settings.ReportsFolder is { Length: > 0 } folder ? folder : s["files.reports.notSet"];
+        LogoFileText.Text = App.Settings.LogoFile switch
         {
             "" => s["files.logo.noneSaved"],
             { } file => file,
@@ -366,10 +375,11 @@ public sealed partial class SettingsPage : Page
 
     private void ReportsBrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        var start = App.Settings.Current.ReportsFolder ?? Services.OutputLocations.SuggestedReportsFolder;
+        var start = App.Settings.ReportsFolder ?? Services.OutputLocations.SuggestedReportsFolder;
         if (Services.ShellDialogs.PickFolder(App.Text["files.reports.pick"], start) is { } folder)
         {
-            App.Settings.Update(x => x with { ReportsFolder = folder });
+            var stored = Core.Settings.DataLocation.StorePath(folder);
+            App.Settings.Update(x => x with { ReportsFolder = stored });
             ShowFiles();
         }
     }
@@ -383,10 +393,11 @@ public sealed partial class SettingsPage : Page
     private void LogoBrowseButton_Click(object sender, RoutedEventArgs e)
     {
         var s = App.Text;
-        var start = App.Settings.Current.LogoFile is { Length: > 0 } current ? current : Core.Benchmark.BenchmarkFiles.Folder;
+        var start = App.Settings.LogoFile is { Length: > 0 } current ? current : Core.Benchmark.BenchmarkFiles.Folder;
         if (Services.ShellDialogs.PickFile(s["files.logo.pick"], start, (s["files.logo.images"], "*.png;*.jpg;*.jpeg;*.svg")) is { } file)
         {
-            App.Settings.Update(x => x with { LogoFile = file });
+            var stored = Core.Settings.DataLocation.StorePath(file);
+            App.Settings.Update(x => x with { LogoFile = stored });
             ShowFiles();
         }
     }
@@ -407,7 +418,8 @@ public sealed partial class SettingsPage : Page
     {
         if (Services.ShellDialogs.PickFolder(App.Text["charts.logFolder"], App.Settings.LogFolder) is { } folder)
         {
-            App.Settings.Update(x => x with { LogFolder = folder });
+            var stored = Core.Settings.DataLocation.StorePath(folder);
+            App.Settings.Update(x => x with { LogFolder = stored });
             LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
         }
     }
@@ -416,5 +428,50 @@ public sealed partial class SettingsPage : Page
     {
         App.Settings.Update(x => x with { LogFolder = null });
         LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
+    }
+
+    // ---- Technician's pen drive ----------------------------------------------------------------------------------
+
+    private void PerClientCheck_Click(object sender, RoutedEventArgs e)
+    {
+        var on = PerClientCheck.IsChecked == true;
+        App.Settings.Update(x => x with { ReportsPerClient = on });
+    }
+
+    private void RemoveDriverCheck_Click(object sender, RoutedEventArgs e)
+    {
+        var on = RemoveDriverCheck.IsChecked == true;
+        App.Settings.Update(x => x with { RemoveDriverOnExit = on });
+    }
+
+    private async void KitButton_Click(object sender, RoutedEventArgs e)
+    {
+        var s = App.Text;
+        if (Services.ShellDialogs.PickFolder(s["kit.pick"], null) is not { } target)
+        {
+            return;
+        }
+
+        KitButton.IsEnabled = false;
+        KitProgress.Visibility = Visibility.Visible;
+        KitResult.Text = s["kit.copying"];
+        try
+        {
+            var settings = App.Settings.Current;
+            var logo = App.Settings.LogoFile;
+            var progress = new Progress<double>(p => KitProgress.Value = p);
+            var folder = await Task.Run(() => Services.PortableKit.Create(target, settings, logo, progress));
+            KitResult.Text = s.Format("kit.done", folder);
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true })?.Dispose();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            KitResult.Text = s.Format("kit.failed", ex.Message);
+        }
+        finally
+        {
+            KitButton.IsEnabled = true;
+            KitProgress.Visibility = Visibility.Collapsed;
+        }
     }
 }

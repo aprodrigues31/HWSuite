@@ -17,13 +17,13 @@ internal static class OutputLocations
     /// <summary>The folder to save reports in, asking the first time; null when the user cancels.</summary>
     public static async Task<string?> ReportsFolderAsync(XamlRoot root)
     {
-        if (App.Settings.Current.ReportsFolder is { Length: > 0 } saved && Directory.Exists(saved))
+        if (App.Settings.ReportsFolder is { Length: > 0 } saved && Directory.Exists(saved))
         {
             return saved;
         }
 
         var s = App.Text;
-        var chosen = App.Settings.Current.ReportsFolder is { Length: > 0 } missing ? missing : SuggestedReportsFolder;
+        var chosen = App.Settings.ReportsFolder is { Length: > 0 } missing ? missing : SuggestedReportsFolder;
         var path = new TextBlock { Text = chosen, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, FontFamily = Hud.HudUi.Font("HudMonoFont"), FontSize = 13 };
         var browse = new Button { Content = s["files.browse"] };
         browse.Click += (_, _) =>
@@ -65,7 +65,7 @@ internal static class OutputLocations
 
         if (remember.IsChecked == true)
         {
-            var folder = path.Text;
+            var folder = Core.Settings.DataLocation.StorePath(path.Text);
             App.Settings.Update(x => x with { ReportsFolder = folder });
         }
 
@@ -78,7 +78,7 @@ internal static class OutputLocations
     /// </summary>
     public static async Task<(bool Proceed, string? LogoDataUri)> LogoAsync(XamlRoot root)
     {
-        var saved = App.Settings.Current.LogoFile;
+        var saved = App.Settings.LogoFile;
         if (saved is "")
         {
             return (true, null); // remembered: reports without a logo
@@ -138,7 +138,7 @@ internal static class OutputLocations
         var use = answer == ContentDialogResult.Primary && file is not null ? file : null;
         if (remember.IsChecked == true)
         {
-            var keep = use ?? "";
+            var keep = use is null ? "" : Core.Settings.DataLocation.StorePath(use);
             App.Settings.Update(x => x with { LogoFile = keep });
         }
 

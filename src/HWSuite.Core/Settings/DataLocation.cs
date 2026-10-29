@@ -26,6 +26,34 @@ public static class DataLocation
     /// <summary>Settings file: next to the data when portable, %LOCALAPPDATA%\HWSuite otherwise.</summary>
     public static string SettingsPath => IsPortable ? Path.Combine(Folder, "settings.json") : SettingsStore.DefaultPath;
 
+    /// <summary>
+    /// A path from the settings, made absolute. A portable copy stores paths inside its own folder relative to it
+    /// ("HWSuite\Reports"), because a pen drive gets a different letter on every computer.
+    /// </summary>
+    public static string? ResolvePath(string? path) => ResolvePath(path, AppContext.BaseDirectory);
+
+    public static string? ResolvePath(string? path, string baseFolder)
+    {
+        ArgumentNullException.ThrowIfNull(baseFolder);
+        return string.IsNullOrEmpty(path) || Path.IsPathRooted(path) ? path : Path.GetFullPath(Path.Combine(baseFolder, path));
+    }
+
+    /// <summary>The form to save in the settings: relative when this is a portable copy and the path is inside it.</summary>
+    public static string StorePath(string path) => StorePath(path, IsPortable ? AppContext.BaseDirectory : null);
+
+    public static string StorePath(string path, string? portableBase)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        if (portableBase is null)
+        {
+            return path;
+        }
+
+        var full = Path.GetFullPath(path);
+        var root = Normalize(portableBase);
+        return full.StartsWith(root, StringComparison.OrdinalIgnoreCase) ? full[root.Length..] : full;
+    }
+
     /// <summary>Whether a program in <paramref name="exeFolder"/> was installed (and so should use Documents).</summary>
     public static bool IsInstalled(string exeFolder, IEnumerable<string> installRoots)
     {

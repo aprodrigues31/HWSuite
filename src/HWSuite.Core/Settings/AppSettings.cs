@@ -80,6 +80,12 @@ public sealed record AppSettings
     /// <summary>The company logo for reports; null = ask on the first report, "" = reports without a logo.</summary>
     public string? LogoFile { get; init; }
 
+    /// <summary>Maintenance reports go into a subfolder per client (Reports\Client name\).</summary>
+    public bool ReportsPerClient { get; init; } = true;
+
+    /// <summary>A portable copy removes the PawnIO driver when it closes, if it installed the driver itself.</summary>
+    public bool RemoveDriverOnExit { get; init; } = true;
+
     /// <summary>Components shown on the Hardware page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? InventoryCategories { get; init; }
 

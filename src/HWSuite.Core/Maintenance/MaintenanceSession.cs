@@ -79,7 +79,7 @@ public static class MaintenanceSession
         var logo = settings.LogoFile switch
         {
             "" => null,
-            { } file => LogoFromFile(file),
+            { } file => LogoFromFile(DataLocation.ResolvePath(file)!),
             null => LogoDataUri(logoFolder),
         };
         return new CompanyProfile(settings.CompanyName, settings.CompanyDocument, settings.CompanyContact, settings.CompanyAddress, settings.TechnicianName, logo);

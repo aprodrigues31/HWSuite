@@ -299,14 +299,26 @@ public static class MaintenanceReportWriter
     public static string FileName(MaintenanceReport report, string extension)
     {
         ArgumentNullException.ThrowIfNull(report);
-        var who = report.Order.Client ?? report.Inventory.MachineName ?? "pc";
-        var safe = new string(who.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) || ch is '/' or '\\' or ':' ? '_' : ch).ToArray()).Trim();
-        if (safe.Length > 60)
-        {
-            safe = safe[..60];
-        }
+        return $"hwsuite-{report.At:yyyy-MM-dd-HHmm}-{Safe(report.Order.Client ?? report.Inventory.MachineName ?? "pc")}.{extension.TrimStart('.')}";
+    }
 
-        return $"hwsuite-{report.At:yyyy-MM-dd-HHmm}-{safe}.{extension.TrimStart('.')}";
+    /// <summary>
+    /// Where a report goes: the reports folder itself, or a subfolder named after the client (with
+    /// <paramref name="perClient"/> and a client filled in), so each client's history stays together.
+    /// </summary>
+    public static string Folder(MaintenanceReport report, string reportsFolder, bool perClient)
+    {
+        ArgumentNullException.ThrowIfNull(report);
+        ArgumentNullException.ThrowIfNull(reportsFolder);
+        return perClient && !string.IsNullOrWhiteSpace(report.Order.Client)
+            ? Path.Combine(reportsFolder, Safe(report.Order.Client))
+            : reportsFolder;
+    }
+
+    private static string Safe(string text)
+    {
+        var safe = new string(text.Select(ch => Path.GetInvalidFileNameChars().Contains(ch) || ch is '/' or '\\' or ':' ? '_' : ch).ToArray()).Trim().TrimEnd('.');
+        return safe.Length > 60 ? safe[..60].Trim() : safe.Length == 0 ? "_" : safe;
     }
 
     /// <summary>False for empty values and the placeholders boards ship with ("System Product Name", "To be filled by O.E.M.").</summary>

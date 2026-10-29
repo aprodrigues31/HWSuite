@@ -15,6 +15,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
   - no relatório de manutenção: aviso quando o limite de potência foi reduzido abaixo do padrão da placa e quando ela está limitando o clock em repouso por temperatura ou alimentação.
 - **Processadores híbridos** (Intel 12ª geração em diante): quantidade de núcleos de desempenho (P) e de eficiência (E) no Hardware e nos relatórios.
 - **Driver de vídeo Intel** com o nome que a Intel usa (por exemplo "Intel Graphics 101.6078").
+- **Pendrive do técnico** (Configurações › Pendrive do técnico): **Criar cópia portátil...** copia o HWSuite (app e linha de comando) para a pasta escolhida, com os dados da empresa, o logo e a pasta de relatórios já configurados. No computador do cliente:
+  - roda sem instalar e grava só ao lado de si mesma; os caminhos ficam relativos à cópia, então funciona com qualquer letra de unidade;
+  - mostra "PORTÁTIL" na barra de título e não oferece "Iniciar com o Windows";
+  - se instalar o driver PawnIO naquela sessão, remove-o ao fechar (opção, ligada por padrão), sem deixar rastros no computador do cliente.
+- **Relatórios por cliente:** os relatórios de manutenção vão para uma subpasta com o nome do cliente (Relatórios\Cliente\), opção em Configurações › Arquivos (ligada por padrão); vale também para o `hwsuite maintenance`.
 
 ## [0.20.0] - 2026-10-29
 

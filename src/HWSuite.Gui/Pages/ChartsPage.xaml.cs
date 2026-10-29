@@ -182,7 +182,8 @@ public sealed partial class ChartsPage : Page
     {
         if (Services.ShellDialogs.PickFolder(App.Text["charts.logFolder"], LogFolder) is { } folder)
         {
-            App.Settings.Update(x => x with { LogFolder = folder });
+            var stored = Core.Settings.DataLocation.StorePath(folder);
+            App.Settings.Update(x => x with { LogFolder = stored });
             ShowRecording();
             FillSources();
         }

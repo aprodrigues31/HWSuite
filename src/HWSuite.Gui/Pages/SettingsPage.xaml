@@ -84,6 +84,7 @@
                             <Button x:Name="ReportsResetButton" Click="ReportsResetButton_Click" />
                         </StackPanel>
                     </StackPanel>
+                    <CheckBox x:Name="PerClientCheck" Click="PerClientCheck_Click" />
                     <StackPanel Spacing="6">
                         <TextBlock x:Name="LogoLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
                         <TextBlock x:Name="LogoFileText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
@@ -93,6 +94,17 @@
                             <Button x:Name="LogoResetButton" Click="LogoResetButton_Click" />
                         </StackPanel>
                     </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="KitTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="10">
+                    <TextBlock x:Name="KitText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                    <Button x:Name="KitButton" Click="KitButton_Click" />
+                    <ProgressBar x:Name="KitProgress" Maximum="1" Visibility="Collapsed" />
+                    <TextBlock x:Name="KitResult" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    <CheckBox x:Name="RemoveDriverCheck" Click="RemoveDriverCheck_Click" />
                 </StackPanel>
             </Border>
 

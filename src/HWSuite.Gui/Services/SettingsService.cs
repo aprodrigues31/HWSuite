@@ -25,7 +25,13 @@ public sealed class SettingsService
 
     public static string DefaultLogFolder => Path.Combine(DataLocation.Folder, "logs");
 
-    public string LogFolder => Current.LogFolder ?? DefaultLogFolder;
+    public string LogFolder => DataLocation.ResolvePath(Current.LogFolder) ?? DefaultLogFolder;
+
+    /// <summary>The reports folder as an absolute path (portable copies keep it relative to themselves), or null.</summary>
+    public string? ReportsFolder => DataLocation.ResolvePath(Current.ReportsFolder);
+
+    /// <summary>The logo file as an absolute path; "" = reports without a logo; null = not chosen.</summary>
+    public string? LogoFile => DataLocation.ResolvePath(Current.LogoFile);
 
     public void Update(Func<AppSettings, AppSettings> change)
     {

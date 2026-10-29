@@ -192,6 +192,9 @@ public sealed class MaintenanceTests
         Assert.Contains("Anexo", html, StringComparison.Ordinal);
         Assert.StartsWith("hwsuite-2026-10-29-1000-Cliente & Cia", MaintenanceReportWriter.FileName(report, "pdf"), StringComparison.Ordinal);
         Assert.EndsWith(".pdf", MaintenanceReportWriter.FileName(report, "pdf"), StringComparison.Ordinal);
+        Assert.Equal(Path.Combine("R", "Cliente & Cia"), MaintenanceReportWriter.Folder(report, "R", perClient: true));
+        Assert.Equal("R", MaintenanceReportWriter.Folder(report, "R", perClient: false));
+        Assert.Equal("R", MaintenanceReportWriter.Folder(report with { Order = report.Order with { Client = null } }, "R", perClient: true));
     }
 
     [Fact]
@@ -282,5 +285,22 @@ public sealed class MaintenanceTests
         {
             Directory.Delete(usb, recursive: true);
         }
+    }
+
+    [Fact]
+    public void Portable_paths_are_kept_relative_to_the_copy()
+    {
+        var usb = Path.Combine(Path.GetTempPath(), "usb-e", "hwsuite");
+        var inside = Path.Combine(usb, "HWSuite", "Reports");
+        Assert.Equal(Path.Combine("HWSuite", "Reports"), HWSuite.Core.Settings.DataLocation.StorePath(inside, usb));
+        var outside = Path.Combine(Path.GetTempPath(), "clientes");
+        Assert.Equal(Path.GetFullPath(outside), HWSuite.Core.Settings.DataLocation.StorePath(outside, usb));
+        Assert.Equal(inside, HWSuite.Core.Settings.DataLocation.StorePath(inside, null)); // installed copies keep absolute paths
+
+        var other = Path.Combine(Path.GetTempPath(), "usb-f", "hwsuite"); // same pen drive, another letter
+        Assert.Equal(Path.Combine(other, "HWSuite", "Reports"), HWSuite.Core.Settings.DataLocation.ResolvePath(Path.Combine("HWSuite", "Reports"), other));
+        Assert.Equal(outside, HWSuite.Core.Settings.DataLocation.ResolvePath(outside, other));
+        Assert.Equal("", HWSuite.Core.Settings.DataLocation.ResolvePath("", other)); // "" = no logo stays as is
+        Assert.Null(HWSuite.Core.Settings.DataLocation.ResolvePath(null, other));
     }
 }

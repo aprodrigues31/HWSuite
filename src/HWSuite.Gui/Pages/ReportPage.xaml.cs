@@ -97,7 +97,7 @@ public sealed partial class ReportPage : Page
     private void ShowLogo()
     {
         var s = App.Text;
-        LogoText.Text = App.Settings.Current.LogoFile switch
+        LogoText.Text = App.Settings.LogoFile switch
         {
             "" => s["files.logo.noneSaved"],
             { } file => s.Format("rep.logoFound", file),
@@ -126,10 +126,11 @@ public sealed partial class ReportPage : Page
     private void LogoButton_Click(object sender, RoutedEventArgs e)
     {
         var s = App.Text;
-        var start = App.Settings.Current.LogoFile is { Length: > 0 } current ? current : BenchmarkFiles.Folder;
+        var start = App.Settings.LogoFile is { Length: > 0 } current ? current : BenchmarkFiles.Folder;
         if (Services.ShellDialogs.PickFile(s["files.logo.pick"], start, (s["files.logo.images"], "*.png;*.jpg;*.jpeg;*.svg")) is { } file)
         {
-            App.Settings.Update(x => x with { LogoFile = file });
+            var stored = Core.Settings.DataLocation.StorePath(file);
+            App.Settings.Update(x => x with { LogoFile = stored });
             ShowLogo();
         }
     }
@@ -310,6 +311,7 @@ public sealed partial class ReportPage : Page
         }
 
         var report = _report with { Company = _report.Company with { LogoDataUri = logo } };
+        folder = MaintenanceReportWriter.Folder(report, folder, App.Settings.Current.ReportsPerClient);
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, MaintenanceReportWriter.FileName(report, "html"));
         File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, App.Text), new UTF8Encoding(false));

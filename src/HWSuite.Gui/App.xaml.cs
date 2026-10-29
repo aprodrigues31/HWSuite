@@ -243,11 +243,27 @@ public partial class App : Application
         Current.Exit();
     }
 
+    /// <summary>Set when this session installed the PawnIO driver (a portable copy may remove it on exit).</summary>
+    public static bool DriverInstalledThisSession { get; set; }
+
     private static void Shutdown()
     {
         Monitor.Dispose();
         Tray?.Dispose();
         Tray = null;
+
+        // A portable copy on a client's computer leaves nothing behind: the driver it installed goes with it.
+        if (Core.Settings.DataLocation.IsPortable && DriverInstalledThisSession && Settings.Current.RemoveDriverOnExit && !IsDemo)
+        {
+            try
+            {
+                _ = Providers.Windows.PawnIoInstaller.Uninstall((_, _) => { });
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                System.Diagnostics.Debug.WriteLine($"HWSuite: driver removal failed: {ex.Message}");
+            }
+        }
     }
 
     private bool AcquireSingleInstance(bool relaunched)

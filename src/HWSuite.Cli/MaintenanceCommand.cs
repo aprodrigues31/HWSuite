@@ -29,7 +29,7 @@ internal static class MaintenanceCommand
     private static (string Folder, AppSettings Settings) AskFiles(SettingsStore store, AppSettings settings, bool needFolder, Strings s)
     {
         var interactive = !Console.IsInputRedirected;
-        var folder = settings.ReportsFolder is { Length: > 0 } saved ? saved : MaintenanceSession.ReportsFolder;
+        var folder = DataLocation.ResolvePath(settings.ReportsFolder) is { Length: > 0 } saved ? saved : MaintenanceSession.ReportsFolder;
         if (needFolder && settings.ReportsFolder is null && interactive)
         {
             Console.Write(s.Format("cli.files.folder", folder));
@@ -40,7 +40,7 @@ internal static class MaintenanceCommand
 
             if (Confirm(s["cli.files.remember"]))
             {
-                settings = settings with { ReportsFolder = folder };
+                settings = settings with { ReportsFolder = DataLocation.StorePath(folder) };
                 Save(store, settings);
             }
         }
@@ -51,6 +51,7 @@ internal static class MaintenanceCommand
             Console.Write(s.Format("cli.files.logo", found ?? s["files.logo.without"]));
             var typed = Console.ReadLine()?.Trim().Trim('"');
             var logo = typed is { Length: > 0 } ? (typed == "-" ? "" : Path.GetFullPath(typed)) : found ?? "";
+            var stored = logo.Length == 0 ? "" : DataLocation.StorePath(logo);
             if (logo.Length > 0 && MaintenanceSession.LogoFromFile(logo) is null)
             {
                 Console.WriteLine(s.Format("cli.files.badLogo", logo));
@@ -58,7 +59,7 @@ internal static class MaintenanceCommand
             }
 
             var remember = Confirm(s["cli.files.remember"]);
-            settings = settings with { LogoFile = logo };
+            settings = settings with { LogoFile = stored };
             if (remember)
             {
                 Save(store, settings);
@@ -173,7 +174,7 @@ internal static class MaintenanceCommand
 
         var path = options.OutputPath is { } output
             ? Path.GetFullPath(output)
-            : Path.Combine(folder, MaintenanceReportWriter.FileName(report, "html"));
+            : Path.Combine(MaintenanceReportWriter.Folder(report, folder, settings.ReportsPerClient), MaintenanceReportWriter.FileName(report, "html"));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, s), new UTF8Encoding(false));
         Console.WriteLine();
