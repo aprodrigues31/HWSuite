@@ -50,7 +50,7 @@ internal static class MaintenanceCommand
             Volumes = MaintenanceSession.Volumes(),
             PumpSensorId = settings.PumpSensorId,
             PumpMinRpm = settings.PumpMinRpm,
-            Network = NetworkHistory.Read(BenchmarkFiles.Network).FirstOrDefault(),
+            Network = NetworkHistory.Read(BenchmarkFiles.Network) is [var lastNet, ..] ? lastNet : null,
         };
 
         using var stop = new CancellationTokenSource();

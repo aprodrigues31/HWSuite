@@ -155,7 +155,7 @@ public sealed partial class ReportPage : Page
                 Volumes = volumes,
                 PumpSensorId = settings.PumpSensorId,
                 PumpMinRpm = settings.PumpMinRpm,
-                Network = NetworkHistory.Read(BenchmarkFiles.Network).FirstOrDefault(),
+                Network = NetworkHistory.Read(BenchmarkFiles.Network) is [var lastNet, ..] ? lastNet : null,
             };
 
             if (LoadCheck.IsChecked == true)
