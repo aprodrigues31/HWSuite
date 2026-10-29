@@ -17,12 +17,20 @@ namespace HWSuite.Gui.Pages;
 /// </summary>
 public sealed partial class SensorsPage : Page
 {
-    private static readonly SensorKind?[] FilterKinds = [null, SensorKind.Temperature, SensorKind.Voltage, SensorKind.Fan, SensorKind.Power, SensorKind.Clock, SensorKind.Load];
+    /// <summary>Order of the reading-type chips; only types that the chosen components have are shown.</summary>
+    private static readonly SensorKind[] KindOrder =
+    [
+        SensorKind.Temperature, SensorKind.Voltage, SensorKind.Fan, SensorKind.Power, SensorKind.Clock, SensorKind.Load,
+        SensorKind.Current, SensorKind.Control, SensorKind.Level, SensorKind.Data, SensorKind.SmallData, SensorKind.Throughput,
+        SensorKind.Frequency, SensorKind.Flow, SensorKind.Factor, SensorKind.Energy, SensorKind.TimeSpan, SensorKind.Timing,
+        SensorKind.Noise, SensorKind.Humidity, SensorKind.Conductivity, SensorKind.Other,
+    ];
     private const double WarnTemperature = 80;
 
     private readonly Dictionary<string, Row> _rows = new(StringComparer.Ordinal);
     private readonly Dictionary<string, Device> _devices = new(StringComparer.Ordinal);
-    private readonly List<ToggleButton> _filterButtons = [];
+    private readonly Dictionary<SensorKind, ToggleButton> _kindButtons = [];
+    private ToggleButton? _allKinds;
     private readonly Dictionary<string, (TextBlock Value, TextBlock Note)> _summary = [];
     private readonly HashSet<SensorCategory> _categories = [.. SensorCategories.Parse(App.Settings.Current.SensorCategories)];
     private readonly SortedDictionary<SensorCategory, ToggleButton> _categoryButtons = [];
@@ -181,31 +189,61 @@ public sealed partial class SensorsPage : Page
 
     private void BuildFilters()
     {
-        var s = App.Text;
-        foreach (var kind in FilterKinds)
-        {
-            var label = kind is null ? s["sensors.filter.all"] : s[$"sensorKind.{kind}"];
-            var button = new ToggleButton
-            {
-                Content = label.ToUpper(s.Culture),
-                FontFamily = HudUi.Font("HudMonoFont"),
-                FontSize = 12,
-                CharacterSpacing = 120,
-                Padding = new Thickness(14, 7, 14, 7),
-                IsChecked = kind is null,
-            };
-            button.Click += (_, _) =>
-            {
-                _filter = kind;
-                foreach (var other in _filterButtons)
-                {
-                    other.IsChecked = ReferenceEquals(other, button);
-                }
+        _allKinds = KindChip(null);
+        Filters.Children.Add(_allKinds);
+    }
 
-                ApplyFilter();
-            };
-            _filterButtons.Add(button);
-            Filters.Children.Add(button);
+    private ToggleButton KindChip(SensorKind? kind)
+    {
+        var s = App.Text;
+        var button = new ToggleButton
+        {
+            Content = (kind is null ? s["sensors.filter.all"] : s[$"sensorKind.{kind}"]).ToUpper(s.Culture),
+            FontFamily = HudUi.Font("HudMonoFont"),
+            FontSize = 12,
+            CharacterSpacing = 120,
+            Padding = new Thickness(14, 7, 14, 7),
+            IsChecked = kind == _filter,
+        };
+        button.Click += (_, _) =>
+        {
+            _filter = kind;
+            ApplyFilter();
+        };
+        return button;
+    }
+
+    /// <summary>
+    /// Only the reading types the chosen components actually have (a motherboard has voltages and fans, a drive has
+    /// temperatures and data...). A type that disappears with the component choice is dropped back to "All".
+    /// </summary>
+    private void RefreshKindChips()
+    {
+        var present = _rows.Values.Where(r => Shown(r.Category)).Select(r => r.Reading.Kind).ToHashSet();
+        if (_filter is { } current && !present.Contains(current))
+        {
+            _filter = null;
+        }
+
+        foreach (var kind in KindOrder.Where(present.Contains).Where(k => !_kindButtons.ContainsKey(k)))
+        {
+            var button = KindChip(kind);
+            _kindButtons[kind] = button;
+
+            // Keep the fixed order after "All".
+            var index = 1 + _kindButtons.Keys.OrderBy(k => Array.IndexOf(KindOrder, k)).ToList().IndexOf(kind);
+            Filters.Children.Insert(Math.Min(index, Filters.Children.Count), button);
+        }
+
+        if (_allKinds is not null)
+        {
+            _allKinds.IsChecked = _filter is null;
+        }
+
+        foreach (var (kind, button) in _kindButtons)
+        {
+            button.Visibility = present.Contains(kind) ? Visibility.Visible : Visibility.Collapsed;
+            button.IsChecked = kind == _filter;
         }
     }
 
@@ -226,6 +264,7 @@ public sealed partial class SensorsPage : Page
 
     private void ApplyFilter()
     {
+        RefreshKindChips();
         foreach (var row in _rows.Values)
         {
             row.Root.Visibility = Visible(row) ? Visibility.Visible : Visibility.Collapsed;

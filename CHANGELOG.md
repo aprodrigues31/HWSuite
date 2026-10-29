@@ -20,6 +20,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ### Alterado
 - **Hardware (inventário)** no mesmo estilo dos Sensores: filtro por componente (Sistema, Placa-mãe, Processador, Memória, Placa de vídeo, NPU, Discos, Bateria, Diagnóstico; vários ao mesmo tempo, ou Todos), lembrado entre as aberturas, e busca que mostra só as linhas que combinam (modelo, serial, driver...).
 - **Blocos que se ajustam à tela** em Hardware, Sensores e Gráficos: quantas colunas couberem na largura da janela, e os blocos se redistribuem conforme o filtro (um bloco ocupa a largura toda; vários dividem as colunas), sem espaços vazios.
+- **Sensores:** os botões de tipo de leitura acompanham os componentes escolhidos e mostram só os tipos que eles têm (placa-mãe: tensões, ventoinhas, temperaturas...; discos: temperatura, dados...). Tipos além dos seis principais (corrente, nível, vazão, taxa de transferência...) aparecem quando existem; se o tipo escolhido deixa de existir na nova seleção, volta para "Todos".
 
 ## [0.19.0] - 2026-10-29
 
