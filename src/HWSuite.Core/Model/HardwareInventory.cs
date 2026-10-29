@@ -77,6 +77,11 @@ public sealed class ProcessorInfo
     public string? Signature { get; set; }
     public int? Cores { get; set; }
     public int? Threads { get; set; }
+
+    /// <summary>Hybrid processors (Intel 12th gen and later, some AMD): performance and efficiency cores; null otherwise.</summary>
+    public int? PerformanceCores { get; set; }
+
+    public int? EfficiencyCores { get; set; }
     public int? BusClockMhz { get; set; }
     public int? MaxClockMhz { get; set; }
     public int? CurrentClockMhz { get; set; }
@@ -225,6 +230,37 @@ public sealed class GpuInfo
 
     /// <summary>Counterfeit check against the model the name claims (<see cref="Gpu.GpuAuthenticity"/>).</summary>
     public Gpu.AuthenticityResult? Authenticity { get; set; }
+
+    // NVIDIA (NVML): what the driver itself reports about the card.
+
+    /// <summary>"Ada Lovelace", "Ampere"...</summary>
+    public string? Architecture { get; set; }
+
+    /// <summary>CUDA cores (NVIDIA).</summary>
+    public int? ShaderUnits { get; set; }
+
+    public int? MemoryBusBits { get; set; }
+
+    public int? MaxGpuClockMhz { get; set; }
+
+    public int? MaxMemoryClockMhz { get; set; }
+
+    /// <summary>Power limit in effect now, the card's default and the range the driver allows (watts).</summary>
+    public double? PowerLimitW { get; set; }
+
+    public double? PowerLimitDefaultW { get; set; }
+
+    public double? PowerLimitMinW { get; set; }
+
+    public double? PowerLimitMaxW { get; set; }
+
+    /// <summary>Temperatures at which the card slows down and shuts down (°C).</summary>
+    public int? SlowdownTemperatureC { get; set; }
+
+    public int? ShutdownTemperatureC { get; set; }
+
+    /// <summary>"CUDA 12.6": the highest CUDA version the installed driver supports.</summary>
+    public string? ComputeVersion { get; set; }
 }
 
 /// <summary>

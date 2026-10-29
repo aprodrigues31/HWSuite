@@ -115,6 +115,7 @@ public static class ReportModel
                 (s["field.familyModelStepping"], Join(c, " / ", Hex(cpu.Family), Hex(cpu.Model), Hex(cpu.Stepping))),
                 (s["field.signature"], cpu.Signature),
                 (s["field.coresThreads"], Join(c, " / ", cpu.Cores, cpu.Threads)),
+                (s["field.hybridCores"], cpu.PerformanceCores is { } pc && cpu.EfficiencyCores is { } ec ? s.Format("cpu.hybrid", pc, ec) : null),
                 (s["field.clocks"], Join(c, " / ", Mhz(cpu.BusClockMhz), Mhz(cpu.MaxClockMhz), Mhz(cpu.CurrentClockMhz))),
                 (s["field.instructions"], cpu.InstructionSets.Count > 0 ? string.Join(", ", cpu.InstructionSets) : null),
                 (s["field.virtualization"], VirtualizationText(cpu, s))));
@@ -160,6 +161,15 @@ public static class ReportModel
                   + (g.Revision is int rev ? string.Create(CultureInfo.InvariantCulture, $" · rev {rev:X2}") : "")),
             (s["field.pcie"], Link(g.PcieLink, s)),
             (s["field.cardClocks"], CardClocks(g, s)),
+            (s["field.architecture.gpu"], g.Architecture),
+            (s["field.cudaCores"], g.ShaderUnits?.ToString("N0", c)),
+            (s["field.memoryBus"], g.MemoryBusBits is { } bus ? s.Format("gpu.bus", bus) : null),
+            (s["field.maxClocks"], g.MaxGpuClockMhz is null && g.MaxMemoryClockMhz is null ? null
+                : s.Format("gpu.maxClocks", Mhz(g.MaxGpuClockMhz) ?? "—", Mhz(g.MaxMemoryClockMhz) ?? "—")),
+            (s["field.powerLimit"], PowerLimit(g, s)),
+            (s["field.tempLimits"], g.SlowdownTemperatureC is null && g.ShutdownTemperatureC is null ? null
+                : s.Format("gpu.tempLimits", g.SlowdownTemperatureC?.ToString(c) ?? "—", g.ShutdownTemperatureC?.ToString(c) ?? "—")),
+            (s["field.compute"], g.ComputeVersion),
             (s["field.dedicatedMemory"], g.DedicatedMemoryBytes is { } d ? Bytes(d, c) : null),
             (s["field.memoryVendor"], g.MemoryVendor),
             (s["field.sharedMemory"], g.SharedMemoryBytes is { } sh ? Bytes(sh, c) : null),
@@ -311,6 +321,31 @@ public static class ReportModel
     /// the AMD driver reports them. The memory clock is the real one (it matches GPU-Z); the GPU value is the
     /// top of the Adrenalin tuning range, a little above the boost clock, so it is not used for the fill rate.
     /// </summary>
+    /// <summary>"200 W (default 200 W · range 100–250 W)".</summary>
+    private static string? PowerLimit(GpuInfo g, Strings s)
+    {
+        if (g.PowerLimitW is not { } now)
+        {
+            return null;
+        }
+
+        var c = s.Culture;
+        string W(double w) => w.ToString("0", c) + " W";
+        var text = W(now);
+        var extra = new List<string>();
+        if (g.PowerLimitDefaultW is { } d)
+        {
+            extra.Add(s.Format("gpu.powerDefault", W(d)));
+        }
+
+        if (g.PowerLimitMinW is { } min && g.PowerLimitMaxW is { } max && max > min)
+        {
+            extra.Add(s.Format("gpu.powerRange", W(min), W(max)));
+        }
+
+        return extra.Count == 0 ? text : $"{text} ({string.Join(" · ", extra)})";
+    }
+
     private static string? CardClocks(GpuInfo g, Strings s)
     {
         var c = s.Culture;

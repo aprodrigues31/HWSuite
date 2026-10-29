@@ -22,7 +22,22 @@ public static class GpuDrivers
             return "NVIDIA " + release;
         }
 
+        if (string.Equals(vendorId, "8086", StringComparison.OrdinalIgnoreCase) && IntelRelease(driverVersion) is { } intel)
+        {
+            return "Intel Graphics " + intel;
+        }
+
         return null;
+    }
+
+    /// <summary>"32.0.101.6078" -> "101.6078" (Intel names its graphics drivers by the last two fields).</summary>
+    public static string? IntelRelease(string? driverVersion)
+    {
+        var parts = driverVersion?.Split('.');
+        return parts is { Length: 4 } && int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out var build) && build >= 100
+            && int.TryParse(parts[3], NumberStyles.None, CultureInfo.InvariantCulture, out _)
+            ? $"{parts[2]}.{parts[3]}"
+            : null;
     }
 
     /// <summary>"32.0.15.6094" -> "560.94".</summary>

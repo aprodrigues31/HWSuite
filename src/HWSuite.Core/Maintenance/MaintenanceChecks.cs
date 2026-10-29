@@ -46,7 +46,7 @@ public static class MaintenanceChecks
         Memory(inv, s, list);
         Disks(inv, s, list);
         Volumes(input.Volumes, s, list);
-        Graphics(inv, dash, input.Now, s, list);
+        Graphics(inv, input.Sensors, dash, input.Now, s, list);
         Cooling(input, dash, s, list);
         Power(input.Sensors, s, list);
         Batteries(inv, s, list);
@@ -323,7 +323,7 @@ public static class MaintenanceChecks
 
     // ---- Graphics ----------------------------------------------------------------------------------------------
 
-    private static void Graphics(HardwareInventory inv, DashboardReadout? dash, DateTimeOffset now, Strings s, List<CheckResult> list)
+    private static void Graphics(HardwareInventory inv, SensorSnapshot? snapshot, DashboardReadout? dash, DateTimeOffset now, Strings s, List<CheckResult> list)
     {
         var c = s.Culture;
         foreach (var gpu in inv.Gpus.Where(g => g.Name is not null && !g.Name.Contains("Basic Render", StringComparison.OrdinalIgnoreCase)))
@@ -348,6 +348,26 @@ public static class MaintenanceChecks
                 list.Add(months > DriverOldMonths
                     ? new(CheckArea.Graphics, s.Format("mnt.gpu.driver", name), finding, Verdict.Attention, s["mnt.gpu.driver.advice"])
                     : new(CheckArea.Graphics, s.Format("mnt.gpu.driver", name), finding, Verdict.Ok));
+            }
+
+            // NVIDIA: a power limit set well below the card's default (by a tool or a previous owner) costs performance.
+            if (gpu.PowerLimitW is { } limit && gpu.PowerLimitDefaultW is { } standard && limit < standard * 0.9)
+            {
+                list.Add(new(CheckArea.Graphics, s.Format("mnt.gpu.power", name),
+                    s.Format("mnt.gpu.power.low", limit.ToString("0", c), standard.ToString("0", c)), Verdict.Attention, s["mnt.gpu.power.advice"]));
+            }
+        }
+
+        // NVIDIA: the card holding its clock back at rest because of temperature, a hardware signal or power delivery.
+        if (snapshot is not null)
+        {
+            var alarming = Gpu.Nvml.LimitSensors.Where(l => Gpu.Nvml.Alarming.HasFlag(l.Flag)).Select(l => l.Name).ToHashSet(StringComparer.Ordinal);
+            foreach (var card in snapshot.Readings.Where(r => r.HardwareKind == "GPU" && r.Id.StartsWith("/nvml/", StringComparison.Ordinal)).GroupBy(r => r.Hardware))
+            {
+                var active = card.Where(r => alarming.Contains(r.Name) && r.Value >= 50).Select(r => r.Name).ToList();
+                list.Add(active.Count > 0
+                    ? new(CheckArea.Graphics, s.Format("mnt.gpu.limits", card.Key), string.Join(" · ", active), Verdict.Attention, s["mnt.gpu.limits.advice"])
+                    : new(CheckArea.Graphics, s.Format("mnt.gpu.limits", card.Key), s["mnt.gpu.limits.none"], Verdict.Ok));
             }
         }
 

@@ -23,6 +23,7 @@ public static class ProviderCatalog
         new WindowsSmbiosProvider(),
         new LinuxSmbiosProvider(),
         new CpuidProvider(),
+        new CoreTopologyProvider(), // after CPUID: P / E cores of hybrid processors
         new DxgiGpuProvider(),
         new WindowsNpuProvider(),
         new WindowsBatteryProvider(),
@@ -40,7 +41,7 @@ public static class ProviderCatalog
         ISensorSource source = new LhmSensorSource(access);
         if (OperatingSystem.IsWindows())
         {
-            source = new CompositeSensorSource(source, new AdlTelemetrySource(raw));
+            source = new CompositeSensorSource(source, new AdlTelemetrySource(raw), new NvmlSource());
         }
 
         if (!raw)

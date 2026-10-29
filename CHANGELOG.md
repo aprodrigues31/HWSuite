@@ -8,6 +8,14 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Placas NVIDIA em detalhe** (pela biblioteca de gerenciamento da NVIDIA, que vem com o driver):
+  - sensores novos: limite de potência em uso, estado de desempenho (P0–P12), uso do codificador e do decodificador de vídeo e **por que a placa está segurando o clock** (limite de potência, térmico, térmico de hardware, redução por hardware, freio de energia), cada um como um canal "Limit: ..." que fica em 100 enquanto ativo;
+  - no Hardware: arquitetura (Ampere, Ada Lovelace...), núcleos CUDA, barramento de memória, clocks máximos, limite de potência (em uso, padrão e faixa ajustável), temperaturas em que a placa reduz o clock e desliga, versão de CUDA do driver e versão da BIOS de vídeo;
+  - no relatório de manutenção: aviso quando o limite de potência foi reduzido abaixo do padrão da placa e quando ela está limitando o clock em repouso por temperatura ou alimentação.
+- **Processadores híbridos** (Intel 12ª geração em diante): quantidade de núcleos de desempenho (P) e de eficiência (E) no Hardware e nos relatórios.
+- **Driver de vídeo Intel** com o nome que a Intel usa (por exemplo "Intel Graphics 101.6078").
+
 ## [0.20.0] - 2026-10-29
 
 ### Adicionado

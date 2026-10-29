@@ -38,6 +38,7 @@ public sealed class DxgiGpuProvider : IInventoryProvider
         var registry = ReadDisplayClass();
         var amdCards = AdlTelemetrySource.Cards();
         var biosImages = VfctReader.Read();
+        var nvidiaCards = NvmlSource.Cards();
         foreach (var gpu in EnumerateAdapters())
         {
             if (registry.FirstOrDefault(r => r.Matches(gpu)) is { } entry)
@@ -58,6 +59,19 @@ public sealed class DxgiGpuProvider : IInventoryProvider
             {
                 gpu.MemoryVendor = card.MemoryVendor is { } vendorCode ? Core.Gpu.GpuDrivers.AmdMemoryVendor(vendorCode) : null;
                 (gpu.CardGpuClockMhz, gpu.CardMemoryClockMhz) = Core.Gpu.Overdrive8.DefaultClocks(card.Overdrive);
+            }
+
+            // NVIDIA: the driver's own facts, matched by PCI ids (the subsystem tells two cards of one model apart).
+            var nvidia = nvidiaCards.Where(n => string.Equals(n.VendorId, gpu.PciVendorId, StringComparison.OrdinalIgnoreCase)
+                && string.Equals(n.DeviceId, gpu.PciDeviceId, StringComparison.OrdinalIgnoreCase)).ToList();
+            if (nvidia.Count > 1)
+            {
+                nvidia = [.. nvidia.Where(n => string.Equals(n.SubsystemId, gpu.PciSubsystemId, StringComparison.OrdinalIgnoreCase))];
+            }
+
+            if (nvidia.Count >= 1)
+            {
+                nvidia[0].ApplyTo(gpu);
             }
 
             AttachVideoBios(gpu, biosImages);
