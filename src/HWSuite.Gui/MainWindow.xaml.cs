@@ -105,26 +105,67 @@ public sealed partial class MainWindow : Window
         }
     }
 
-    private Uri? _updateLink;
+    private Core.Updates.ReleaseInfo? _update;
+    private bool _updating;
 
-    /// <summary>"HWSuite 0.14.0 is available" with a button to the installer (or the release page).</summary>
+    /// <summary>Installed by the setup (per-user folder) rather than run from an extracted zip.</summary>
+    private static bool IsInstalled => AppContext.BaseDirectory.TrimEnd('\\').EndsWith(@"Programs\HWSuite", StringComparison.OrdinalIgnoreCase)
+        && File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+
+    /// <summary>
+    /// "HWSuite 0.15.0 is available". Installed copies get "Update now" (verified download, silent install,
+    /// restart); portable copies get the download link, so a second installation is never created unasked.
+    /// </summary>
     public void ShowUpdate(Core.Updates.ReleaseInfo release)
     {
         ArgumentNullException.ThrowIfNull(release);
         var s = App.Text;
-        _updateLink = release.Installer ?? release.Page;
+        _update = release;
         UpdateBar.Title = s.Format("app.update.title", release.Version);
         UpdateBar.Message = s.Format("app.update.message", Core.BuildInfo.Current.Version);
-        UpdateButton.Content = s[release.Installer is null ? "app.update.page" : "app.update.download"];
+        UpdateButton.Content = s[CanUpdateInPlace(release) ? "app.update.now" : release.Installer is null ? "app.update.page" : "app.update.download"];
+        UpdateButton.IsEnabled = true;
         UpdateBar.IsOpen = true;
     }
 
-    private void UpdateButton_Click(object sender, RoutedEventArgs e)
+    private static bool CanUpdateInPlace(Core.Updates.ReleaseInfo release) =>
+        IsInstalled && release.Installer is not null && release.InstallerSha256 is not null;
+
+    private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
-        if (_updateLink is not null)
+        if (_update is not { } release || _updating)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_updateLink.AbsoluteUri) { UseShellExecute = true })?.Dispose();
+            return;
         }
+
+        if (!CanUpdateInPlace(release))
+        {
+            var link = release.Installer ?? release.Page;
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true })?.Dispose();
+            return;
+        }
+
+        var s = App.Text;
+        _updating = true;
+        UpdateButton.IsEnabled = false;
+        var progress = new Progress<double>(p => UpdateBar.Message = s.Format("app.update.downloading", (p * 100).ToString("0", s.Culture)));
+        using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
+        var folder = Path.Combine(Path.GetTempPath(), "HWSuite-update");
+        var setup = await Core.Updates.UpdateChecker.DownloadInstallerAsync(http, release, folder, progress);
+        if (setup is null)
+        {
+            UpdateBar.Message = s["app.update.downloadFailed"];
+            UpdateButton.Content = s["app.update.download"];
+            UpdateButton.IsEnabled = true;
+            _updating = false;
+            _update = release with { InstallerSha256 = null }; // the next click opens the download in the browser
+            return;
+        }
+
+        // Silent install over this copy; the setup starts the new version when it finishes (/RELAUNCH=1).
+        UpdateBar.Message = s["app.update.installing"];
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(setup, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1") { UseShellExecute = true })?.Dispose();
+        App.Quit();
     }
 
     /// <summary>Explains what limits the sensors and offers the one action that fixes it.</summary>

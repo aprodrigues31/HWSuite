@@ -57,7 +57,15 @@ Name: "{autodesktop}\HWSuite"; Filename: "{app}\HWSuite.Gui.exe"; Tasks: desktop
 
 [Run]
 Filename: "{app}\HWSuite.Gui.exe"; Description: "{cm:LaunchProgram,HWSuite}"; Flags: nowait postinstall skipifsilent
+; In-app update: the app runs the setup with /SILENT /RELAUNCH=1 and exits; the new version starts here.
+Filename: "{app}\HWSuite.Gui.exe"; Flags: nowait; Check: Relaunch
 
 [UninstallRun]
 ; The "start with Windows" scheduled task points at this folder; remove it with the app (ignored if absent).
 Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""HWSuite"" /F"; Flags: runhidden; RunOnceId: "RemoveStartupTask"
+
+[Code]
+function Relaunch: Boolean;
+begin
+  Result := WizardSilent and (ExpandConstant('{param:RELAUNCH|0}') = '1');
+end;
