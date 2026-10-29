@@ -117,7 +117,7 @@ public sealed partial class ChartsPage : Page
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
             {
-                RecordText.Text = App.Text.Format("log.cannotRead", Path.GetFileName(path), ex.Message);
+                RecordText.Text = App.Text.Format("log.cannotRead", System.IO.Path.GetFileName(path), ex.Message);
             }
         }
 
