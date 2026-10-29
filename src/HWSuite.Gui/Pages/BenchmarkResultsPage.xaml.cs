@@ -92,12 +92,14 @@ public sealed partial class BenchmarkResultsPage : Page
         var grid = new Grid { ColumnSpacing = 20 };
         for (var col = 0; col < table.Columns.Count; col++)
         {
+            // Date and name fixed; number columns sized by their header (about 7 px per character, at most two lines).
+            var headerWidth = Math.Clamp(table.Columns[col].Header.Length * 7.0, 90, 200);
             var width = col switch
             {
                 0 => 140,
-                1 => 300,
-                _ when col == table.BarColumn => 220,
-                _ => table.Columns.Count > 6 ? 190 : 120,
+                1 => 280,
+                _ when col == table.BarColumn => Math.Max(250, headerWidth),
+                _ => headerWidth,
             };
             grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(width) });
         }
@@ -113,8 +115,13 @@ public sealed partial class BenchmarkResultsPage : Page
                 HorizontalAlignment = numeric ? HorizontalAlignment.Right : HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Center,
                 FontWeight = header || (best && col == table.BarColumn) ? FontWeights.SemiBold : FontWeights.Normal,
-                Foreground = header ? Brush("TextFillColorSecondaryBrush") : null,
             };
+
+            // Only headers get a color; a null Foreground would make the text transparent, not the default color.
+            if (header)
+            {
+                text.Foreground = Brush("TextFillColorSecondaryBrush");
+            }
             if (!header && col == 1)
             {
                 ToolTipService.SetToolTip(text, cells[col]); // full name when trimmed
@@ -162,15 +169,24 @@ public sealed partial class BenchmarkResultsPage : Page
             grid.Children.Add(cell);
         }
 
-        return new Border
+        var line = new Border
         {
             Child = grid,
             Padding = new Thickness(12, header ? 10 : 8, 12, header ? 10 : 8),
             CornerRadius = new CornerRadius(4),
-            Background = odd ? Brush("SubtleFillColorSecondaryBrush") : null,
-            BorderThickness = header ? new Thickness(0, 0, 0, 1) : new Thickness(0),
-            BorderBrush = header ? Brush("DividerStrokeColorDefaultBrush") : null,
         };
+        if (odd)
+        {
+            line.Background = Brush("SubtleFillColorSecondaryBrush");
+        }
+
+        if (header)
+        {
+            line.BorderThickness = new Thickness(0, 0, 0, 1);
+            line.BorderBrush = Brush("DividerStrokeColorDefaultBrush");
+        }
+
+        return line;
     }
 
     private static Brush Brush(string key) => (Brush)Application.Current.Resources[key];
