@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.19.0] - 2026-10-29
+
 ### Adicionado
 - **Relatório de manutenção** (novo item **Relatório** no menu e o comando `hwsuite maintenance`), para entregar ao cliente:
   - diagnóstico automático com veredito por item (OK, Atenção, Problema, Info) e a orientação do que fazer: suporte do Windows (fim das atualizações por versão e edição), idade da BIOS, temperatura do processador em repouso e sob carga, memória (capacidade, canal único, módulos diferentes, XMP/EXPO desligado), discos (SMART, setores realocados, desgaste, temperatura) e espaço livre, placa de vídeo (autenticidade, driver antigo), bomba e ventoinhas, tensões da fonte, bateria, desempenho e o último teste de Internet;
