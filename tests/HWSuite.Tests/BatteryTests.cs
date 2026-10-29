@@ -76,6 +76,7 @@ public class BatteryTests
         var rows = ReportModel.Build(inventory, Strings.For("pt-BR")).Single(s => s.Title == "Bateria e nobreak").Groups.Single().Rows.ToDictionary(r => r.Label, r => r.Value);
         Assert.Equal("Nobreak (USB)", rows["Tipo"]);
         Assert.Equal("100% · na tomada", rows["Carga"]);
+        Assert.Equal("Chumbo-ácido", rows["Química"]);
     }
 
     [Theory]

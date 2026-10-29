@@ -34,10 +34,11 @@ public partial class App : Application
         InitializeComponent();
     }
 
-    /// <summary>UI text in the system language (Portuguese or English).</summary>
-    public static Strings Text { get; } = Strings.For((string?)null);
-
+    // Settings first: the UI language is one of them.
     public static SettingsService Settings { get; } = new();
+
+    /// <summary>UI text in the chosen language, or the system language (Portuguese or English); applied at start.</summary>
+    public static Strings Text { get; } = Strings.For(Settings.Current.Language);
 
     /// <summary>Shared sensor polling, used by every page that shows live values.</summary>
     public static SensorMonitor Monitor { get; } = new();

@@ -235,4 +235,12 @@ public class SettingsAndSummaryTests
             StartupTask.Unregister(name);
         }
     }
+
+    [Theory]
+    [InlineData("pt-BR", "pt-BR")]
+    [InlineData("en", "en")]
+    [InlineData("fr", null)]
+    [InlineData(null, null)]
+    public void Language_setting_keeps_only_supported_languages(string? saved, string? expected) =>
+        Assert.Equal(expected, HWSuite.Core.Settings.SettingsStore.Parse(HWSuite.Core.Settings.SettingsStore.Serialize(new HWSuite.Core.Settings.AppSettings { Language = saved })).Language);
 }

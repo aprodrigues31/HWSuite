@@ -13,6 +13,7 @@ namespace HWSuite.Gui.Pages;
 public sealed partial class SettingsPage : Page
 {
     private static readonly AppTheme[] Themes = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
+    private static readonly string?[] Languages = [null, "pt-BR", "en"];
     private bool _loading;
 
     public SettingsPage()
@@ -24,6 +25,11 @@ public sealed partial class SettingsPage : Page
         IntervalBox.Header = s["settings.interval"];
         IntervalBox.Minimum = AppSettings.MinInterval;
         IntervalBox.Maximum = AppSettings.MaxInterval;
+        LanguageBox.Header = s["settings.language"];
+        LanguageBox.Items.Add(s["settings.language.system"]);
+        LanguageBox.Items.Add("Português (Brasil)");
+        LanguageBox.Items.Add("English");
+        LanguageHint.Text = s["settings.language.restart"];
         ThemeChoice.Header = s["settings.theme"];
         foreach (var theme in Themes)
         {
@@ -56,6 +62,7 @@ public sealed partial class SettingsPage : Page
         var settings = App.Settings.Current;
         IntervalBox.Value = settings.IntervalSeconds;
         ThemeChoice.SelectedIndex = Array.IndexOf(Themes, settings.Theme);
+        LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, settings.Language));
         CloseToTraySwitch.IsOn = settings.CloseToTray;
         UpdatesSwitch.IsOn = settings.CheckForUpdates;
         AlertsSwitch.IsOn = settings.AlertsEnabled;
@@ -284,6 +291,16 @@ public sealed partial class SettingsPage : Page
         finally
         {
             CheckUpdatesButton.IsEnabled = true;
+        }
+    }
+
+    private void LanguageBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (!_loading && LanguageBox.SelectedIndex >= 0)
+        {
+            var language = Languages[LanguageBox.SelectedIndex];
+            App.Settings.Update(s => s with { Language = language });
+            LanguageHint.Visibility = Visibility.Visible; // texts are loaded at start
         }
     }
 

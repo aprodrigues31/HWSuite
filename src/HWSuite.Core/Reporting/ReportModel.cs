@@ -320,7 +320,7 @@ public static class ReportModel
             (s["field.manufacturer"], b.Manufacturer),
             (s["field.serial"], b.SerialNumber),
             (s["field.manufactured"], DateText.Display(b.ManufactureDate, c)),
-            (s["field.chemistry"], b.Chemistry),
+            (s["field.chemistry"], b.Chemistry == "Lead acid" ? s["battery.leadAcid"] : b.Chemistry),
             (s["field.charge"], Power.Batteries.ChargePercent(b) is { } pct ? string.Create(c, $"{pct:0}% · {state}") : state),
             (s["field.runtime"], b.EstimatedTime is { } t ? s.Format("battery.runtime", (int)t.TotalHours, t.Minutes) : null),
             (s["field.batteryHealth"], health is { } h ? s.Format("battery.health", h.ToString("0", c), (100 - h).ToString("0", c)) : null),

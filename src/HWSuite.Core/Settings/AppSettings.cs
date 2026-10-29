@@ -39,6 +39,9 @@ public sealed record AppSettings
     /// <summary>Folder for CSV logs; null means Documents\HWSuite\logs.</summary>
     public string? LogFolder { get; init; }
 
+    /// <summary>UI and report language: null follows Windows, otherwise "pt-BR" or "en".</summary>
+    public string? Language { get; init; }
+
     /// <summary>Look for a newer release on GitHub when the app starts.</summary>
     public bool CheckForUpdates { get; init; } = true;
 
@@ -58,6 +61,7 @@ public sealed record AppSettings
         IntervalSeconds = Math.Clamp(IntervalSeconds, MinInterval, MaxInterval),
         Theme = Enum.IsDefined(Theme) ? Theme : AppTheme.System,
         PumpMinRpm = Math.Clamp(PumpMinRpm, 100, 5000),
+        Language = Language is "pt-BR" or "en" ? Language : null,
         PumpSensorId = string.IsNullOrWhiteSpace(PumpSensorId) ? null : PumpSensorId,
         LogFolder = string.IsNullOrWhiteSpace(LogFolder) ? null : LogFolder,
     };
