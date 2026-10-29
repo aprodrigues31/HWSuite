@@ -69,7 +69,7 @@ internal static class NetCommand
         Row(s["net.upload"], $"{N(result.UploadMbps)} Mbps");
         Row($"{s["net.latency"]} {s["net.idle"]}", $"{N(result.Idle.Summary.Median)} ms ({s["net.withDownload"]} {N(result.LoadedDownload.Summary.Median)}, {s["net.withUpload"]} {N(result.LoadedUpload.Summary.Median)})");
         Row($"{s["net.jitter"]} {s["net.idle"]}", $"{N(result.Idle.Jitter)} ms ({s["net.withDownload"]} {N(result.LoadedDownload.Jitter)}, {s["net.withUpload"]} {N(result.LoadedUpload.Jitter)})");
-        Row(s["net.loss"], result.LossPercent is { } loss ? $"{loss.ToString("0.#", c)}%" : s["net.lossNa"]);
+        Row($"{s["net.loss"]} {s["net.idle"]}", result.LossPercent is { } loss ? $"{loss.ToString("0.#", c)}%" : s["net.lossNa"]);
         Row(s["net.serverName"], result.Endpoint.Server ?? result.Endpoint.Host);
         if (result.Endpoint.Provider is { } provider)
         {

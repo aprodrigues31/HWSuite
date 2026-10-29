@@ -221,8 +221,8 @@ public sealed partial class NetworkPage : Page
         metrics.Children.Add(SubRow(s["net.withDownload"], Number(r.LoadedDownload.Jitter), "ms"));
         metrics.Children.Add(SubRow(s["net.withUpload"], Number(r.LoadedUpload.Jitter), "ms"));
         metrics.Children.Add(r.LossPercent is { } loss
-            ? MetricRow("", s["net.loss"], null, loss.ToString("0.#", App.Text.Culture), "%")
-            : MetricRow("", s["net.loss"], null, s["net.lossNa"], ""));
+            ? MetricRow("", s["net.loss"], s["net.idle"], loss.ToString("0.#", App.Text.Culture), "%")
+            : MetricRow("", s["net.loss"], s["net.idle"], s["net.lossNa"], ""));
         ResultPanel.Children.Add(Card(s.Format("net.metrics", r.Family), metrics));
 
         var info = new StackPanel { Spacing = 2 };
