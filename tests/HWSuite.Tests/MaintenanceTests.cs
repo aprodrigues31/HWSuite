@@ -6,6 +6,7 @@ using HWSuite.Core.Sensors;
 
 namespace HWSuite.Tests;
 
+[Collection(TimingCollection.Name)]
 public sealed class MaintenanceTests
 {
     private static readonly Strings Pt = Strings.For("pt-BR");

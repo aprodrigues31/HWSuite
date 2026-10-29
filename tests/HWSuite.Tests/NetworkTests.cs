@@ -7,6 +7,7 @@ using HWSuite.Providers.Windows;
 
 namespace HWSuite.Tests;
 
+[Collection(TimingCollection.Name)]
 public sealed class NetworkTests
 {
     private static readonly NetTestOptions Fast = new()

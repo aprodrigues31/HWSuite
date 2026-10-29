@@ -3,6 +3,7 @@ using HWSuite.Core.Benchmark;
 
 namespace HWSuite.Tests;
 
+[Collection(TimingCollection.Name)]
 public class BenchmarkTests
 {
     [Fact]
