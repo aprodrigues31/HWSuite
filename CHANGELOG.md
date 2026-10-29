@@ -9,6 +9,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Atualização automática:** quando o HWSuite foi instalado pelo instalador, a barra de nova versão oferece "Atualizar agora". O app baixa o instalador, confere o SHA-256 publicado pelo GitHub (se não conferir, nada é instalado), instala em modo silencioso, fecha e reabre já na versão nova. A versão portátil continua com o botão de download.
 - **Winget:** manifestos do pacote `aprodrigues31.HWSuite`, um workflow para o primeiro envio ao repositório da comunidade do Windows Package Manager e o envio automático de cada nova versão no workflow de release (com o *secret* `WINGET_TOKEN`).
 - Botão **"Verificar atualizações"** em Configurações e em Sobre: consulta o GitHub na hora e diz se há versão nova (abrindo a barra com o botão de download) ou se você já está na mais recente.
 

@@ -229,6 +229,13 @@ jobs:
           $installed = "$env:LOCALAPPDATA\Programs\HWSuite"
           if (-not (Test-Path "$installed\HWSuite.Gui.exe") -or -not (Test-Path "$installed\hwsuite.exe")) { throw "Installer did not install the app" }
           & "$installed\hwsuite.exe" --version
+          # In-app update path: a silent reinstall over the existing copy must start the app again.
+          Start-Process -FilePath (Resolve-Path $setup) -ArgumentList '/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/RELAUNCH=1' -Wait
+          Start-Sleep -Seconds 8
+          $relaunched = Get-Process HWSuite.Gui -ErrorAction SilentlyContinue
+          if (-not $relaunched) { throw "The setup did not reopen the app with /RELAUNCH=1" }
+          $relaunched | Stop-Process -Force
+          Start-Sleep -Seconds 2
           Start-Process -FilePath "$installed\unins000.exe" -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES' -Wait
           Start-Sleep -Seconds 3
           if (Test-Path "$installed\HWSuite.Gui.exe") { throw "Uninstaller left the app behind" }
