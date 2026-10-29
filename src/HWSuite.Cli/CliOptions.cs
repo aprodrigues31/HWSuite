@@ -25,6 +25,7 @@ public enum CliCommand
     Stability,
     MemTest,
     Batch,
+    Tuneup,
 }
 
 public enum DriverAction
@@ -116,6 +117,12 @@ public sealed record CliOptions
     /// <summary>bench / maintenance: run the processor benchmark.</summary>
     public bool Bench { get; init; }
 
+    /// <summary>tuneup: the tasks to run (none given = the default set).</summary>
+    public HWSuite.Core.Maintenance.TuneupTasks Tasks { get; init; }
+
+    /// <summary>tuneup: empty the Recycle Bin during the cleanup.</summary>
+    public bool EmptyRecycleBin { get; init; }
+
     /// <summary>log: the CSV log to read.</summary>
     public string? LogFile { get; init; }
 
@@ -172,6 +179,11 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("memtest", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.MemTest };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("tuneup", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Tuneup };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("batch", StringComparison.OrdinalIgnoreCase))
@@ -266,6 +278,12 @@ public sealed record CliOptions
                 "--accept-mlab-policy" when options.Command == CliCommand.Net => options with { AcceptMlabPolicy = true },
                 "--ipv6" when options.Command == CliCommand.Net => options with { Ipv6 = true },
                 "--minutes" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Minutes = Math.Clamp(Seconds(arg), 1, 720) },
+                "--cleanup" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Cleanup },
+                "--optimize" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Optimize },
+                "--windows-update" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.WindowsUpdate },
+                "--store" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.StoreApps },
+                "--apps" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.DesktopApps },
+                "--empty-recycle-bin" when options.Command == CliCommand.Tuneup => options with { EmptyRecycleBin = true },
                 "--no-gpu" when options.Command == CliCommand.Stability => options with { NoGpu = true },
                 "--no-memory" when options.Command == CliCommand.Stability => options with { NoMemory = true },
                 "--client" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Client = Value(arg) },

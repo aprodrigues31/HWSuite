@@ -9,6 +9,12 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Manutenção do Windows** (Relatório › Manutenção do Windows, e `hwsuite tuneup`), com as ferramentas do próprio Windows e como administrador:
+  - **limpeza de disco**: arquivos temporários, sobras do Windows Update, caches, relatórios de erro e logs antigos (Limpeza de Disco do Windows) e as pastas temporárias; mostra quanto espaço foi liberado. A pasta Downloads nunca é mexida; Lixeira e instalação anterior do Windows só se marcadas;
+  - **otimizar unidades**: TRIM nos SSDs e desfragmentação nos HDs, em todas as unidades fixas;
+  - **Windows Update**: procura, baixa e instala as atualizações e avisa se precisa reiniciar;
+  - **apps da Microsoft Store** e, opcionalmente, **programas instalados** pelo winget;
+  - o resultado de cada tarefa entra sozinho em "Serviços realizados" do próximo relatório de manutenção.
 - **Teste de estabilidade completo** (Bench › Estabilidade e `hwsuite stability`): processador em todas as threads, placa de vídeo e memória RAM sob carga ao mesmo tempo por 5, 10, 15, 30 ou 60 minutos, com todos os resultados conferidos:
   - valores ao vivo (erros de cada parte, temperaturas, consumo e clocks) e gráficos ao final;
   - qualquer erro de cálculo ou de memória reprova o teste; uma peça superaquecendo interrompe o teste para protegê-la;

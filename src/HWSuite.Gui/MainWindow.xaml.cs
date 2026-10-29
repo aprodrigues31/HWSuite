@@ -60,6 +60,7 @@ public sealed partial class MainWindow : Window
         StabilityTab.Text = s["stab.tab"];
         ReportRunTab.Text = s["hist.tab.report"];
         HistoryTab.Text = s["hist.tab.history"];
+        TuneupTab.Text = s["tune.tab"];
         BenchResultsTab.Text = s["app.nav.benchResults"];
         Navigate("dashboard");
 
@@ -72,7 +73,7 @@ public sealed partial class MainWindow : Window
         var railTag = tag switch
         {
             "benchresults" or "stability" => "bench",
-            "history" => "report",
+            "history" or "tuneup" => "report",
             _ => tag,
         };
         if (_rail.TryGetValue(railTag, out var item) && item.IsChecked != true)
@@ -120,7 +121,7 @@ public sealed partial class MainWindow : Window
     {
         // Pages grouped under one rail item get tabs: Bench (tests | stability | results), Report (new | history).
         var isBench = tag is "bench" or "stability" or "benchresults";
-        var isReport = tag is "report" or "history";
+        var isReport = tag is "report" or "history" or "tuneup";
         BenchTabs.Visibility = isBench ? Visibility.Visible : Visibility.Collapsed;
         ReportTabs.Visibility = isReport ? Visibility.Visible : Visibility.Collapsed;
         if (isBench || isReport)
@@ -131,6 +132,7 @@ public sealed partial class MainWindow : Window
                 "benchresults" => BenchResultsTab,
                 "stability" => StabilityTab,
                 "history" => HistoryTab,
+                "tuneup" => TuneupTab,
                 "report" => ReportRunTab,
                 _ => BenchRunTab,
             };
@@ -150,6 +152,7 @@ public sealed partial class MainWindow : Window
             "network" => typeof(NetworkPage),
             "report" => typeof(ReportPage),
             "history" => typeof(HistoryPage),
+            "tuneup" => typeof(TuneupPage),
             "stability" => typeof(StabilityPage),
             "charts" => typeof(ChartsPage),
             "settings" => typeof(SettingsPage),

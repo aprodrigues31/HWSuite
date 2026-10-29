@@ -56,6 +56,9 @@ public partial class App : Application
     /// <summary>Running on <see cref="DemoSensorSource"/> data (title bar says DEMO; nothing is saved as a real reading).</summary>
     public static bool IsDemo { get; private set; }
 
+    /// <summary>Windows maintenance done in this session (one line each), offered as the report's services performed.</summary>
+    public static List<string> ServicesDone { get; } = [];
+
     public static string IconPath => Path.Combine(AppContext.BaseDirectory, "Assets", "HWSuite.ico");
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -209,7 +212,7 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "history", "settings", "about"];
+        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "tuneup", "history", "settings", "about"];
         var saved = 0;
         try
         {

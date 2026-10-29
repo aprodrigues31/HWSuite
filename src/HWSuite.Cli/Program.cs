@@ -45,5 +45,6 @@ return options.Command switch
     CliCommand.Stability => StabilityCommand.Run(options, s, memoryOnly: false),
     CliCommand.MemTest => StabilityCommand.Run(options, s, memoryOnly: true),
     CliCommand.Batch => BatchCommand.Run(options, s),
+    CliCommand.Tuneup => TuneupCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

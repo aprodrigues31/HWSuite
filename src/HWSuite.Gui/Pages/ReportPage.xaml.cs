@@ -65,6 +65,16 @@ public sealed partial class ReportPage : Page
         AddressBox.Text = settings.CompanyAddress ?? "";
         ShowLogo();
 
+        // Windows maintenance done in this session goes into "services performed".
+        Loaded += (_, _) =>
+        {
+            var missing = App.ServicesDone.Where(line => !ServicesBox.Text.Contains(line, StringComparison.Ordinal)).ToList();
+            if (missing.Count > 0)
+            {
+                ServicesBox.Text = string.Join("\r", new[] { ServicesBox.Text.TrimEnd() }.Where(x => x.Length > 0).Concat(missing));
+            }
+        };
+
         if (App.IsDemo)
         {
             // Screenshots: a filled-in order and a diagnosis made right away (no load test).
