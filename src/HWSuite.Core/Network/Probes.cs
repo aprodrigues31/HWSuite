@@ -189,40 +189,85 @@ public sealed class CloudflareProbe : PinnedProbe
     {
         await PinAsync(Host, 443, cancel).ConfigureAwait(false);
         Endpoint = new NetEndpoint(Host, "Cloudflare", null, null);
-        try
+        if (await GetTextAsync("/meta", cancel).ConfigureAwait(false) is { } meta && ParseMeta(meta) is { Server: not "Cloudflare" } fromMeta)
         {
-            using var request = Request(HttpMethod.Get, "/meta");
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-            timeout.CancelAfter(TimeSpan.FromSeconds(8));
-            using var response = await Http.SendAsync(request, timeout.Token).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                Endpoint = ParseMeta(await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false));
-            }
+            Endpoint = fromMeta;
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException || (ex is OperationCanceledException && !cancel.IsCancellationRequested))
+        else if (await GetTextAsync("/cdn-cgi/trace", cancel).ConfigureAwait(false) is { } trace)
         {
-            // the test itself still works without the provider name
+            Endpoint = ParseTrace(trace);
         }
     }
 
-    /// <summary>Reads /meta: {"clientIp","asOrganization","colo","city","country",...}.</summary>
+    /// <summary>A small GET (sent as the speed test page sends it); null when it fails. The test itself works without these.</summary>
+    private async Task<string?> GetTextAsync(string path, CancellationToken cancel)
+    {
+        try
+        {
+            using var request = Request(HttpMethod.Get, path);
+            request.Headers.Referrer = new Uri($"https://{Host}/");
+            request.Headers.Add("Origin", $"https://{Host}");
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
+            timeout.CancelAfter(TimeSpan.FromSeconds(8));
+            using var response = await Http.SendAsync(request, timeout.Token).ConfigureAwait(false);
+            return response.IsSuccessStatusCode ? await response.Content.ReadAsStringAsync(timeout.Token).ConfigureAwait(false) : null;
+        }
+        catch (Exception ex) when (ex is HttpRequestException or IOException || (ex is OperationCanceledException && !cancel.IsCancellationRequested))
+        {
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Reads /meta: {"clientIp","asOrganization","city","country", "colo": "GRU" or {"iata":"GRU","city":"São Paulo","cca2":"BR"}}.
+    /// The data center is shown as "Cloudflare São Paulo, BR (GRU)".
+    /// </summary>
     public static NetEndpoint ParseMeta(string json)
     {
         try
         {
             using var doc = JsonDocument.Parse(json);
             var root = doc.RootElement;
-            string? Get(string name) => root.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String && v.GetString() is { Length: > 0 } s ? s : null;
-            var place = string.Join(", ", new[] { Get("city"), Get("country") }.OfType<string>());
-            var colo = Get("colo");
-            var server = "Cloudflare" + (place.Length > 0 ? " " + place : "") + (colo is null ? "" : $" ({colo})");
-            return new NetEndpoint(Host, server, Get("asOrganization"), Get("clientIp"));
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                return new NetEndpoint(Host, "Cloudflare", null, null);
+            }
+
+            static string? Get(JsonElement e, string name) => e.ValueKind == JsonValueKind.Object && e.TryGetProperty(name, out var v) && v.ValueKind == JsonValueKind.String && v.GetString() is { Length: > 0 } s ? s : null;
+            string? colo, city, country;
+            if (root.TryGetProperty("colo", out var c) && c.ValueKind == JsonValueKind.Object)
+            {
+                (colo, city, country) = (Get(c, "iata"), Get(c, "city"), Get(c, "cca2"));
+            }
+            else
+            {
+                (colo, city, country) = (Get(root, "colo"), Get(root, "city"), Get(root, "country"));
+            }
+
+            return new NetEndpoint(Host, Label(colo, city, country), Get(root, "asOrganization"), Get(root, "clientIp"));
         }
         catch (JsonException)
         {
             return new NetEndpoint(Host, "Cloudflare", null, null);
         }
+    }
+
+    /// <summary>Reads /cdn-cgi/trace (key=value lines: ip, colo, loc), the fallback when /meta is unavailable.</summary>
+    public static NetEndpoint ParseTrace(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var values = text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(l => l.Split('=', 2))
+            .Where(p => p.Length == 2)
+            .GroupBy(p => p[0], StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First()[1], StringComparer.Ordinal);
+        return new NetEndpoint(Host, Label(values.GetValueOrDefault("colo"), null, values.GetValueOrDefault("loc")), null, values.GetValueOrDefault("ip"));
+    }
+
+    private static string Label(string? colo, string? city, string? country)
+    {
+        var place = string.Join(", ", new[] { city, country }.OfType<string>());
+        return "Cloudflare" + (place.Length > 0 ? " " + place : "") + (colo is null ? "" : $" ({colo})");
     }
 
     public override Task DownloadAsync(Action<long> onBytes, TimeSpan duration, CancellationToken cancel) =>

@@ -311,6 +311,12 @@ public sealed class NetworkTests
         Assert.Equal("Neolink Telecom", e.Provider);
         Assert.Equal("177.128.253.99", e.ClientAddress);
         Assert.Equal("Cloudflare", CloudflareProbe.ParseMeta("{}").Server);
+        var nested = CloudflareProbe.ParseMeta("""{"clientIp":"2804:14c::1","asn":262663,"asOrganization":"Neolink Telecom","colo":{"iata":"GRU","lat":-23.4,"lon":-46.5,"cca2":"BR","region":"South America","city":"São Paulo"}}""");
+        Assert.Equal("Cloudflare São Paulo, BR (GRU)", nested.Server);
+        Assert.Equal("2804:14c::1", nested.ClientAddress);
+        var trace = CloudflareProbe.ParseTrace("fl=1f\nh=speed.cloudflare.com\nip=177.128.253.99\nts=1.2\ncolo=GRU\nloc=BR\nwarp=off\n");
+        Assert.Equal("Cloudflare BR (GRU)", trace.Server);
+        Assert.Equal("177.128.253.99", trace.ClientAddress);
         Assert.Equal("Cloudflare", CloudflareProbe.ParseMeta("not json").Server);
     }
 
