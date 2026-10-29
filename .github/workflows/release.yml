@@ -51,7 +51,23 @@ jobs:
       - name: Build and test
         run: |
           dotnet build HWSuite.slnx -c Release
-          dotnet test HWSuite.slnx -c Release --no-build
+          dotnet test HWSuite.slnx -c Release --no-build --logger "trx;LogFileName=results.trx" --results-directory artifacts/test-results
+
+      - name: Failed tests as annotations
+        if: failure()
+        shell: pwsh
+        run: |
+          # One annotation per failed test (name and assertion message), readable on the run page.
+          $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
+          Get-ChildItem artifacts/test-results -Filter *.trx -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            Select-Xml -Path $_.FullName -Namespace $ns -XPath '//t:UnitTestResult[@outcome="Failed"]' | ForEach-Object {
+              $r = $_.Node
+              $title = ($r.testName -replace '[:,]', ' ')
+              $msg = "$($r.Output.ErrorInfo.Message) $($r.Output.ErrorInfo.StackTrace)" -replace "`r?`n", ' | '
+              if ($msg.Length -gt 1500) { $msg = $msg.Substring(0, 1500) }
+              Write-Output "::error title=$title::$msg"
+            }
+          }
 
       - name: Publish and package
         shell: pwsh
@@ -109,7 +125,16 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
+        shell: pwsh
+        run: |
+          # gh's own message becomes an annotation, so a failure is readable on the run page.
+          $out = gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Host $out
+          if ($code -ne 0) {
+            Write-Output "::error title=gh release create failed ($code)::$(($out -split "`r?`n" | Where-Object { $_.Trim() }) -join ' | ')"
+            exit 1
+          }
 
       - name: Update winget
         # Opens a pull request in microsoft/winget-pkgs for this version (tools/winget-update.ps1: skipped with a
