@@ -388,8 +388,8 @@ public sealed partial class ChartsPage : Page
     private void Layout_SizeChanged(object sender, SizeChangedEventArgs e)
     {
         // Picker beside the charts when wide, above them when narrow.
-        var wide = e.NewSize.Width >= 900;
-        PickerColumn.Width = wide ? new GridLength(320) : new GridLength(1, GridUnitType.Star);
+        var wide = e.NewSize.Width >= 760;
+        PickerColumn.Width = wide ? new GridLength(290) : new GridLength(1, GridUnitType.Star);
         Layout.ColumnDefinitions[1].Width = wide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
         Layout.ColumnSpacing = wide ? 16 : 0;
         Grid.SetColumn(ChartsColumn, wide ? 1 : 0);
