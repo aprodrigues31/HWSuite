@@ -53,6 +53,7 @@ public sealed partial class MainWindow : Window
         RailTop.Children.Add(RailItem("charts", "\uE9D2", s["rail.charts"], s["charts.title"]));
         RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
         RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
+        RailTop.Children.Add(RailItem("tuneup", "\uE90F", s["rail.maintenance"], s["tune.title"]));
         RailTop.Children.Add(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
         RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
         RailBottom.Children.Add(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
@@ -60,7 +61,6 @@ public sealed partial class MainWindow : Window
         StabilityTab.Text = s["stab.tab"];
         ReportRunTab.Text = s["hist.tab.report"];
         HistoryTab.Text = s["hist.tab.history"];
-        TuneupTab.Text = s["tune.tab"];
         BenchResultsTab.Text = s["app.nav.benchResults"];
         Navigate("dashboard");
 
@@ -73,7 +73,7 @@ public sealed partial class MainWindow : Window
         var railTag = tag switch
         {
             "benchresults" or "stability" => "bench",
-            "history" or "tuneup" => "report",
+            "history" => "report",
             _ => tag,
         };
         if (_rail.TryGetValue(railTag, out var item) && item.IsChecked != true)
@@ -121,7 +121,7 @@ public sealed partial class MainWindow : Window
     {
         // Pages grouped under one rail item get tabs: Bench (tests | stability | results), Report (new | history).
         var isBench = tag is "bench" or "stability" or "benchresults";
-        var isReport = tag is "report" or "history" or "tuneup";
+        var isReport = tag is "report" or "history";
         BenchTabs.Visibility = isBench ? Visibility.Visible : Visibility.Collapsed;
         ReportTabs.Visibility = isReport ? Visibility.Visible : Visibility.Collapsed;
         if (isBench || isReport)
@@ -132,7 +132,6 @@ public sealed partial class MainWindow : Window
                 "benchresults" => BenchResultsTab,
                 "stability" => StabilityTab,
                 "history" => HistoryTab,
-                "tuneup" => TuneupTab,
                 "report" => ReportRunTab,
                 _ => BenchRunTab,
             };

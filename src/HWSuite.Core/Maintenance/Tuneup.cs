@@ -25,7 +25,11 @@ public enum TuneupTasks
 }
 
 /// <summary>Options of the disk cleanup.</summary>
-public sealed record CleanupOptions(bool EmptyRecycleBin = false, bool RemovePreviousWindows = false);
+/// <param name="Drives">
+/// Drives to clean ("C:", "D:"); null = only the Windows drive. Windows' own cleanup (temporary files, update leftovers,
+/// caches) runs when the Windows drive is chosen; on every chosen drive the Recycle Bin (when asked) and CHKDSK leftovers.
+/// </param>
+public sealed record CleanupOptions(bool EmptyRecycleBin = false, bool RemovePreviousWindows = false, IReadOnlyList<string>? Drives = null);
 
 /// <summary>How one task went.</summary>
 /// <param name="Summary">One line for the report's "services performed" ("Disk cleanup: 3.2 GB freed").</param>
@@ -42,9 +46,10 @@ public sealed record WindowsUpdateItem(string Title, string? Kb, long? SizeBytes
 public static class Tuneup
 {
     /// <summary>
-    /// Disk Cleanup handlers run by default (Explorer\VolumeCaches key names). "Downloads" is never on the list: the
-    /// user's downloads folder is not HWSuite's to empty. The recycle bin and the previous Windows installation (which
-    /// allows going back to it) only when asked.
+    /// Disk Cleanup handlers run on the Windows drive (Explorer\VolumeCaches key names). "Downloads" is never on the list:
+    /// the user's downloads folder is not HWSuite's to empty. The previous Windows installation (which allows going back
+    /// to it) only when asked. The Recycle Bin and old CHKDSK files are not here: Disk Cleanup would empty them on every
+    /// drive, so HWSuite does them itself, only on the drives chosen.
     /// </summary>
     public static IReadOnlyList<string> CleanupHandlers(CleanupOptions options)
     {
@@ -53,16 +58,11 @@ public static class Tuneup
         [
             "Active Setup Temp Folders", "BranchCache", "D3D Shader Cache", "Delivery Optimization Files", "Device Driver Packages",
             "Diagnostic Data Viewer database files", "Downloaded Program Files", "Internet Cache Files", "Language Pack",
-            "Old ChkDsk Files", "RetailDemo Offline Content", "Setup Log Files", "System error memory dump files",
+            "RetailDemo Offline Content", "Setup Log Files", "System error memory dump files",
             "System error minidump files", "Temporary Files", "Temporary Setup Files", "Thumbnail Cache", "Update Cleanup",
             "Upgrade Discarded Files", "User file versions", "Windows Defender", "Windows Error Reporting Files",
             "Windows ESD installation files", "Windows Upgrade Log Files",
         ];
-        if (options.EmptyRecycleBin)
-        {
-            handlers.Add("Recycle Bin");
-        }
-
         if (options.RemovePreviousWindows)
         {
             handlers.Add("Previous Installations");
@@ -70,6 +70,43 @@ public static class Tuneup
 
         return handlers;
     }
+
+    /// <summary>"C:" out of "c", "C:", "C:\" or "c:/"; null when it is not a drive letter.</summary>
+    public static string? DriveLetter(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var t = text.Trim().TrimEnd('\\', '/');
+        if (t.EndsWith(':'))
+        {
+            t = t[..^1];
+        }
+
+        return t.Length == 1 && char.IsAsciiLetter(t[0]) ? char.ToUpperInvariant(t[0]) + ":" : null;
+    }
+
+    /// <summary>
+    /// Drive letters from a command line list ("C,D", "C: D:", "c;e"), without repeats; throws
+    /// <see cref="FormatException"/> naming the first item that is not a drive letter.
+    /// </summary>
+    public static IReadOnlyList<string> DriveList(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        var drives = new List<string>();
+        foreach (var item in text.Split([',', ';', ' '], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var letter = DriveLetter(item) ?? throw new FormatException(item);
+            if (!drives.Contains(letter))
+            {
+                drives.Add(letter);
+            }
+        }
+
+        return drives;
+    }
+
+    /// <summary>True when <paramref name="drives"/> includes <paramref name="systemDrive"/> (letters compared without case).</summary>
+    public static bool Includes(IEnumerable<string> drives, string systemDrive) =>
+        drives.Any(d => string.Equals(DriveLetter(d), DriveLetter(systemDrive), StringComparison.Ordinal));
 
     /// <summary>"KB5044284" out of an update title, or null.</summary>
     public static string? KbOf(string title)

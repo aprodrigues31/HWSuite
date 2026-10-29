@@ -5,7 +5,9 @@ using Microsoft.Win32.SafeHandles;
 namespace HWSuite.Providers.Windows;
 
 /// <summary>A drive the disk benchmark can test: letter, the physical disk behind it, size and free space.</summary>
-public sealed record DiskBenchmarkDrive(string Letter, string? Label, string? Model, string? Bus, long TotalBytes, long FreeBytes);
+/// <param name="Media">"SSD" or "HDD" when Windows tells it.</param>
+/// <param name="Removable">A removable drive (USB stick, card).</param>
+public sealed record DiskBenchmarkDrive(string Letter, string? Label, string? Model, string? Bus, long TotalBytes, long FreeBytes, string? Media = null, bool Removable = false);
 
 /// <summary>
 /// Windows side of the disk benchmark: the drives to offer (with the disk model behind each letter, from
@@ -37,7 +39,7 @@ public static unsafe partial class DiskBenchmarkTargets
 
             var letter = drive.Name.TrimEnd('\\');
             var disk = DiskNumber(letter) is { } number ? disks.Disks.FirstOrDefault(d => d.Index == number) : null;
-            result.Add(new DiskBenchmarkDrive(letter, string.IsNullOrWhiteSpace(drive.VolumeLabel) ? null : drive.VolumeLabel, disk?.Model, disk?.BusType, drive.TotalSize, drive.AvailableFreeSpace));
+            result.Add(new DiskBenchmarkDrive(letter, string.IsNullOrWhiteSpace(drive.VolumeLabel) ? null : drive.VolumeLabel, disk?.Model, disk?.BusType, drive.TotalSize, drive.AvailableFreeSpace, disk?.MediaType, drive.DriveType == DriveType.Removable));
         }
 
         return result;

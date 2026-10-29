@@ -123,6 +123,12 @@ public sealed record CliOptions
     /// <summary>tuneup: empty the Recycle Bin during the cleanup.</summary>
     public bool EmptyRecycleBin { get; init; }
 
+    /// <summary>tuneup: drives to clean ("C:", "D:"); null = the Windows drive.</summary>
+    public IReadOnlyList<string>? CleanupDrives { get; init; }
+
+    /// <summary>tuneup: drives to optimize; null = every fixed drive.</summary>
+    public IReadOnlyList<string>? OptimizeDrives { get; init; }
+
     /// <summary>log: the CSV log to read.</summary>
     public string? LogFile { get; init; }
 
@@ -247,6 +253,20 @@ public sealed record CliOptions
                 : throw new CliUsageException("cli.unknownArgument", text);
         }
 
+        IReadOnlyList<string> Drives(string name)
+        {
+            var text = Value(name);
+            try
+            {
+                var drives = HWSuite.Core.Maintenance.Tuneup.DriveList(text);
+                return drives.Count > 0 ? drives : throw new CliUsageException("cli.missingValue", name);
+            }
+            catch (FormatException ex)
+            {
+                throw new CliUsageException("cli.unknownArgument", ex.Message);
+            }
+        }
+
         double Seconds(string name)
         {
             var text = Value(name);
@@ -284,6 +304,9 @@ public sealed record CliOptions
                 "--store" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.StoreApps },
                 "--apps" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.DesktopApps },
                 "--empty-recycle-bin" when options.Command == CliCommand.Tuneup => options with { EmptyRecycleBin = true },
+                "--drives" when options.Command == CliCommand.Tuneup => Drives(arg) is { } both ? options with { CleanupDrives = both, OptimizeDrives = both } : options,
+                "--cleanup-drives" when options.Command == CliCommand.Tuneup => options with { CleanupDrives = Drives(arg) },
+                "--optimize-drives" when options.Command == CliCommand.Tuneup => options with { OptimizeDrives = Drives(arg) },
                 "--no-gpu" when options.Command == CliCommand.Stability => options with { NoGpu = true },
                 "--no-memory" when options.Command == CliCommand.Stability => options with { NoMemory = true },
                 "--client" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Client = Value(arg) },

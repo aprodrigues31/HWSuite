@@ -84,7 +84,6 @@
             <!-- Report: new report | service history -->
             <SelectorBar x:Name="ReportTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="ReportRunTab" Tag="report" />
-                <SelectorBarItem x:Name="TuneupTab" Tag="tuneup" />
                 <SelectorBarItem x:Name="HistoryTab" Tag="history" />
             </SelectorBar>
 

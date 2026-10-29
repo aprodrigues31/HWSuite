@@ -455,15 +455,27 @@ public sealed class Strings
         ["rail.network"] = "Network",
         ["rail.report"] = "Report",
         ["rail.charts"] = "Charts",
-        ["tune.tab"] = "Windows maintenance",
+        ["rail.maintenance"] = "Maintenance",
         ["tune.title"] = "Windows maintenance",
         ["tune.subtitle"] = "Cleanup, drive optimization and updates with Windows' own tools. What is done goes into the maintenance report's services.",
         ["tune.cleanup"] = "Disk cleanup",
-        ["tune.cleanup.hint"] = "Temporary files, Windows Update leftovers, caches, error reports and old logs (Windows Disk Cleanup). The Downloads folder is never touched.",
+        ["tune.cleanup.hint"] = "On the Windows drive: temporary files, Windows Update leftovers, caches, error reports and old logs (Windows Disk Cleanup). On every drive chosen: the Recycle Bin (when ticked) and files left by CHKDSK. The Downloads folder is never touched.",
+        ["tune.drives"] = "Drives",
+        ["tune.drives.loading"] = "Reading the drives...",
+        ["tune.drives.none"] = "No drive found.",
+        ["tune.drives.system"] = "Windows",
+        ["tune.drives.free"] = "{0} free of {1}",
+        ["tune.drives.pickCleanup"] = "Choose at least one drive to clean.",
+        ["tune.drives.pickOptimize"] = "Choose at least one drive to optimize.",
+        ["tune.cleanup.recycleDrive"] = "Emptying the Recycle Bin of {0}...",
+        ["tune.cleanup.recycled"] = "{0}: Recycle Bin emptied",
+        ["tune.cleanup.recycleFailed"] = "{0}: the Recycle Bin could not be emptied (code {1})",
+        ["tune.cleanup.chkdsk"] = "{0}: {1} file(s) left by CHKDSK removed",
+        ["tune.cleanup.driveFreed"] = "{0}: {1} freed",
         ["tune.recycle"] = "Also empty the Recycle Bin",
         ["tune.previous"] = "Also remove the previous Windows installation (no way back to it afterwards)",
         ["tune.optimize"] = "Optimize drives",
-        ["tune.optimize.hint"] = "TRIM on SSDs and defragmentation on hard disks (Windows \"Optimize drives\"), every fixed drive.",
+        ["tune.optimize.hint"] = "TRIM on SSDs and defragmentation on hard disks (Windows \"Optimize drives\") on the drives chosen.",
         ["tune.wu"] = "Windows Update",
         ["tune.wu.hint"] = "Searches, downloads and installs Windows updates (security, quality, Defender definitions). It can take a while and may ask for a restart.",
         ["tune.store"] = "Microsoft Store apps",
@@ -1074,10 +1086,13 @@ public sealed class Strings
                                             One summary page of every computer whose reports are in the
                                             folder (default: the reports folder).
               hwsuite tuneup [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
-                             [--empty-recycle-bin]
+                             [--empty-recycle-bin] [--cleanup-drives C,D] [--optimize-drives C,D]
+                             [--drives C,D]
                                             Windows maintenance as administrator: disk cleanup, drive
                                             optimization (TRIM / defrag), Windows Update, Store apps,
                                             programs through winget (no option = all but --apps).
+                                            Drives: cleanup = the Windows drive, optimization = every
+                                            fixed drive, unless given (--drives sets both).
               hwsuite maintenance [options]
                                             Maintenance report for the client: diagnosis with advice,
                                             saved as HTML in the reports folder.
@@ -1587,15 +1602,27 @@ public sealed class Strings
         ["rail.network"] = "Rede",
         ["rail.report"] = "Relatório",
         ["rail.charts"] = "Gráficos",
-        ["tune.tab"] = "Manutenção do Windows",
+        ["rail.maintenance"] = "Manutenção",
         ["tune.title"] = "Manutenção do Windows",
         ["tune.subtitle"] = "Limpeza, otimização das unidades e atualizações com as ferramentas do próprio Windows. O que for feito entra nos serviços do relatório de manutenção.",
         ["tune.cleanup"] = "Limpeza de disco",
-        ["tune.cleanup.hint"] = "Arquivos temporários, sobras do Windows Update, caches, relatórios de erro e logs antigos (Limpeza de Disco do Windows). A pasta Downloads nunca é mexida.",
+        ["tune.cleanup.hint"] = "Na unidade do Windows: arquivos temporários, sobras do Windows Update, caches, relatórios de erro e logs antigos (Limpeza de Disco do Windows). Em todas as unidades escolhidas: a Lixeira (se marcada) e os arquivos deixados pelo CHKDSK. A pasta Downloads nunca é mexida.",
+        ["tune.drives"] = "Unidades",
+        ["tune.drives.loading"] = "Lendo as unidades...",
+        ["tune.drives.none"] = "Nenhuma unidade encontrada.",
+        ["tune.drives.system"] = "Windows",
+        ["tune.drives.free"] = "{0} livres de {1}",
+        ["tune.drives.pickCleanup"] = "Escolha pelo menos uma unidade para limpar.",
+        ["tune.drives.pickOptimize"] = "Escolha pelo menos uma unidade para otimizar.",
+        ["tune.cleanup.recycleDrive"] = "Esvaziando a Lixeira de {0}...",
+        ["tune.cleanup.recycled"] = "{0}: Lixeira esvaziada",
+        ["tune.cleanup.recycleFailed"] = "{0}: não foi possível esvaziar a Lixeira (código {1})",
+        ["tune.cleanup.chkdsk"] = "{0}: {1} arquivo(s) deixado(s) pelo CHKDSK removido(s)",
+        ["tune.cleanup.driveFreed"] = "{0}: {1} liberados",
         ["tune.recycle"] = "Esvaziar também a Lixeira",
         ["tune.previous"] = "Remover também a instalação anterior do Windows (não dá mais para voltar a ela)",
         ["tune.optimize"] = "Otimizar unidades (desfragmentação)",
-        ["tune.optimize.hint"] = "TRIM nos SSDs e desfragmentação nos HDs (\"Otimizar unidades\" do Windows), em todas as unidades fixas.",
+        ["tune.optimize.hint"] = "TRIM nos SSDs e desfragmentação nos HDs (\"Otimizar unidades\" do Windows) nas unidades escolhidas.",
         ["tune.wu"] = "Windows Update",
         ["tune.wu.hint"] = "Procura, baixa e instala as atualizações do Windows (segurança, qualidade, definições do Defender). Pode demorar e pedir reinicialização.",
         ["tune.store"] = "Apps da Microsoft Store",
@@ -2206,10 +2233,13 @@ public sealed class Strings
                                             Página de resumo de todos os computadores cujos relatórios estão
                                             na pasta (padrão: a pasta dos relatórios).
               hwsuite tuneup [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
-                             [--empty-recycle-bin]
+                             [--empty-recycle-bin] [--cleanup-drives C,D] [--optimize-drives C,D]
+                             [--drives C,D]
                                             Manutenção do Windows como administrador: limpeza de disco,
                                             otimização das unidades (TRIM / desfragmentação), Windows Update,
                                             apps da Loja, programas pelo winget (sem opção = tudo menos --apps).
+                                            Unidades: limpeza = a do Windows, otimização = todas as fixas,
+                                            se não forem informadas (--drives vale para as duas).
               hwsuite maintenance [opções]
                                             Relatório de manutenção para o cliente: diagnóstico com
                                             orientações, salvo em HTML na pasta dos relatórios.

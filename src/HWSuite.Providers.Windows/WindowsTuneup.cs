@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Text;
 using HWSuite.Core.Localization;
@@ -15,19 +16,73 @@ namespace HWSuite.Providers.Windows;
 /// task needs administrator rights; each reports a one-line summary for the maintenance report and the details.
 /// </summary>
 [SupportedOSPlatform("windows")]
-public static class WindowsTuneup
+public static partial class WindowsTuneup
 {
     private const int SageSet = 731; // StateFlags0731: HWSuite's own Disk Cleanup preset, removed afterwards
     private const string VolumeCaches = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches";
 
     // ---- Disk cleanup -----------------------------------------------------------------------------------------------
 
+    /// <summary>The Windows drive ("C:").</summary>
+    public static string SystemDrive => Path.GetPathRoot(Environment.SystemDirectory)!.TrimEnd('\\');
+
     public static TuneupOutcome Cleanup(CleanupOptions options, Strings s, Action<string>? log = null, CancellationToken cancel = default)
     {
         ArgumentNullException.ThrowIfNull(options);
         ArgumentNullException.ThrowIfNull(s);
-        var before = FreeBytes();
+        var system = SystemDrive;
+        var drives = (options.Drives is { Count: > 0 } chosen ? chosen : [system])
+            .Select(d => Tuneup.DriveLetter(d))
+            .OfType<string>()
+            .Distinct(StringComparer.Ordinal)
+            .ToList();
+        var before = drives.ToDictionary(d => d, FreeBytes, StringComparer.Ordinal);
         var details = new List<string>();
+
+        // Windows' own cleanup acts on the Windows drive: only when that drive was chosen.
+        if (Tuneup.Includes(drives, system))
+        {
+            WindowsCleanup(options, s, details, log, cancel);
+        }
+
+        foreach (var drive in drives)
+        {
+            if (cancel.IsCancellationRequested)
+            {
+                break;
+            }
+
+            if (options.EmptyRecycleBin)
+            {
+                log?.Invoke(s.Format("tune.cleanup.recycleDrive", drive));
+                var result = SHEmptyRecycleBinW(0, drive + "\\", EmptyNoConfirmation | EmptyNoProgressUi | EmptyNoSound);
+                details.Add(result is 0 or unchecked((int)0x8000FFFF) // E_UNEXPECTED: the bin was already empty
+                    ? s.Format("tune.cleanup.recycled", drive)
+                    : s.Format("tune.cleanup.recycleFailed", drive, result.ToString("X8", CultureInfo.InvariantCulture)));
+            }
+
+            var chk = DeleteChkdskLeftovers(drive, cancel);
+            if (chk > 0)
+            {
+                details.Add(s.Format("tune.cleanup.chkdsk", drive, chk));
+            }
+        }
+
+        long total = 0;
+        foreach (var drive in drives)
+        {
+            var freed = Math.Max(0, FreeBytes(drive) - before[drive]);
+            total += freed;
+            details.Add(s.Format("tune.cleanup.driveFreed", drive, ReportModel.Bytes(freed, s.Culture)));
+        }
+
+        var summary = s.Format("tune.cleanup.summary", ReportModel.Bytes(total, s.Culture)) + " (" + string.Join(", ", drives) + ")";
+        return new TuneupOutcome(TuneupTasks.Cleanup, true, summary, details);
+    }
+
+    /// <summary>Disk Cleanup handlers (cleanmgr /sagerun with HWSuite's own preset) and the temporary folders.</summary>
+    private static void WindowsCleanup(CleanupOptions options, Strings s, List<string> details, Action<string>? log, CancellationToken cancel)
+    {
         var flag = string.Create(CultureInfo.InvariantCulture, $"StateFlags{SageSet:0000}");
         var marked = new List<string>();
         try
@@ -82,25 +137,90 @@ public static class WindowsTuneup
         var removed = DeleteOld(Path.GetTempPath(), TimeSpan.FromDays(1), cancel)
             + DeleteOld(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Temp"), TimeSpan.FromDays(1), cancel);
         details.Add(s.Format("tune.cleanup.tempFiles", removed.ToString("N0", s.Culture)));
-
-        var freed = Math.Max(0, FreeBytes() - before);
-        var summary = s.Format("tune.cleanup.summary", ReportModel.Bytes(freed, s.Culture));
-        return new TuneupOutcome(TuneupTasks.Cleanup, true, summary, details);
     }
 
-    private static long FreeBytes() => DriveInfo.GetDrives()
-        .Where(d => d.DriveType == DriveType.Fixed && d.IsReady)
-        .Sum(d =>
+    private static long FreeBytes(string drive)
+    {
+        try
         {
+            var info = new DriveInfo(drive);
+            return info.IsReady ? info.AvailableFreeSpace : 0;
+        }
+        catch (Exception ex) when (ex is IOException or ArgumentException or UnauthorizedAccessException)
+        {
+            return 0;
+        }
+    }
+
+    /// <summary>Files CHKDSK recovered into X:\FOUND.000, FOUND.001...: *.chk files, and the folder when it ends up empty.</summary>
+    private static int DeleteChkdskLeftovers(string drive, CancellationToken cancel)
+    {
+        var count = 0;
+        IEnumerable<string> folders;
+        try
+        {
+            folders = Directory.EnumerateDirectories(drive + "\\", "FOUND.*")
+                .Where(f => System.Text.RegularExpressions.Regex.IsMatch(Path.GetFileName(f), @"^FOUND\.\d{3}$", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                .ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return 0;
+        }
+
+        foreach (var folder in folders)
+        {
+            List<string> files;
             try
             {
-                return d.AvailableFreeSpace;
+                files = [.. Directory.EnumerateFiles(folder, "*.chk")];
             }
-            catch (IOException)
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                return 0;
+                continue;
             }
-        });
+
+            foreach (var file in files)
+            {
+                if (cancel.IsCancellationRequested)
+                {
+                    return count;
+                }
+
+                try
+                {
+                    File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                    count++;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    // stays
+                }
+            }
+
+            try
+            {
+                if (!Directory.EnumerateFileSystemEntries(folder).Any())
+                {
+                    Directory.Delete(folder);
+                }
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                // stays
+            }
+        }
+
+        return count;
+    }
+
+    private const uint EmptyNoConfirmation = 0x1;
+    private const uint EmptyNoProgressUi = 0x2;
+    private const uint EmptyNoSound = 0x4;
+
+    [LibraryImport("shell32.dll", StringMarshalling = StringMarshalling.Utf16)]
+    private static partial int SHEmptyRecycleBinW(nint window, string rootPath, uint flags);
 
     private static int DeleteOld(string folder, TimeSpan age, CancellationToken cancel)
     {
@@ -147,20 +267,23 @@ public static class WindowsTuneup
 
     // ---- Optimize drives --------------------------------------------------------------------------------------------
 
-    public static TuneupOutcome Optimize(Strings s, Action<string>? log = null, CancellationToken cancel = default)
+    /// <summary>Runs "Optimize drives" on <paramref name="drives"/> ("C:", "D:"); null = every fixed drive.</summary>
+    public static TuneupOutcome Optimize(IReadOnlyList<string>? drives, Strings s, Action<string>? log = null, CancellationToken cancel = default)
     {
         ArgumentNullException.ThrowIfNull(s);
         var defrag = Path.Combine(Environment.SystemDirectory, "defrag.exe");
         var details = new List<string>();
+        var letters = drives is { Count: > 0 }
+            ? drives.Select(d => Tuneup.DriveLetter(d)).OfType<string>().Distinct(StringComparer.Ordinal).ToList()
+            : DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed && d.IsReady).Select(d => d.Name.TrimEnd('\\')).ToList();
         var done = 0;
-        foreach (var drive in DriveInfo.GetDrives().Where(d => d.DriveType == DriveType.Fixed && d.IsReady))
+        foreach (var letter in letters)
         {
             if (cancel.IsCancellationRequested)
             {
                 break;
             }
 
-            var letter = drive.Name.TrimEnd('\\');
             log?.Invoke(s.Format("tune.optimize.drive", letter));
             var (code, _) = Run(defrag, $"{letter} /O /H", TimeSpan.FromHours(3), null, null, cancel);
             if (code == 0)
@@ -174,7 +297,8 @@ public static class WindowsTuneup
             }
         }
 
-        return new TuneupOutcome(TuneupTasks.Optimize, done > 0, s.Format("tune.optimize.summary", done), details);
+        var summary = s.Format("tune.optimize.summary", done) + (letters.Count > 0 ? " (" + string.Join(", ", letters) + ")" : "");
+        return new TuneupOutcome(TuneupTasks.Optimize, done > 0, summary, details);
     }
 
     // ---- Windows Update ---------------------------------------------------------------------------------------------

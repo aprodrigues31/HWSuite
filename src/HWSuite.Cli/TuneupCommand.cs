@@ -29,7 +29,7 @@ internal static class TuneupCommand
         };
 
         var tasks = options.Tasks == TuneupTasks.None ? TuneupTasks.Default : options.Tasks;
-        var cleanup = new CleanupOptions(options.EmptyRecycleBin);
+        var cleanup = new CleanupOptions(options.EmptyRecycleBin, Drives: options.CleanupDrives);
         void Log(string line) => Console.WriteLine("  " + line);
         var failed = false;
         var reboot = false;
@@ -43,7 +43,7 @@ internal static class TuneupCommand
             var outcome = task switch
             {
                 TuneupTasks.Cleanup => WindowsTuneup.Cleanup(cleanup, s, Log, cancel.Token),
-                TuneupTasks.Optimize => WindowsTuneup.Optimize(s, Log, cancel.Token),
+                TuneupTasks.Optimize => WindowsTuneup.Optimize(options.OptimizeDrives, s, Log, cancel.Token),
                 TuneupTasks.WindowsUpdate => WindowsTuneup.WindowsUpdate(s, Log, cancel.Token),
                 TuneupTasks.StoreApps => WindowsTuneup.StoreApps(s, Log, cancel.Token),
                 _ => WindowsTuneup.DesktopApps(s, Log, cancel.Token),

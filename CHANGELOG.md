@@ -8,6 +8,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Alterado
+- A manutenção do Windows ganhou item próprio no menu lateral, **Manutenção**, logo abaixo de Rede (antes era uma aba de Relatório).
+- Limpeza de disco e Otimizar unidades agora têm a lista de unidades com caixas de seleção (com tipo SSD/HDD, modelo e espaço livre), para escolher uma ou várias. A limpeza do Windows age na unidade do Windows; em cada unidade escolhida, a Lixeira (se marcada) e os arquivos do CHKDSK. Na linha de comando: `--cleanup-drives`, `--optimize-drives` e `--drives`.
+
 ## [0.21.0] - 2026-10-29
 
 ### Adicionado

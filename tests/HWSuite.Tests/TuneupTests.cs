@@ -14,8 +14,25 @@ public sealed class TuneupTests
         Assert.DoesNotContain("Recycle Bin", plain);
         Assert.DoesNotContain("Previous Installations", plain);
         var all = Tuneup.CleanupHandlers(new CleanupOptions(EmptyRecycleBin: true, RemovePreviousWindows: true));
-        Assert.Contains("Recycle Bin", all);
         Assert.Contains("Previous Installations", all);
+
+        // Disk Cleanup would empty these on every drive: HWSuite does them itself, on the drives chosen.
+        Assert.DoesNotContain("Recycle Bin", all);
+        Assert.DoesNotContain("Old ChkDsk Files", all);
+    }
+
+    [Fact]
+    public void Drive_letters_are_read_from_any_spelling()
+    {
+        Assert.Equal("C:", Tuneup.DriveLetter("c"));
+        Assert.Equal("D:", Tuneup.DriveLetter("D:\\"));
+        Assert.Equal("E:", Tuneup.DriveLetter(" e:/ "));
+        Assert.Null(Tuneup.DriveLetter("CD"));
+        Assert.Null(Tuneup.DriveLetter("1:"));
+        Assert.Equal(["C:", "D:", "E:"], Tuneup.DriveList("c, D: ;e c"));
+        Assert.Throws<FormatException>(() => Tuneup.DriveList("C,XY"));
+        Assert.True(Tuneup.Includes(["d:", "C:\\"], "C:"));
+        Assert.False(Tuneup.Includes(["D:"], "C:"));
     }
 
     [Fact]
@@ -39,5 +56,14 @@ public sealed class TuneupTests
         Assert.True(o.EmptyRecycleBin);
         Assert.Equal(TuneupTasks.None, HWSuite.Cli.CliOptions.Parse(["tuneup"]).Tasks); // none = the default set
         Assert.Throws<HWSuite.Cli.CliUsageException>(() => HWSuite.Cli.CliOptions.Parse(["report", "--cleanup"]));
+
+        var drives = HWSuite.Cli.CliOptions.Parse(["tuneup", "--cleanup-drives", "c,d", "--optimize-drives", "E:"]);
+        Assert.Equal(["C:", "D:"], drives.CleanupDrives);
+        Assert.Equal(["E:"], drives.OptimizeDrives);
+        var both = HWSuite.Cli.CliOptions.Parse(["tuneup", "--drives", "D"]);
+        Assert.Equal(["D:"], both.CleanupDrives);
+        Assert.Equal(["D:"], both.OptimizeDrives);
+        Assert.Null(HWSuite.Cli.CliOptions.Parse(["tuneup"]).CleanupDrives);
+        Assert.Throws<HWSuite.Cli.CliUsageException>(() => HWSuite.Cli.CliOptions.Parse(["tuneup", "--drives", "C,XY"]));
     }
 }

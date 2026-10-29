@@ -1,4 +1,5 @@
 using HWSuite.Core.Maintenance;
+using HWSuite.Core.Reporting;
 using HWSuite.Gui.Hud;
 using HWSuite.Providers.Windows;
 using Microsoft.UI.Xaml;
@@ -16,6 +17,9 @@ public sealed partial class TuneupPage : Page
     private readonly Dictionary<TuneupTasks, CheckBox> _tasks = [];
     private CheckBox? _recycle;
     private CheckBox? _previous;
+    private readonly StackPanel _cleanupDrives = new() { Spacing = 2 };
+    private readonly StackPanel _optimizeDrives = new() { Spacing = 2 };
+    private bool _drivesLoaded;
     private CancellationTokenSource? _cancel;
 
     public TuneupPage()
@@ -36,8 +40,14 @@ public sealed partial class TuneupPage : Page
             _previous = new CheckBox { Content = s["tune.previous"] };
             extra.Children.Add(_recycle);
             extra.Children.Add(_previous);
+            extra.Children.Add(DrivesHeader());
+            extra.Children.Add(_cleanupDrives);
         });
-        Add(TuneupTasks.Optimize, "tune.optimize", "tune.optimize.hint", true);
+        Add(TuneupTasks.Optimize, "tune.optimize", "tune.optimize.hint", true, extra =>
+        {
+            extra.Children.Add(DrivesHeader());
+            extra.Children.Add(_optimizeDrives);
+        });
         Add(TuneupTasks.WindowsUpdate, "tune.wu", "tune.wu.hint", true);
         Add(TuneupTasks.StoreApps, "tune.store", "tune.store.hint", true);
         Add(TuneupTasks.DesktopApps, "tune.apps", "tune.apps.hint", false);
@@ -47,8 +57,82 @@ public sealed partial class TuneupPage : Page
             var admin = App.Monitor.Access.IsElevated;
             AdminBar.IsOpen = !admin && !App.IsDemo;
             RunButton.IsEnabled = admin || App.IsDemo;
+            if (!_drivesLoaded)
+            {
+                _drivesLoaded = true;
+                _ = LoadDrivesAsync();
+            }
         };
     }
+
+    private static TextBlock DrivesHeader() => new()
+    {
+        Text = App.Text["tune.drives"].ToUpper(App.Text.Culture),
+        Style = HudUi.Style("HudTagStyle"),
+        Margin = new Thickness(0, 10, 0, 2),
+    };
+
+    /// <summary>
+    /// The fixed drives, each with a box in both lists: cleanup starts with the Windows drive ticked (Windows' own
+    /// cleanup works there), optimization with every drive ticked.
+    /// </summary>
+    private async Task LoadDrivesAsync()
+    {
+        var s = App.Text;
+        _cleanupDrives.Children.Add(new TextBlock { Text = s["tune.drives.loading"], Foreground = HudUi.TextDim, FontSize = 13 });
+        _optimizeDrives.Children.Add(new TextBlock { Text = s["tune.drives.loading"], Foreground = HudUi.TextDim, FontSize = 13 });
+        IReadOnlyList<DiskBenchmarkDrive> drives;
+        try
+        {
+            drives = App.IsDemo
+                ? [new("C:", null, "Samsung SSD 990 PRO 1TB", "NVMe", 1_000_202_273_280, 412_316_860_416, "SSD"),
+                   new("D:", "Dados", "WDC WD20EZBX-00AYRA0", "SATA", 2_000_381_014_016, 1_207_959_552_000, "HDD")]
+                : (await Task.Run(DiskBenchmarkTargets.Drives)).Where(d => !d.Removable).ToList();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException)
+        {
+            drives = [];
+        }
+
+        var system = App.IsDemo ? "C:" : WindowsTuneup.SystemDrive;
+        _cleanupDrives.Children.Clear();
+        _optimizeDrives.Children.Clear();
+        if (drives.Count == 0)
+        {
+            _cleanupDrives.Children.Add(new TextBlock { Text = s["tune.drives.none"], Foreground = HudUi.TextDim, FontSize = 13 });
+            _optimizeDrives.Children.Add(new TextBlock { Text = s["tune.drives.none"], Foreground = HudUi.TextDim, FontSize = 13 });
+        }
+
+        foreach (var drive in drives)
+        {
+            var isSystem = string.Equals(drive.Letter, system, StringComparison.OrdinalIgnoreCase);
+            _cleanupDrives.Children.Add(DriveBox(drive, isSystem, isSystem));
+            _optimizeDrives.Children.Add(DriveBox(drive, isSystem, true));
+        }
+
+        Tasks.Reflow();
+    }
+
+    private static CheckBox DriveBox(DiskBenchmarkDrive drive, bool isSystem, bool on)
+    {
+        var s = App.Text;
+        var title = isSystem ? s["tune.drives.system"] : drive.Label;
+        var line = string.Join(" · ", new[] { title, drive.Model, drive.Media }.Where(x => !string.IsNullOrWhiteSpace(x)));
+        var text = new TextBlock { TextWrapping = TextWrapping.Wrap };
+        text.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = drive.Letter + "  ", FontFamily = HudUi.Font("HudMonoFont") });
+        text.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run { Text = line });
+        text.Inlines.Add(new Microsoft.UI.Xaml.Documents.LineBreak());
+        text.Inlines.Add(new Microsoft.UI.Xaml.Documents.Run
+        {
+            Text = s.Format("tune.drives.free", ReportModel.Bytes(drive.FreeBytes, s.Culture), ReportModel.Bytes(drive.TotalBytes, s.Culture)),
+            FontSize = 12,
+            Foreground = HudUi.TextDim,
+        });
+        return new CheckBox { Content = text, IsChecked = on, Tag = drive.Letter };
+    }
+
+    private static List<string> Chosen(StackPanel list) =>
+        [.. list.Children.OfType<CheckBox>().Where(b => b.IsChecked == true).Select(b => (string)b.Tag)];
 
     private void Add(TuneupTasks task, string title, string hint, bool on, Action<StackPanel>? extra = null)
     {
@@ -77,6 +161,20 @@ public sealed partial class TuneupPage : Page
             return;
         }
 
+        var cleanupDrives = Chosen(_cleanupDrives);
+        var optimizeDrives = Chosen(_optimizeDrives);
+        if (chosen.Contains(TuneupTasks.Cleanup) && cleanupDrives.Count == 0)
+        {
+            StatusText.Text = s["tune.drives.pickCleanup"];
+            return;
+        }
+
+        if (chosen.Contains(TuneupTasks.Optimize) && optimizeDrives.Count == 0)
+        {
+            StatusText.Text = s["tune.drives.pickOptimize"];
+            return;
+        }
+
         var confirm = new ContentDialog
         {
             XamlRoot = XamlRoot,
@@ -97,7 +195,7 @@ public sealed partial class TuneupPage : Page
         StopButton.IsEnabled = true;
         Progress.Visibility = Visibility.Visible;
         Results.Children.Clear();
-        var options = new CleanupOptions(_recycle?.IsChecked == true, _previous?.IsChecked == true);
+        var options = new CleanupOptions(_recycle?.IsChecked == true, _previous?.IsChecked == true, cleanupDrives);
         void Log(string text) => DispatcherQueue.TryEnqueue(() => StatusText.Text = text);
         var reboot = false;
         try
@@ -112,7 +210,7 @@ public sealed partial class TuneupPage : Page
                 var outcome = await Task.Run(() => task switch
                 {
                     TuneupTasks.Cleanup => WindowsTuneup.Cleanup(options, s, Log, token),
-                    TuneupTasks.Optimize => WindowsTuneup.Optimize(s, Log, token),
+                    TuneupTasks.Optimize => WindowsTuneup.Optimize(optimizeDrives, s, Log, token),
                     TuneupTasks.WindowsUpdate => WindowsTuneup.WindowsUpdate(s, Log, token),
                     TuneupTasks.StoreApps => WindowsTuneup.StoreApps(s, Log, token),
                     _ => WindowsTuneup.DesktopApps(s, Log, token),
