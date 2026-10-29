@@ -9,6 +9,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Base de hardware ampliada:**
+  - **placas de vídeo**: além das RX 6000/7000/9000, RTX 30/40/50 e Arc, agora Radeon RX 400/500 (Polaris), RX Vega 56/64, RX 5000 (RDNA), GeForce GT 1030, GTX 10, GTX 16 e RTX 20, com especificações de referência, dados do chip e os IDs PCI (pci.ids de 2026-10-28) usados na verificação de autenticidade, útil para pegar as falsificações mais comuns (GTX 1050 Ti, RX 580);
+  - **processadores**: especificação de referência de cerca de 100 modelos de mesa (Ryzen 1000 a 9000 e APUs G, Intel Core 8ª a 14ª geração e Core Ultra 200S): codinome, soquete, processo, núcleos/threads (P + E), clocks base e boost, cache L3, TDP, memória suportada, vídeo integrado (modelos Intel "F" indicados sem vídeo) e lançamento, no Hardware e nos relatórios;
+  - **placas-mãe**: o chipset é reconhecido pelo nome do modelo (AMD A320 a X870E, Intel H310 a Z890), com soquete, memória, processadores compatíveis, geração do PCI Express e se permite overclock do processador e da memória.
 - **Manutenção do Windows** (Relatório › Manutenção do Windows, e `hwsuite tuneup`), com as ferramentas do próprio Windows e como administrador:
   - **limpeza de disco**: arquivos temporários, sobras do Windows Update, caches, relatórios de erro e logs antigos (Limpeza de Disco do Windows) e as pastas temporárias; mostra quanto espaço foi liberado. A pasta Downloads nunca é mexida; Lixeira e instalação anterior do Windows só se marcadas;
   - **otimizar unidades**: TRIM nos SSDs e desfragmentação nos HDs, em todas as unidades fixas;

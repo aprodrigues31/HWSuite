@@ -33,7 +33,7 @@ public class GpuDatabaseTests
     [Theory]
     [InlineData("AMD Radeon(TM) Graphics")]
     [InlineData("Microsoft Basic Render Driver")]
-    [InlineData("NVIDIA GeForce GTX 1060 6GB")]
+    [InlineData("NVIDIA GeForce GTX 980")]
     [InlineData("")]
     public void Unknown_adapters_have_no_reference(string adapter)
     {
@@ -44,10 +44,11 @@ public class GpuDatabaseTests
     [Fact]
     public void Units_match_shaders_for_every_entry()
     {
-        // AMD: 64 stream processors per CU; NVIDIA Ampere and later: 128 CUDA cores per SM; Intel: 128 ALUs per Xe core.
+        // AMD: 64 stream processors per CU; NVIDIA Turing 64 and Pascal, Ampere and later 128 CUDA cores per SM;
+        // Intel: 128 ALUs per Xe core.
         Assert.All(GpuDatabase.All, s =>
         {
-            Assert.Equal(s.Shaders, s.Units!.Value * (s.UnitName == "CU" ? 64 : 128));
+            Assert.Equal(s.Shaders, s.Units!.Value * (s.UnitName == "CU" || s.Architecture == "Turing" ? 64 : 128));
             Assert.True(s.BoostMhz >= s.BaseMhz, s.Model);
             Assert.True(s.BusBits % 32 == 0, s.Model);
         });

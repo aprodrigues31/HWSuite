@@ -88,10 +88,13 @@ public static class ReportModel
         if (inv.Motherboard is { } mb)
         {
             Section("section.motherboard", Group(null,
+            [
                 (s["field.manufacturer"], mb.Manufacturer),
                 (s["field.product"], mb.Product),
                 (s["field.version"], mb.Version),
-                (s["field.serial"], mb.SerialNumber)));
+                (s["field.serial"], mb.SerialNumber),
+                .. ChipsetRows(mb.Product, s),
+            ]));
         }
 
         if (inv.Bios is { } bios)
@@ -109,6 +112,7 @@ public static class ReportModel
             var cpu = inv.Processors[i];
             var title = multiCpu ? $"#{i}" : null;
             Section("section.cpu", Group(title,
+            [
                 (s["field.name"], cpu.Name),
                 (s["field.vendor"], cpu.Vendor),
                 (s["field.socket"], cpu.Socket),
@@ -118,7 +122,9 @@ public static class ReportModel
                 (s["field.hybridCores"], cpu.PerformanceCores is { } pc && cpu.EfficiencyCores is { } ec ? s.Format("cpu.hybrid", pc, ec) : null),
                 (s["field.clocks"], Join(c, " / ", Mhz(cpu.BusClockMhz), Mhz(cpu.MaxClockMhz), Mhz(cpu.CurrentClockMhz))),
                 (s["field.instructions"], cpu.InstructionSets.Count > 0 ? string.Join(", ", cpu.InstructionSets) : null),
-                (s["field.virtualization"], VirtualizationText(cpu, s))));
+                (s["field.virtualization"], VirtualizationText(cpu, s)),
+                .. CpuReferenceRows(cpu, s),
+            ]));
 
             if (cpu.Caches.Count > 0)
             {
@@ -446,6 +452,51 @@ public static class ReportModel
     }
 
     /// <summary>Reference specifications (GPU-Z style), plus a warning when the card reports less memory than the model has.</summary>
+    /// <summary>The processor's published specification (when the model is in the database).</summary>
+    private static (string Label, string? Value)[] CpuReferenceRows(ProcessorInfo cpu, Strings s)
+    {
+        if (Cpuid.CpuDatabase.Find(cpu.Name, out var noGraphics) is not { } r)
+        {
+            return [];
+        }
+
+        var c = s.Culture;
+        var cores = r.PerformanceCores is { } p && r.EfficiencyCores is { } e
+            ? s.Format("cpu.ref.hybrid", r.Cores, r.Threads, p, e)
+            : $"{r.Cores} / {r.Threads}";
+        return
+        [
+            (s["field.cpu.codename"], r.Codename),
+            (s["field.cpu.refSocket"], $"{r.Socket} · {r.Process}"),
+            (s["field.cpu.refCores"], cores),
+            (s["field.cpu.refClocks"], s.Format("cpu.ref.clocks", Gpu.GpuDatabase.Clock(r.BaseMhz, c), Gpu.GpuDatabase.Clock(r.BoostMhz, c))),
+            (s["field.cpu.refCache"], $"{r.L3Mb} MB"),
+            (s["field.cpu.refPower"], $"{r.TdpW} W"),
+            (s["field.cpu.refMemory"], r.Memory),
+            (s["field.cpu.refGraphics"], noGraphics || r.Graphics is null ? s["cpu.ref.noGraphics"] : r.Graphics),
+            (s["field.cpu.refReleased"], DateText.Display(r.Released, c)),
+        ];
+    }
+
+    /// <summary>What the board's chipset supports (when the model name shows it).</summary>
+    private static (string Label, string? Value)[] ChipsetRows(string? product, Strings s)
+    {
+        if (Model.Chipsets.Find(product) is not { } chip)
+        {
+            return [];
+        }
+
+        string Yes(bool on) => s[on ? "value.yes" : "value.no"];
+        return
+        [
+            (s["field.chipset"], $"{chip.Vendor} {chip.Name} ({chip.Year.ToString(s.Culture)})"),
+            (s["field.chipset.socket"], $"{chip.Socket} · {chip.Memory}"),
+            (s["field.chipset.cpus"], chip.Processors),
+            (s["field.chipset.pcie"], chip.Pcie),
+            (s["field.chipset.oc"], s.Format("chipset.oc", Yes(chip.CpuOverclock), Yes(chip.MemoryOverclock))),
+        ];
+    }
+
     private static (string Label, string? Value)[] ReferenceRows(GpuInfo g, Strings s)
     {
         if (g.Reference is not { } r)

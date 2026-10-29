@@ -18,7 +18,7 @@ for line in open(pci, encoding='utf-8', errors='replace'):
     if cur and dm: vendors[cur].append((dm.group(1), dm.group(2).strip()))
 skip = re.compile(r'Audio|USB|SRIOV|MxGPU|Virtual', re.I)
 def vendor_of(model):
-    return '1002' if model.startswith('RX') else '10de' if model.startswith('RTX') else '8086'
+    return '1002' if model.startswith('RX') else '10de' if model.startswith(('RTX', 'GTX', 'GT ')) else '8086'
 def mentions(name, model):
     br = re.search(r'\[(.*)\]', name)
     if not br: return False
@@ -31,7 +31,10 @@ def mentions(name, model):
 table = {}
 for model, chip in models:
     v = vendor_of(model)
-    chips = [c.strip() for c in chip.split('/')]
+    # pci.ids names Polaris dies by their code names.
+    alias = {'Polaris 10': 'Ellesmere', 'Polaris 20': 'Ellesmere', 'Polaris 30': 'Ellesmere',
+             'Polaris 11': 'Baffin', 'Polaris 21': 'Baffin', 'Polaris 12': 'Lexa'}
+    chips = [alias.get(c.strip(), c.strip()) for c in chip.split('/')]
     for dev, name in vendors[v]:
         if skip.search(name): continue
         ok = False

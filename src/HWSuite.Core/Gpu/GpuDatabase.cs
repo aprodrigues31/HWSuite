@@ -33,23 +33,29 @@ public sealed record GpuSpec(
     /// <summary>"CU" (AMD), "SM" (NVIDIA) or "Xe" (Intel).</summary>
     public string UnitName => Architecture switch
     {
-        _ when Architecture.StartsWith("RDNA", StringComparison.Ordinal) => "CU",
+        _ when Architecture.StartsWith("RDNA", StringComparison.Ordinal) || Architecture.StartsWith("GCN", StringComparison.Ordinal) => "CU",
         _ when Architecture.StartsWith("Xe", StringComparison.Ordinal) => "Xe",
         _ => "SM",
     };
 }
 
 /// <summary>
-/// Desktop GPU reference data (Radeon RX 6000/7000/9000, GeForce RTX 30/40/50, Intel Arc A/B).
+/// Desktop GPU reference data (Radeon RX 400/500, Vega, RX 5000/6000/7000/9000; GeForce GTX 10/16, RTX 20/30/40/50;
+/// Intel Arc A/B).
 /// Sources: manufacturer specifications as compiled in the Wikipedia series articles. Models share
 /// PCI device ids (AMD uses one id for the RX 7700 XT and 7800 XT), so the model is matched on the
 /// adapter name, and memory size picks between variants of the same name (RTX 3060 8 GB / 12 GB).
 /// </summary>
 public static partial class GpuDatabase
 {
+    private const string Gcn4 = "GCN 4 (Polaris)";
+    private const string Gcn5 = "GCN 5 (Vega)";
+    private const string Rdna1 = "RDNA";
     private const string Rdna2 = "RDNA 2";
     private const string Rdna3 = "RDNA 3";
     private const string Rdna4 = "RDNA 4";
+    private const string Pascal = "Pascal";
+    private const string Turing = "Turing";
     private const string Ampere = "Ampere";
     private const string Ada = "Ada Lovelace";
     private const string Blackwell = "Blackwell";
@@ -58,6 +64,34 @@ public static partial class GpuDatabase
 
     public static IReadOnlyList<GpuSpec> All { get; } =
     [
+        // AMD Radeon RX 400 / 500 (GCN 4 "Polaris"; GlobalFoundries 14LPP, RX 590 on 12LP)
+        new("RX 460", "Polaris 11", Gcn4, "GF 14LPP", "2016-08-08", 14, 896, 56, 16, 1090, 1200, 2, "GDDR5", 128, 7, 75),
+        new("RX 460", "Polaris 11", Gcn4, "GF 14LPP", "2016-08-08", 14, 896, 56, 16, 1090, 1200, 4, "GDDR5", 128, 7, 75),
+        new("RX 470", "Polaris 10", Gcn4, "GF 14LPP", "2016-08-04", 32, 2048, 128, 32, 926, 1206, 4, "GDDR5", 256, 6.6, 120),
+        new("RX 470", "Polaris 10", Gcn4, "GF 14LPP", "2016-08-04", 32, 2048, 128, 32, 926, 1206, 8, "GDDR5", 256, 7, 120),
+        new("RX 480", "Polaris 10", Gcn4, "GF 14LPP", "2016-06-29", 36, 2304, 144, 32, 1120, 1266, 4, "GDDR5", 256, 7, 150),
+        new("RX 480", "Polaris 10", Gcn4, "GF 14LPP", "2016-06-29", 36, 2304, 144, 32, 1120, 1266, 8, "GDDR5", 256, 8, 150),
+        new("RX 550", "Polaris 12", Gcn4, "GF 14LPP", "2017-04-20", 8, 512, 32, 16, 1100, 1183, 2, "GDDR5", 128, 7, 50),
+        new("RX 550", "Polaris 12", Gcn4, "GF 14LPP", "2017-04-20", 8, 512, 32, 16, 1100, 1183, 4, "GDDR5", 128, 7, 50),
+        new("RX 560", "Polaris 21", Gcn4, "GF 14LPP", "2017-04-18", 16, 1024, 64, 16, 1175, 1275, 2, "GDDR5", 128, 7, 80),
+        new("RX 560", "Polaris 21", Gcn4, "GF 14LPP", "2017-04-18", 16, 1024, 64, 16, 1175, 1275, 4, "GDDR5", 128, 7, 80),
+        new("RX 570", "Polaris 20", Gcn4, "GF 14LPP", "2017-04-18", 32, 2048, 128, 32, 1168, 1244, 4, "GDDR5", 256, 7, 150),
+        new("RX 570", "Polaris 20", Gcn4, "GF 14LPP", "2017-04-18", 32, 2048, 128, 32, 1168, 1244, 8, "GDDR5", 256, 7, 150),
+        new("RX 580", "Polaris 20", Gcn4, "GF 14LPP", "2017-04-18", 36, 2304, 144, 32, 1257, 1340, 4, "GDDR5", 256, 7, 185),
+        new("RX 580", "Polaris 20", Gcn4, "GF 14LPP", "2017-04-18", 36, 2304, 144, 32, 1257, 1340, 8, "GDDR5", 256, 8, 185),
+        new("RX 590", "Polaris 30", Gcn4, "GF 12LP", "2018-11-15", 36, 2304, 144, 32, 1469, 1545, 8, "GDDR5", 256, 8, 225),
+
+        // AMD Radeon RX Vega (GCN 5, HBM2)
+        new("RX Vega 56", "Vega 10", Gcn5, "GF 14LPP", "2017-08-28", 56, 3584, 224, 64, 1156, 1471, 8, "HBM2", 2048, 1.6, 210),
+        new("RX Vega 64", "Vega 10", Gcn5, "GF 14LPP", "2017-08-14", 64, 4096, 256, 64, 1247, 1546, 8, "HBM2", 2048, 1.89, 295),
+
+        // AMD Radeon RX 5000 (RDNA, TSMC N7)
+        new("RX 5500 XT", "Navi 14", Rdna1, "TSMC N7", "2019-12-12", 22, 1408, 88, 32, 1607, 1845, 4, "GDDR6", 128, 14, 130),
+        new("RX 5500 XT", "Navi 14", Rdna1, "TSMC N7", "2019-12-12", 22, 1408, 88, 32, 1607, 1845, 8, "GDDR6", 128, 14, 130),
+        new("RX 5600 XT", "Navi 10", Rdna1, "TSMC N7", "2020-01-21", 36, 2304, 144, 64, 1375, 1750, 6, "GDDR6", 192, 14, 150),
+        new("RX 5700", "Navi 10", Rdna1, "TSMC N7", "2019-07-07", 36, 2304, 144, 64, 1465, 1725, 8, "GDDR6", 256, 14, 180),
+        new("RX 5700 XT", "Navi 10", Rdna1, "TSMC N7", "2019-07-07", 40, 2560, 160, 64, 1605, 1905, 8, "GDDR6", 256, 14, 225),
+
         // AMD Radeon RX 6000 (RDNA 2)
         new("RX 6400", "Navi 24", Rdna2, "TSMC N6", "2022-01-19", 12, 768, 48, 32, 1923, 2321, 4, "GDDR6", 64, 16, 53),
         new("RX 6500 XT", "Navi 24", Rdna2, "TSMC N6", "2022-01-19", 16, 1024, 64, 32, 2310, 2815, 4, "GDDR6", 64, 18, 107),
@@ -89,6 +123,32 @@ public static partial class GpuDatabase
         new("RX 9070 GRE", "Navi 48", Rdna4, "TSMC N4P", "2025-05-08", 48, 3072, 192, 96, 2220, 2790, 12, "GDDR6", 192, 18, 220),
         new("RX 9070", "Navi 48", Rdna4, "TSMC N4P", "2025-03-06", 56, 3584, 224, 128, 2070, 2520, 16, "GDDR6", 256, 20, 220),
         new("RX 9070 XT", "Navi 48", Rdna4, "TSMC N4P", "2025-03-06", 64, 4096, 256, 128, 2400, 2970, 16, "GDDR6", 256, 20, 304),
+
+        // NVIDIA GeForce GTX 10 (Pascal; GP107/GP108 on Samsung 14LPP, the rest on TSMC 16FF)
+        new("GT 1030", "GP108", Pascal, "Samsung 14LPP", "2017-05-17", 3, 384, 24, 16, 1227, 1468, 2, "GDDR5", 64, 6, 30),
+        new("GTX 1050", "GP107", Pascal, "Samsung 14LPP", "2016-10-25", 5, 640, 40, 32, 1354, 1455, 2, "GDDR5", 128, 7, 75),
+        new("GTX 1050 Ti", "GP107", Pascal, "Samsung 14LPP", "2016-10-25", 6, 768, 48, 32, 1290, 1392, 4, "GDDR5", 128, 7, 75),
+        new("GTX 1060", "GP106", Pascal, "TSMC 16FF", "2016-08-18", 9, 1152, 72, 48, 1506, 1708, 3, "GDDR5", 192, 8, 120),
+        new("GTX 1060", "GP106", Pascal, "TSMC 16FF", "2016-07-19", 10, 1280, 80, 48, 1506, 1708, 6, "GDDR5", 192, 8, 120),
+        new("GTX 1070", "GP104", Pascal, "TSMC 16FF", "2016-06-10", 15, 1920, 120, 64, 1506, 1683, 8, "GDDR5", 256, 8, 150),
+        new("GTX 1070 Ti", "GP104", Pascal, "TSMC 16FF", "2017-11-02", 19, 2432, 152, 64, 1607, 1683, 8, "GDDR5", 256, 8, 180),
+        new("GTX 1080", "GP104", Pascal, "TSMC 16FF", "2016-05-27", 20, 2560, 160, 64, 1607, 1733, 8, "GDDR5X", 256, 10, 180),
+        new("GTX 1080 Ti", "GP102", Pascal, "TSMC 16FF", "2017-03-10", 28, 3584, 224, 88, 1480, 1582, 11, "GDDR5X", 352, 11, 250),
+
+        // NVIDIA GeForce GTX 16 and RTX 20 (Turing, TSMC 12FFN)
+        new("GTX 1650", "TU117", Turing, "TSMC 12FFN", "2019-04-23", 14, 896, 56, 32, 1485, 1665, 4, "GDDR5", 128, 8, 75),
+        new("GTX 1650 SUPER", "TU116", Turing, "TSMC 12FFN", "2019-11-22", 20, 1280, 80, 32, 1530, 1725, 4, "GDDR6", 128, 12, 100),
+        new("GTX 1660", "TU116", Turing, "TSMC 12FFN", "2019-03-14", 22, 1408, 88, 48, 1530, 1785, 6, "GDDR5", 192, 8, 120),
+        new("GTX 1660 SUPER", "TU116", Turing, "TSMC 12FFN", "2019-10-29", 22, 1408, 88, 48, 1530, 1785, 6, "GDDR6", 192, 14, 125),
+        new("GTX 1660 Ti", "TU116", Turing, "TSMC 12FFN", "2019-02-22", 24, 1536, 96, 48, 1500, 1770, 6, "GDDR6", 192, 12, 120),
+        new("RTX 2060", "TU106", Turing, "TSMC 12FFN", "2019-01-15", 30, 1920, 120, 48, 1365, 1680, 6, "GDDR6", 192, 14, 160),
+        new("RTX 2060", "TU106", Turing, "TSMC 12FFN", "2021-12-07", 34, 2176, 136, 48, 1470, 1650, 12, "GDDR6", 192, 14, 185),
+        new("RTX 2060 SUPER", "TU106", Turing, "TSMC 12FFN", "2019-07-09", 34, 2176, 136, 64, 1470, 1650, 8, "GDDR6", 256, 14, 175),
+        new("RTX 2070", "TU106", Turing, "TSMC 12FFN", "2018-10-17", 36, 2304, 144, 64, 1410, 1620, 8, "GDDR6", 256, 14, 175),
+        new("RTX 2070 SUPER", "TU104", Turing, "TSMC 12FFN", "2019-07-09", 40, 2560, 160, 64, 1605, 1770, 8, "GDDR6", 256, 14, 215),
+        new("RTX 2080", "TU104", Turing, "TSMC 12FFN", "2018-09-20", 46, 2944, 184, 64, 1515, 1710, 8, "GDDR6", 256, 14, 215),
+        new("RTX 2080 SUPER", "TU104", Turing, "TSMC 12FFN", "2019-07-23", 48, 3072, 192, 64, 1650, 1815, 8, "GDDR6", 256, 15.5, 250),
+        new("RTX 2080 Ti", "TU102", Turing, "TSMC 12FFN", "2018-09-27", 68, 4352, 272, 88, 1350, 1545, 11, "GDDR6", 352, 14, 250),
 
         // NVIDIA GeForce RTX 30 (Ampere, Samsung 8N)
         new("RTX 3050", "GA107", Ampere, "Samsung 8N", "2024-02-02", 18, 2304, 72, 32, 1042, 1470, 6, "GDDR6", 96, 14, 70),
@@ -217,7 +277,7 @@ public static partial class GpuDatabase
         ArgumentNullException.ThrowIfNull(chip);
         var key = chip.Split(' ', '/')[0] switch
         {
-            "Navi" => string.Join(' ', chip.Split(' ').Take(2)),
+            "Navi" or "Polaris" or "Vega" => string.Join(' ', chip.Split(' ').Take(2)),
             var first => first,
         };
 
@@ -226,6 +286,15 @@ public static partial class GpuDatabase
 
     private static readonly Dictionary<string, (double, int)> Dies = new(StringComparer.Ordinal)
     {
+        ["Polaris 10"] = (232, 5_700),
+        ["Polaris 11"] = (123, 3_000),
+        ["Polaris 12"] = (101, 2_200),
+        ["Polaris 20"] = (232, 5_700),
+        ["Polaris 21"] = (123, 3_000),
+        ["Polaris 30"] = (232, 5_700),
+        ["Vega 10"] = (495, 12_500),
+        ["Navi 10"] = (251, 10_300),
+        ["Navi 14"] = (158, 6_400),
         ["Navi 21"] = (520, 26_800),
         ["Navi 22"] = (335, 17_200),
         ["Navi 23"] = (237, 11_060),
@@ -235,6 +304,16 @@ public static partial class GpuDatabase
         ["Navi 33"] = (204, 13_300),
         ["Navi 44"] = (199, 29_700),
         ["Navi 48"] = (356.5, 53_900),
+        ["GP102"] = (471, 11_800),
+        ["GP104"] = (314, 7_200),
+        ["GP106"] = (200, 4_400),
+        ["GP107"] = (132, 3_300),
+        ["GP108"] = (74, 1_800),
+        ["TU102"] = (754, 18_600),
+        ["TU104"] = (545, 13_600),
+        ["TU106"] = (445, 10_800),
+        ["TU116"] = (284, 6_600),
+        ["TU117"] = (200, 4_700),
         ["GA102"] = (628, 28_300),
         ["GA104"] = (392, 17_400),
         ["GA106"] = (276, 12_000),
