@@ -12,7 +12,7 @@ public class UpdateCheckerTests
           "prerelease": false,
           "assets": [
             { "name": "hwsuite-0.14.0-win-x64.zip", "browser_download_url": "https://github.com/aprodrigues31/HWSuite/releases/download/v0.14.0/hwsuite-0.14.0-win-x64.zip" },
-            { "name": "hwsuite-gui-0.14.0-win-x64.zip", "browser_download_url": "https://github.com/aprodrigues31/HWSuite/releases/download/v0.14.0/hwsuite-gui-0.14.0-win-x64.zip" },
+            { "name": "hwsuite-gui-0.14.0-win-x64.zip", "browser_download_url": "https://github.com/aprodrigues31/HWSuite/releases/download/v0.14.0/hwsuite-gui-0.14.0-win-x64.zip", "digest": "sha256:02D97EB22FE01FC77E57B92A29C7C291F68F203EDBE6057CF6F24112FA7965A7" },
             { "name": "hwsuite-setup-0.14.0.exe", "browser_download_url": "https://github.com/aprodrigues31/HWSuite/releases/download/v0.14.0/hwsuite-setup-0.14.0.exe", "digest": "sha256:F82CDA8FCAC127BA23D917EA10B8A5FD60E63C8C5B8ACB766687E443776D89BA" }
           ]
         }
@@ -26,6 +26,7 @@ public class UpdateCheckerTests
         Assert.EndsWith("hwsuite-setup-0.14.0.exe", release.Installer!.AbsoluteUri, StringComparison.Ordinal);
         Assert.EndsWith("hwsuite-gui-0.14.0-win-x64.zip", release.Portable!.AbsoluteUri, StringComparison.Ordinal);
         Assert.Equal("f82cda8fcac127ba23d917ea10b8a5fd60e63c8c5b8acb766687e443776d89ba", release.InstallerSha256); // the real 0.14.0 setup
+        Assert.Equal("02d97eb22fe01fc77e57b92a29c7c291f68f203edbe6057cf6f24112fa7965a7", release.PortableSha256);
     }
 
     private sealed class FakeServer(byte[] body) : HttpMessageHandler

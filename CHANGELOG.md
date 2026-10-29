@@ -22,6 +22,12 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - **Blocos que se ajustam à tela** em Hardware, Sensores e Gráficos: quantas colunas couberem na largura da janela, e os blocos se redistribuem conforme o filtro (um bloco ocupa a largura toda; vários dividem as colunas), sem espaços vazios.
 - **Sensores:** os botões de tipo de leitura acompanham os componentes escolhidos e mostram só os tipos que eles têm (placa-mãe: tensões, ventoinhas, temperaturas...; discos: temperatura, dados...). Tipos além dos seis principais (corrente, nível, vazão, taxa de transferência...) aparecem quando existem; se o tipo escolhido deixa de existir na nova seleção, volta para "Todos".
 
+### Corrigido
+- **Atualização sempre pelo próprio app:** ao encontrar uma versão nova, o botão é sempre **Atualizar agora**, e o HWSuite baixa, confere a soma SHA-256 publicada pelo GitHub, instala e reabre sozinho, sem baixar instalador nem abrir o navegador:
+  - versão instalada (instalador ou winget): reconhecida pelo desinstalador ao lado do app, em qualquer pasta escolhida na instalação; instala em silêncio por cima;
+  - versão portátil (zip): baixa o app e se substitui na própria pasta, mantendo a pasta `HWSuite` com relatórios e configurações;
+  - se o download falhar, o aviso explica o motivo e oferece **Tentar novamente** dentro do app.
+
 ## [0.19.0] - 2026-10-29
 
 ### Adicionado

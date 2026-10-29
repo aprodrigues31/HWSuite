@@ -9,6 +9,9 @@ public sealed record ReleaseInfo(string Version, Uri Page, Uri? Installer, Uri? 
 {
     /// <summary>SHA-256 of the installer as GitHub computed it on upload (hex, lower case), when published.</summary>
     public string? InstallerSha256 { get; init; }
+
+    /// <summary>SHA-256 of the desktop app zip (portable copies update from it).</summary>
+    public string? PortableSha256 { get; init; }
 }
 
 /// <summary>
@@ -56,7 +59,10 @@ public static class UpdateChecker
             }
 
             Uri? installer = null, portable = null;
-            string? installerSha = null;
+            string? installerSha = null, portableSha = null;
+            static string? Sha(JsonElement asset) =>
+                asset.TryGetProperty("digest", out var digest) && digest.ValueKind == JsonValueKind.String && digest.GetString() is { } d
+                    && d.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase) ? d[7..].ToLowerInvariant() : null;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var asset in assets.EnumerateArray())
@@ -66,19 +72,17 @@ public static class UpdateChecker
                     if (name.StartsWith("hwsuite-setup-", StringComparison.OrdinalIgnoreCase))
                     {
                         installer = url;
-                        if (asset.TryGetProperty("digest", out var digest) && digest.GetString() is { } d && d.StartsWith("sha256:", StringComparison.OrdinalIgnoreCase))
-                        {
-                            installerSha = d[7..].ToLowerInvariant();
-                        }
+                        installerSha = Sha(asset);
                     }
                     else if (name.StartsWith("hwsuite-gui-", StringComparison.OrdinalIgnoreCase))
                     {
                         portable = url;
+                        portableSha = Sha(asset);
                     }
                 }
             }
 
-            return new ReleaseInfo(tag.GetString()!.TrimStart('v', 'V'), new Uri(page.GetString()!), installer, portable) { InstallerSha256 = installerSha };
+            return new ReleaseInfo(tag.GetString()!.TrimStart('v', 'V'), new Uri(page.GetString()!), installer, portable) { InstallerSha256 = installerSha, PortableSha256 = portableSha };
         }
         catch (Exception ex) when (ex is JsonException or KeyNotFoundException or InvalidOperationException or UriFormatException or ArgumentNullException)
         {
@@ -93,18 +97,32 @@ public static class UpdateChecker
     /// </summary>
     public static async Task<string?> DownloadInstallerAsync(HttpClient http, ReleaseInfo release, string folder, IProgress<double>? progress = null, CancellationToken cancel = default)
     {
-        ArgumentNullException.ThrowIfNull(http);
         ArgumentNullException.ThrowIfNull(release);
-        if (release.Installer is null || release.InstallerSha256 is null)
-        {
-            return null;
-        }
+        return release.Installer is null || release.InstallerSha256 is null
+            ? null
+            : await DownloadAsync(http, release.Installer, release.InstallerSha256, folder, progress, cancel).ConfigureAwait(false);
+    }
 
+    /// <summary>The same for the desktop app zip, which portable copies unpack over themselves.</summary>
+    public static async Task<string?> DownloadPortableAsync(HttpClient http, ReleaseInfo release, string folder, IProgress<double>? progress = null, CancellationToken cancel = default)
+    {
+        ArgumentNullException.ThrowIfNull(release);
+        return release.Portable is null || release.PortableSha256 is null
+            ? null
+            : await DownloadAsync(http, release.Portable, release.PortableSha256, folder, progress, cancel).ConfigureAwait(false);
+    }
+
+    /// <summary>Downloads <paramref name="url"/>, keeping it only when its SHA-256 is <paramref name="sha256"/>.</summary>
+    public static async Task<string?> DownloadAsync(HttpClient http, Uri url, string sha256, string folder, IProgress<double>? progress = null, CancellationToken cancel = default)
+    {
+        ArgumentNullException.ThrowIfNull(http);
+        ArgumentNullException.ThrowIfNull(url);
+        ArgumentNullException.ThrowIfNull(sha256);
         Directory.CreateDirectory(folder);
-        var path = Path.Combine(folder, Path.GetFileName(release.Installer.LocalPath));
+        var path = Path.Combine(folder, Path.GetFileName(url.LocalPath));
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, release.Installer);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.UserAgent.Add(new ProductInfoHeaderValue("HWSuite", BuildInfo.Current.Version));
             using var response = await http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancel).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
@@ -128,7 +146,7 @@ public static class UpdateChecker
                 }
             }
 
-            if (!HashMatches(sha.GetHashAndReset(), release.InstallerSha256))
+            if (!HashMatches(sha.GetHashAndReset(), sha256))
             {
                 File.Delete(path);
                 return null;

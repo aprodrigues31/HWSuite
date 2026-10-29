@@ -213,13 +213,13 @@ public sealed partial class MainWindow : Window
     private Core.Updates.ReleaseInfo? _update;
     private bool _updating;
 
-    /// <summary>Installed by the setup (per-user folder) rather than run from an extracted zip.</summary>
-    private static bool IsInstalled => AppContext.BaseDirectory.TrimEnd('\\').EndsWith(@"Programs\HWSuite", StringComparison.OrdinalIgnoreCase)
-        && File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+    /// <summary>Installed by the setup (or winget, which runs the same setup): its uninstaller sits next to the app.</summary>
+    private static bool IsInstalled => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
 
     /// <summary>
-    /// "HWSuite 0.15.0 is available". Installed copies get "Update now" (verified download, silent install,
-    /// restart); portable copies get the download link, so a second installation is never created unasked.
+    /// "HWSuite 0.20.0 is available" with "Update now". The update is always done by the app itself: an installed
+    /// copy downloads the setup (checked against GitHub's SHA-256), installs it silently and restarts; a portable copy
+    /// downloads the desktop app zip (checked the same way) and replaces itself in its own folder, then restarts.
     /// </summary>
     public void ShowUpdate(Core.Updates.ReleaseInfo release)
     {
@@ -228,13 +228,15 @@ public sealed partial class MainWindow : Window
         _update = release;
         UpdateBar.Title = s.Format("app.update.title", release.Version);
         UpdateBar.Message = s.Format("app.update.message", Core.BuildInfo.Current.Version);
-        UpdateButton.Content = s[CanUpdateInPlace(release) ? "app.update.now" : release.Installer is null ? "app.update.page" : "app.update.download"];
+        UpdateButton.Content = s[CanUpdate(release) ? "app.update.now" : "app.update.page"];
         UpdateButton.IsEnabled = true;
+        UpdateBar.Severity = InfoBarSeverity.Informational;
         UpdateBar.IsOpen = true;
     }
 
-    private static bool CanUpdateInPlace(Core.Updates.ReleaseInfo release) =>
-        IsInstalled && release.Installer is not null && release.InstallerSha256 is not null;
+    private static bool CanUpdate(Core.Updates.ReleaseInfo release) => IsInstalled
+        ? release.Installer is not null && release.InstallerSha256 is not null
+        : release.Portable is not null && release.PortableSha256 is not null;
 
     private async void UpdateButton_Click(object sender, RoutedEventArgs e)
     {
@@ -243,10 +245,10 @@ public sealed partial class MainWindow : Window
             return;
         }
 
-        if (!CanUpdateInPlace(release))
+        if (!CanUpdate(release))
         {
-            var link = release.Installer ?? release.Page;
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(link.AbsoluteUri) { UseShellExecute = true })?.Dispose();
+            // Only a release published without its files (or their checksums) ends here.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(release.Page.AbsoluteUri) { UseShellExecute = true })?.Dispose();
             return;
         }
 
@@ -254,23 +256,46 @@ public sealed partial class MainWindow : Window
         _updating = true;
         UpdateButton.IsEnabled = false;
         var progress = new Progress<double>(p => UpdateBar.Message = s.Format("app.update.downloading", (p * 100).ToString("0", s.Culture)));
-        using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
         var folder = Path.Combine(Path.GetTempPath(), "HWSuite-update");
-        var setup = await Core.Updates.UpdateChecker.DownloadInstallerAsync(http, release, folder, progress);
-        if (setup is null)
+        try
         {
-            UpdateBar.Message = s["app.update.downloadFailed"];
-            UpdateButton.Content = s["app.update.download"];
+            if (!IsInstalled && !Services.PortableUpdater.CanWrite(AppContext.BaseDirectory))
+            {
+                throw new UnauthorizedAccessException(s["app.update.readOnly"]);
+            }
+
+            UpdateBar.Message = s.Format("app.update.downloading", "0");
+            using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
+            var file = IsInstalled
+                ? await Core.Updates.UpdateChecker.DownloadInstallerAsync(http, release, folder, progress)
+                : await Core.Updates.UpdateChecker.DownloadPortableAsync(http, release, folder, progress);
+            if (file is null)
+            {
+                throw new IOException(s["app.update.downloadFailed"]);
+            }
+
+            UpdateBar.Message = s["app.update.installing"];
+            if (IsInstalled)
+            {
+                // Silent install over this copy; the setup starts the new version when it finishes (/RELAUNCH=1).
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(file, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1") { UseShellExecute = true })?.Dispose();
+            }
+            else
+            {
+                await Task.Run(() => Services.PortableUpdater.Apply(file, AppContext.BaseDirectory, "HWSuite.Gui.exe"));
+            }
+
+            App.Quit();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException or System.ComponentModel.Win32Exception or HttpRequestException)
+        {
+            // Stays inside the app: the button tries again, nothing is handed to the browser.
+            UpdateBar.Severity = InfoBarSeverity.Warning;
+            UpdateBar.Message = s.Format("app.update.failedRetry", ex.Message);
+            UpdateButton.Content = s["app.update.retry"];
             UpdateButton.IsEnabled = true;
             _updating = false;
-            _update = release with { InstallerSha256 = null }; // the next click opens the download in the browser
-            return;
         }
-
-        // Silent install over this copy; the setup starts the new version when it finishes (/RELAUNCH=1).
-        UpdateBar.Message = s["app.update.installing"];
-        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(setup, "/SILENT /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS /RELAUNCH=1") { UseShellExecute = true })?.Dispose();
-        App.Quit();
     }
 
     /// <summary>Explains what limits the sensors and offers the one action that fixes it.</summary>
