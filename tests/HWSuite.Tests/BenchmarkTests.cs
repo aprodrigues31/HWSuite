@@ -3,7 +3,7 @@ using HWSuite.Core.Benchmark;
 
 namespace HWSuite.Tests;
 
-[Collection(TimingCollection.Name)]
+[Collection(SerialTests.Name)]
 public class BenchmarkTests
 {
     [Fact]

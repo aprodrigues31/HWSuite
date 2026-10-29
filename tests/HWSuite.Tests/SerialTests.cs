@@ -5,7 +5,7 @@ namespace HWSuite.Tests;
 /// collection: one after another and after the parallel tests, so they neither starve nor slow each other down.
 /// </summary>
 [CollectionDefinition(Name, DisableParallelization = true)]
-public sealed class TimingCollection
+public sealed class SerialTests
 {
     public const string Name = "Timing";
 }
