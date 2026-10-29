@@ -37,6 +37,27 @@ public class DiskBenchmarkTests
         }
     }
 
+    /// <summary>
+    /// The real Windows path: FILE_FLAG_NO_BUFFERING needs sector-aligned buffers, offsets and sizes; a mistake
+    /// there fails with "invalid parameter". Also lists the drives with their disk model. Skipped off Windows.
+    /// </summary>
+    [Fact]
+    public void Unbuffered_io_works_on_windows()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var drives = HWSuite.Providers.Windows.DiskBenchmarkTargets.Drives();
+        Assert.NotEmpty(drives);
+        var system = drives.First(d => Environment.SystemDirectory.StartsWith(d.Letter, StringComparison.OrdinalIgnoreCase));
+        var path = Path.Combine(HWSuite.Providers.Windows.DiskBenchmarkTargets.TestFolder(system.Letter), $"hwsuite-test-{Guid.NewGuid():N}.tmp");
+        var result = DiskBenchmark.Run(path, 16L << 20, TimeSpan.FromMilliseconds(150), HWSuite.Providers.Windows.DiskBenchmarkTargets.Open, system.Letter, system.Model);
+        Assert.All(result.Tests, r => Assert.True(r.ReadMBps > 0 && r.WriteMBps > 0));
+        Assert.False(File.Exists(path));
+    }
+
     [Fact]
     public void Cancelling_also_removes_the_file()
     {
