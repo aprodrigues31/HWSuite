@@ -22,6 +22,7 @@ public sealed partial class ReportPage : Page
 {
     private static readonly TimeSpan LoadDuration = TimeSpan.FromSeconds(60);
     private MaintenanceReport? _report;
+    private MaintenanceInput? _input;
     private bool _running;
 
     public ReportPage()
@@ -186,6 +187,7 @@ public sealed partial class ReportPage : Page
             }
 
             var checks = MaintenanceChecks.Run(input, s);
+            _input = input;
             var order = new ServiceOrder(Text(ClientBox), Text(ClientContactBox), Text(EquipmentBox), Text(OrderBox), Text(ServicesBox), Text(NotesBox));
             var company = new CompanyProfile(Text(CompanyBox), Text(DocumentBox), Text(ContactBox), Text(AddressBox), Text(TechnicianBox), null); // the logo is added when saving
             _report = new MaintenanceReport(company, order, checks, inventory, input.Now, BuildInfo.Current.Display, InventoryCheck.IsChecked == true) { Load = input.Load };
@@ -315,6 +317,7 @@ public sealed partial class ReportPage : Page
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, MaintenanceReportWriter.FileName(report, "html"));
         File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, App.Text), new UTF8Encoding(false));
+        AttendanceRecord.From(report, _input, Path.GetFileName(path)).SaveBeside(path); // history and batch summary
         return path;
     }
 

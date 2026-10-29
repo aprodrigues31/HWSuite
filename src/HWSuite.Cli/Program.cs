@@ -42,5 +42,8 @@ return options.Command switch
     CliCommand.Net => NetCommand.Run(options, s),
     CliCommand.Maintenance => MaintenanceCommand.Run(options, s),
     CliCommand.Log => LogCommand.Run(options, s),
+    CliCommand.Stability => StabilityCommand.Run(options, s, memoryOnly: false),
+    CliCommand.MemTest => StabilityCommand.Run(options, s, memoryOnly: true),
+    CliCommand.Batch => BatchCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

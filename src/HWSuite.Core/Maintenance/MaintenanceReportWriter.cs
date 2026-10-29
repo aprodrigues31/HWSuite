@@ -24,122 +24,7 @@ public static class MaintenanceReportWriter
         var order = report.Order;
         var inv = report.Inventory;
 
-        w.Write($$"""
-            <!doctype html>
-            <html lang="{{(c.Name.StartsWith("pt", StringComparison.Ordinal) ? "pt-BR" : "en")}}">
-            <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <title>{{E(s["mnt.report.title"])}} — {{E(order.Client ?? inv.MachineName)}}</title>
-            <style>
-            @page { size: A4; margin: 14mm 13mm 16mm 13mm; }
-            * { box-sizing: border-box; }
-            body { margin: 0; font: 10.5pt/1.45 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: #18222c; background: #eef2f5; }
-            .page { max-width: 210mm; margin: 0 auto; background: #fff; padding: 14mm 13mm; }
-            @media print { body { background: #fff; } .page { padding: 0; max-width: none; } }
-            header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 12px; border-bottom: 3px solid #0e7490; }
-            .brand { display: flex; gap: 14px; align-items: center; }
-            .brand img { max-height: 58px; max-width: 160px; object-fit: contain; }
-            .brand .name { font-size: 15pt; font-weight: 700; color: #0b3b4a; }
-            .brand .meta { color: #4a5a68; font-size: 9pt; }
-            .doc { text-align: right; }
-            .doc h1 { margin: 0; font-size: 15pt; letter-spacing: .02em; color: #0b3b4a; text-transform: uppercase; }
-            .doc .meta { color: #4a5a68; font-size: 9pt; }
-            .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
-            .box { border: 1px solid #d5dee6; border-radius: 6px; padding: 9px 12px; }
-            .box h3 { margin: 0 0 4px 0; font-size: 8.5pt; letter-spacing: .08em; text-transform: uppercase; color: #5b6b78; }
-            .box p { margin: 1px 0; }
-            .verdict { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: 8px; margin: 14px 0 6px 0; color: #fff; }
-            .verdict .big { font-size: 14pt; font-weight: 700; }
-            .v-ok { background: #0f8a5f; } .v-attention { background: #c27803; } .v-problem { background: #c0262d; } .v-info { background: #4a5a68; }
-            .counts { display: flex; gap: 14px; font-size: 9.5pt; }
-            .counts span b { font-size: 12pt; }
-            h2 { font-size: 11pt; margin: 18px 0 6px 0; color: #0b3b4a; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #d5dee6; padding-bottom: 4px; }
-            table { width: 100%; border-collapse: collapse; }
-            th { text-align: left; font-size: 8.5pt; color: #5b6b78; text-transform: uppercase; letter-spacing: .06em; padding: 4px 6px; border-bottom: 1px solid #c9d4dc; }
-            td { padding: 6px; border-bottom: 1px solid #e6ecf0; vertical-align: top; }
-            tr { page-break-inside: avoid; }
-            td.item { width: 26%; font-weight: 600; }
-            td.badge { width: 92px; }
-            .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 8.5pt; font-weight: 700; color: #fff; white-space: nowrap; }
-            .advice { color: #7a3d00; margin-top: 3px; font-size: 9.5pt; }
-            .advice::before { content: "→ "; }
-            .area td { background: #f3f7fa; font-weight: 700; color: #0b3b4a; font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; }
-            .text { white-space: normal; }
-            .inv td:first-child { width: 34%; color: #4a5a68; }
-            .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; page-break-inside: avoid; }
-            .sign div { border-top: 1px solid #18222c; padding-top: 4px; text-align: center; font-size: 9pt; color: #4a5a68; }
-            footer { margin-top: 22px; font-size: 8pt; color: #7b8a96; text-align: center; }
-            .appendix { page-break-before: always; }
-            ol.actions { margin: 4px 0 0 0; padding-left: 22px; }
-            ol.actions li { margin: 5px 0; page-break-inside: avoid; }
-            ol.actions .tag { margin-right: 4px; vertical-align: 1px; }
-            .charts svg { display: block; margin: 4px 0 10px 0; page-break-inside: avoid; }
-            .keep { page-break-inside: avoid; }
-            .note { color: #4a5a68; font-size: 9.5pt; margin: 2px 0 6px 0; }
-            </style>
-            </head>
-            <body><div class="page">
-            """);
-
-        // Header: company left, document right.
-        w.Write("<header class=\"top\"><div class=\"brand\">");
-        if (!string.IsNullOrEmpty(company.LogoDataUri))
-        {
-            w.Write($"<img src=\"{E(company.LogoDataUri)}\" alt=\"\">");
-        }
-
-        w.Write("<div>");
-        w.Write($"<div class=\"name\">{E(company.Name ?? s["mnt.report.noCompany"])}</div>");
-        foreach (var line in new[] { company.Document, company.Contact, company.Address }.Where(x => !string.IsNullOrWhiteSpace(x)))
-        {
-            w.Write($"<div class=\"meta\">{E(line)}</div>");
-        }
-
-        w.Write("</div></div><div class=\"doc\">");
-        w.Write($"<h1>{E(s["mnt.report.title"])}</h1>");
-        if (!string.IsNullOrWhiteSpace(order.OrderNumber))
-        {
-            w.Write($"<div class=\"meta\">{E(s["mnt.report.order"])}: <b>{E(order.OrderNumber)}</b></div>");
-        }
-
-        w.Write($"<div class=\"meta\">{E(report.At.LocalDateTime.ToString("f", c))}</div>");
-        if (!string.IsNullOrWhiteSpace(company.Technician))
-        {
-            w.Write($"<div class=\"meta\">{E(s["mnt.report.technician"])}: {E(company.Technician)}</div>");
-        }
-
-        w.Write("</div></header>");
-
-        // Client and equipment.
-        w.Write("<div class=\"grid2\"><div class=\"box\">");
-        w.Write($"<h3>{E(s["mnt.report.client"])}</h3><p><b>{E(order.Client ?? "—")}</b></p>");
-        if (!string.IsNullOrWhiteSpace(order.ClientContact))
-        {
-            w.Write($"<p>{E(order.ClientContact)}</p>");
-        }
-
-        w.Write("</div><div class=\"box\">");
-        w.Write($"<h3>{E(s["mnt.report.equipment"])}</h3>");
-        if (!string.IsNullOrWhiteSpace(order.Equipment))
-        {
-            w.Write($"<p><b>{E(order.Equipment)}</b></p>");
-        }
-
-        var machine = string.Join(" ", new[] { inv.System?.Manufacturer, inv.System?.Product }.Where(Real));
-        var board = string.Join(" ", new[] { inv.Motherboard?.Manufacturer, inv.Motherboard?.Product }.Where(Real));
-        w.Write($"<p>{E(inv.MachineName)}{(machine.Length > 0 ? " · " + E(machine) : "")}</p>");
-        if (board.Length > 0 && board != machine)
-        {
-            w.Write($"<p>{E(board)}</p>");
-        }
-
-        if (Real(inv.System?.SerialNumber))
-        {
-            w.Write($"<p>{E(s["mnt.report.serial"])}: {E(inv.System!.SerialNumber)}</p>");
-        }
-
-        w.Write("</div></div>");
+        WriteStart(w, s, s["mnt.report.title"], company, order, inv, report.At);
 
         // Overall verdict.
         var overall = report.Overall;
@@ -235,7 +120,7 @@ public static class MaintenanceReportWriter
             Row(s["mnt.sum.cpu"], $"{cpu.Name} · {cpu.Cores}C/{cpu.Threads}T");
         }
 
-        Row(s["mnt.sum.board"], board);
+        Row(s["mnt.sum.board"], string.Join(" ", new[] { inv.Motherboard?.Manufacturer, inv.Motherboard?.Product }.Where(Real)));
         Row(s["mnt.sum.bios"], string.Join(" · ", new[] { inv.Bios?.Version, DateText.Display(inv.Bios?.ReleaseDate, c) }.OfType<string>()));
         if (inv.Memory is { } mem)
         {
@@ -286,6 +171,132 @@ public static class MaintenanceReportWriter
         }
 
         w.Write("</div></body></html>");
+    }
+
+    /// <summary>
+    /// The start shared by HWSuite's client documents (maintenance and stability reports): page style, company header
+    /// with logo, document title, order number, date and technician, then the client and equipment boxes.
+    /// </summary>
+    internal static void WriteStart(TextWriter w, Strings s, string title, CompanyProfile company, ServiceOrder order, HardwareInventory inv, DateTimeOffset at)
+    {
+        var c = s.Culture;
+        static string E(string? text) => Escape(text);
+        w.Write($$"""
+            <!doctype html>
+            <html lang="{{(c.Name.StartsWith("pt", StringComparison.Ordinal) ? "pt-BR" : "en")}}">
+            <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>{{E(title)}} — {{E(order.Client ?? inv.MachineName)}}</title>
+            <style>
+            @page { size: A4; margin: 14mm 13mm 16mm 13mm; }
+            * { box-sizing: border-box; }
+            body { margin: 0; font: 10.5pt/1.45 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; color: #18222c; background: #eef2f5; }
+            .page { max-width: 210mm; margin: 0 auto; background: #fff; padding: 14mm 13mm; }
+            @media print { body { background: #fff; } .page { padding: 0; max-width: none; } }
+            header.top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding-bottom: 12px; border-bottom: 3px solid #0e7490; }
+            .brand { display: flex; gap: 14px; align-items: center; }
+            .brand img { max-height: 58px; max-width: 160px; object-fit: contain; }
+            .brand .name { font-size: 15pt; font-weight: 700; color: #0b3b4a; }
+            .brand .meta { color: #4a5a68; font-size: 9pt; }
+            .doc { text-align: right; }
+            .doc h1 { margin: 0; font-size: 15pt; letter-spacing: .02em; color: #0b3b4a; text-transform: uppercase; }
+            .doc .meta { color: #4a5a68; font-size: 9pt; }
+            .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+            .box { border: 1px solid #d5dee6; border-radius: 6px; padding: 9px 12px; }
+            .box h3 { margin: 0 0 4px 0; font-size: 8.5pt; letter-spacing: .08em; text-transform: uppercase; color: #5b6b78; }
+            .box p { margin: 1px 0; }
+            .verdict { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 16px; border-radius: 8px; margin: 14px 0 6px 0; color: #fff; }
+            .verdict .big { font-size: 14pt; font-weight: 700; }
+            .v-ok { background: #0f8a5f; } .v-attention { background: #c27803; } .v-problem { background: #c0262d; } .v-info { background: #4a5a68; }
+            .counts { display: flex; gap: 14px; font-size: 9.5pt; }
+            .counts span b { font-size: 12pt; }
+            h2 { font-size: 11pt; margin: 18px 0 6px 0; color: #0b3b4a; text-transform: uppercase; letter-spacing: .05em; border-bottom: 1px solid #d5dee6; padding-bottom: 4px; }
+            table { width: 100%; border-collapse: collapse; }
+            th { text-align: left; font-size: 8.5pt; color: #5b6b78; text-transform: uppercase; letter-spacing: .06em; padding: 4px 6px; border-bottom: 1px solid #c9d4dc; }
+            td { padding: 6px; border-bottom: 1px solid #e6ecf0; vertical-align: top; }
+            tr { page-break-inside: avoid; }
+            td.item { width: 26%; font-weight: 600; }
+            td.badge { width: 92px; }
+            .tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 8.5pt; font-weight: 700; color: #fff; white-space: nowrap; }
+            .advice { color: #7a3d00; margin-top: 3px; font-size: 9.5pt; }
+            .advice::before { content: "→ "; }
+            .area td { background: #f3f7fa; font-weight: 700; color: #0b3b4a; font-size: 9pt; text-transform: uppercase; letter-spacing: .06em; }
+            .text { white-space: normal; }
+            .inv td:first-child { width: 34%; color: #4a5a68; }
+            .sign { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; page-break-inside: avoid; }
+            .sign div { border-top: 1px solid #18222c; padding-top: 4px; text-align: center; font-size: 9pt; color: #4a5a68; }
+            footer { margin-top: 22px; font-size: 8pt; color: #7b8a96; text-align: center; }
+            .appendix { page-break-before: always; }
+            ol.actions { margin: 4px 0 0 0; padding-left: 22px; }
+            ol.actions li { margin: 5px 0; page-break-inside: avoid; }
+            ol.actions .tag { margin-right: 4px; vertical-align: 1px; }
+            .charts svg { display: block; margin: 4px 0 10px 0; page-break-inside: avoid; }
+            .keep { page-break-inside: avoid; }
+            .note { color: #4a5a68; font-size: 9.5pt; margin: 2px 0 6px 0; }
+            </style>
+            </head>
+            <body><div class="page">
+            """);
+
+        // Header: company left, document right.
+        w.Write("<header class=\"top\"><div class=\"brand\">");
+        if (!string.IsNullOrEmpty(company.LogoDataUri))
+        {
+            w.Write($"<img src=\"{E(company.LogoDataUri)}\" alt=\"\">");
+        }
+
+        w.Write("<div>");
+        w.Write($"<div class=\"name\">{E(company.Name ?? s["mnt.report.noCompany"])}</div>");
+        foreach (var line in new[] { company.Document, company.Contact, company.Address }.Where(x => !string.IsNullOrWhiteSpace(x)))
+        {
+            w.Write($"<div class=\"meta\">{E(line)}</div>");
+        }
+
+        w.Write("</div></div><div class=\"doc\">");
+        w.Write($"<h1>{E(title)}</h1>");
+        if (!string.IsNullOrWhiteSpace(order.OrderNumber))
+        {
+            w.Write($"<div class=\"meta\">{E(s["mnt.report.order"])}: <b>{E(order.OrderNumber)}</b></div>");
+        }
+
+        w.Write($"<div class=\"meta\">{E(at.LocalDateTime.ToString("f", c))}</div>");
+        if (!string.IsNullOrWhiteSpace(company.Technician))
+        {
+            w.Write($"<div class=\"meta\">{E(s["mnt.report.technician"])}: {E(company.Technician)}</div>");
+        }
+
+        w.Write("</div></header>");
+
+        // Client and equipment.
+        w.Write("<div class=\"grid2\"><div class=\"box\">");
+        w.Write($"<h3>{E(s["mnt.report.client"])}</h3><p><b>{E(order.Client ?? "—")}</b></p>");
+        if (!string.IsNullOrWhiteSpace(order.ClientContact))
+        {
+            w.Write($"<p>{E(order.ClientContact)}</p>");
+        }
+
+        w.Write("</div><div class=\"box\">");
+        w.Write($"<h3>{E(s["mnt.report.equipment"])}</h3>");
+        if (!string.IsNullOrWhiteSpace(order.Equipment))
+        {
+            w.Write($"<p><b>{E(order.Equipment)}</b></p>");
+        }
+
+        var machine = string.Join(" ", new[] { inv.System?.Manufacturer, inv.System?.Product }.Where(Real));
+        var board = string.Join(" ", new[] { inv.Motherboard?.Manufacturer, inv.Motherboard?.Product }.Where(Real));
+        w.Write($"<p>{E(inv.MachineName)}{(machine.Length > 0 ? " · " + E(machine) : "")}</p>");
+        if (board.Length > 0 && board != machine)
+        {
+            w.Write($"<p>{E(board)}</p>");
+        }
+
+        if (Real(inv.System?.SerialNumber))
+        {
+            w.Write($"<p>{E(s["mnt.report.serial"])}: {E(inv.System!.SerialNumber)}</p>");
+        }
+
+        w.Write("</div></div>");
     }
 
     public static string ToHtml(MaintenanceReport report, Strings s)

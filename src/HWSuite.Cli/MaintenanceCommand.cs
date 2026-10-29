@@ -19,14 +19,14 @@ namespace HWSuite.Cli;
 internal static class MaintenanceCommand
 {
     /// <summary>A portable copy's own settings (company, pump, folders) when it has them, else the installed app's.</summary>
-    private static SettingsStore SettingsFile() =>
+    internal static SettingsStore SettingsFile() =>
         new(File.Exists(DataLocation.SettingsPath) || !File.Exists(SettingsStore.DefaultPath) ? DataLocation.SettingsPath : SettingsStore.DefaultPath);
 
     /// <summary>
     /// Where the report goes and which logo it carries come from the settings. When never chosen and someone is at
     /// the keyboard, they are asked once here (before the tests) and can have the answer remembered.
     /// </summary>
-    private static (string Folder, AppSettings Settings) AskFiles(SettingsStore store, AppSettings settings, bool needFolder, Strings s)
+    internal static (string Folder, AppSettings Settings) AskFiles(SettingsStore store, AppSettings settings, bool needFolder, Strings s)
     {
         var interactive = !Console.IsInputRedirected;
         var folder = DataLocation.ResolvePath(settings.ReportsFolder) is { Length: > 0 } saved ? saved : MaintenanceSession.ReportsFolder;
@@ -177,6 +177,7 @@ internal static class MaintenanceCommand
             : Path.Combine(MaintenanceReportWriter.Folder(report, folder, settings.ReportsPerClient), MaintenanceReportWriter.FileName(report, "html"));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, s), new UTF8Encoding(false));
+        AttendanceRecord.From(report, input, Path.GetFileName(path)).SaveBeside(path); // for the history and the batch summary
         Console.WriteLine();
         Console.WriteLine(s.Format("cli.written", path));
 

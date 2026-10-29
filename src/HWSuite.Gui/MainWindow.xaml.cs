@@ -57,6 +57,9 @@ public sealed partial class MainWindow : Window
         RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
         RailBottom.Children.Add(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
         BenchRunTab.Text = s["app.nav.benchRun"];
+        StabilityTab.Text = s["stab.tab"];
+        ReportRunTab.Text = s["hist.tab.report"];
+        HistoryTab.Text = s["hist.tab.history"];
         BenchResultsTab.Text = s["app.nav.benchResults"];
         Navigate("dashboard");
 
@@ -66,7 +69,12 @@ public sealed partial class MainWindow : Window
     /// <summary>Opens a page by its tag ("dashboard", "sensors", "inventory", "bench", "benchresults", "network", "report", "settings", "about").</summary>
     public void Navigate(string tag)
     {
-        var railTag = tag == "benchresults" ? "bench" : tag;
+        var railTag = tag switch
+        {
+            "benchresults" or "stability" => "bench",
+            "history" => "report",
+            _ => tag,
+        };
         if (_rail.TryGetValue(railTag, out var item) && item.IsChecked != true)
         {
             _navigating = tag;
@@ -110,14 +118,25 @@ public sealed partial class MainWindow : Window
 
     private void Show(string tag)
     {
-        var isBench = tag is "bench" or "benchresults";
+        // Pages grouped under one rail item get tabs: Bench (tests | stability | results), Report (new | history).
+        var isBench = tag is "bench" or "stability" or "benchresults";
+        var isReport = tag is "report" or "history";
         BenchTabs.Visibility = isBench ? Visibility.Visible : Visibility.Collapsed;
-        if (isBench)
+        ReportTabs.Visibility = isReport ? Visibility.Visible : Visibility.Collapsed;
+        if (isBench || isReport)
         {
-            var tab = tag == "benchresults" ? BenchResultsTab : BenchRunTab;
-            if (!ReferenceEquals(BenchTabs.SelectedItem, tab))
+            var bar = isBench ? BenchTabs : ReportTabs;
+            var tab = tag switch
             {
-                BenchTabs.SelectedItem = tab; // raises SelectionChanged, which navigates
+                "benchresults" => BenchResultsTab,
+                "stability" => StabilityTab,
+                "history" => HistoryTab,
+                "report" => ReportRunTab,
+                _ => BenchRunTab,
+            };
+            if (!ReferenceEquals(bar.SelectedItem, tab))
+            {
+                bar.SelectedItem = tab; // raises SelectionChanged, which navigates
                 return;
             }
         }
@@ -130,6 +149,8 @@ public sealed partial class MainWindow : Window
             "benchresults" => typeof(BenchmarkResultsPage),
             "network" => typeof(NetworkPage),
             "report" => typeof(ReportPage),
+            "history" => typeof(HistoryPage),
+            "stability" => typeof(StabilityPage),
             "charts" => typeof(ChartsPage),
             "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),

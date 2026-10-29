@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.StabilityPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud"
+    NavigationCacheMode="Required">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Padding="28,6,28,24" Spacing="16">
+                <StackPanel Spacing="4" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+                    <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                    <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                    <TextBlock x:Name="Subtitle" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <hud:MasonryPanel x:Name="TopPanels" MinColumnWidth="440" Spacing="16">
+                    <!-- What to test -->
+                    <hud:HudPanel Highlight="True">
+                        <StackPanel Spacing="12">
+                            <TextBlock x:Name="SetupTag" Style="{StaticResource HudTagStyle}" />
+                            <SelectorBar x:Name="ModeBar" SelectionChanged="ModeBar_SelectionChanged">
+                                <SelectorBarItem x:Name="FullMode" IsSelected="True" />
+                                <SelectorBarItem x:Name="MemoryMode" />
+                            </SelectorBar>
+                            <TextBlock x:Name="ModeText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                            <hud:WrapPanel x:Name="PartsPanel" Spacing="16">
+                                <CheckBox x:Name="CpuCheck" IsChecked="True" />
+                                <CheckBox x:Name="GpuCheck" IsChecked="True" />
+                                <CheckBox x:Name="MemoryCheck" IsChecked="True" />
+                            </hud:WrapPanel>
+                            <ComboBox x:Name="DurationBox" MinWidth="200" />
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Button x:Name="StartButton" Style="{StaticResource HudAccentButtonStyle}" Click="StartButton_Click" />
+                                <TextBlock x:Name="StatusText" Grid.Column="1" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+                            </Grid>
+                        </StackPanel>
+                    </hud:HudPanel>
+
+                    <!-- Client (for the certificate) -->
+                    <hud:HudPanel>
+                        <StackPanel Spacing="10">
+                            <TextBlock x:Name="OrderTag" Style="{StaticResource HudTagStyle}" />
+                            <TextBox x:Name="ClientBox" />
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="EquipmentBox" />
+                                <TextBox x:Name="OrderBox" Grid.Column="1" />
+                            </Grid>
+                            <TextBox x:Name="NotesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="64" />
+                        </StackPanel>
+                    </hud:HudPanel>
+                </hud:MasonryPanel>
+
+                <!-- Live -->
+                <hud:HudPanel x:Name="LivePanel" Visibility="Collapsed">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <TextBlock x:Name="LiveTag" Style="{StaticResource HudTagStyle}" />
+                            <TextBlock x:Name="TimeText" HorizontalAlignment="Right" FontFamily="{StaticResource HudMonoStrongFont}" FontSize="14" />
+                        </Grid>
+                        <ProgressBar x:Name="Progress" Maximum="1" />
+                        <hud:WrapPanel x:Name="Tiles" Spacing="28" LineSpacing="12" />
+                        <hud:TimeChart x:Name="LiveChart" Height="200" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <!-- Result -->
+                <StackPanel x:Name="ResultPanel" Spacing="12" Visibility="Collapsed">
+                    <Border x:Name="VerdictBanner" Padding="18,14" CornerRadius="2">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="#FF031016" TextWrapping="Wrap" />
+                            <TextBlock x:Name="VerdictText" Foreground="#FF031016" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button x:Name="PdfButton" Style="{StaticResource HudAccentButtonStyle}" Click="PdfButton_Click" />
+                        <Button x:Name="HtmlButton" Click="HtmlButton_Click" MinHeight="44" />
+                    </StackPanel>
+                    <TextBlock x:Name="SavedText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+        <WebView2 x:Name="PdfView" Width="2" Height="2" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+    </Grid>
+</Page>

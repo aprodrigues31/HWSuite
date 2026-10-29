@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.HistoryPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Padding="28,6,28,24" Spacing="16">
+                <Grid ColumnSpacing="16" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                        <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                        <TextBlock x:Name="FolderText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Bottom">
+                        <TextBox x:Name="SearchBox" Width="220" TextChanged="SearchBox_TextChanged" />
+                        <Button x:Name="RefreshButton" Click="RefreshButton_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Clients as chips -->
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                    <TextBlock x:Name="ClientsLabel" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+                <hud:WrapPanel x:Name="ClientChips" />
+
+                <TextBlock x:Name="EmptyText" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" Visibility="Collapsed" />
+
+                <!-- Services of the chosen client -->
+                <hud:HudPanel x:Name="ListPanel">
+                    <StackPanel Spacing="10">
+                        <Grid>
+                            <TextBlock x:Name="ListTag" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+                                <Button x:Name="CompareButton" Click="CompareButton_Click" IsEnabled="False" />
+                                <Button x:Name="BatchButton" Style="{StaticResource HudAccentButtonStyle}" Click="BatchButton_Click" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock x:Name="HintText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                        <StackPanel x:Name="Rows" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <!-- Before / after -->
+                <hud:HudPanel x:Name="ComparePanel" Visibility="Collapsed">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="CompareTag" Style="{StaticResource HudTagStyle}" />
+                        <StackPanel x:Name="CompareRows" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <TextBlock x:Name="SavedText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+            </StackPanel>
+        </ScrollViewer>
+        <WebView2 x:Name="PdfView" Width="2" Height="2" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+    </Grid>
+</Page>

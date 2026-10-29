@@ -77,7 +77,14 @@
             <!-- Benchmark: tests | saved results -->
             <SelectorBar x:Name="BenchTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="BenchRunTab" Tag="bench" />
+                <SelectorBarItem x:Name="StabilityTab" Tag="stability" />
                 <SelectorBarItem x:Name="BenchResultsTab" Tag="benchresults" />
+            </SelectorBar>
+
+            <!-- Report: new report | service history -->
+            <SelectorBar x:Name="ReportTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
+                <SelectorBarItem x:Name="ReportRunTab" Tag="report" />
+                <SelectorBarItem x:Name="HistoryTab" Tag="history" />
             </SelectorBar>
 
             <Frame x:Name="ContentFrame" Grid.Row="4" FontFamily="{StaticResource HudBodyFont}" />

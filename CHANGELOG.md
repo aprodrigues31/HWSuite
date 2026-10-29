@@ -9,6 +9,13 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Teste de estabilidade completo** (Bench › Estabilidade e `hwsuite stability`): processador em todas as threads, placa de vídeo e memória RAM sob carga ao mesmo tempo por 5, 10, 15, 30 ou 60 minutos, com todos os resultados conferidos:
+  - valores ao vivo (erros de cada parte, temperaturas, consumo e clocks) e gráficos ao final;
+  - qualquer erro de cálculo ou de memória reprova o teste; uma peça superaquecendo interrompe o teste para protegê-la;
+  - certificado para o cliente em PDF ou HTML (com os gráficos, os dados do atendimento e o veredito), salvo na pasta dos relatórios.
+- **Diagnóstico de memória RAM** (na mesma tela, e `hwsuite memtest`): preenche a maior parte da memória livre com padrões (sólido, xadrez, bit caminhante, endereço, aleatório), confere cada palavra lida, passada após passada, em todos os núcleos; aponta módulo com defeito ou XMP/EXPO instável, com o laudo em PDF.
+- **Histórico de atendimentos** (Relatório › Histórico): cada relatório salvo ganha um resumo ao lado (`.hwsuite.json`), e o histórico os lista por cliente e computador; dois atendimentos do mesmo computador podem ser comparados (temperaturas, desgaste e temperatura dos discos, espaço livre, problemas encontrados: o que melhorou e o que piorou).
+- **Relatório em lote** (Relatório › Histórico › Resumo, e `hwsuite batch <pasta>`): uma página com todos os computadores de um cliente (ou da pasta inteira), o estado de cada um e o que precisa de ação, em PDF ou HTML. Combina com o pendrive do técnico: roda-se `hwsuite maintenance` em cada máquina e o resumo junta tudo no final.
 - **Placas NVIDIA em detalhe** (pela biblioteca de gerenciamento da NVIDIA, que vem com o driver):
   - sensores novos: limite de potência em uso, estado de desempenho (P0–P12), uso do codificador e do decodificador de vídeo e **por que a placa está segurando o clock** (limite de potência, térmico, térmico de hardware, redução por hardware, freio de energia), cada um como um canal "Limit: ..." que fica em 100 enquanto ativo;
   - no Hardware: arquitetura (Ampere, Ada Lovelace...), núcleos CUDA, barramento de memória, clocks máximos, limite de potência (em uso, padrão e faixa ajustável), temperaturas em que a placa reduz o clock e desliga, versão de CUDA do driver e versão da BIOS de vídeo;

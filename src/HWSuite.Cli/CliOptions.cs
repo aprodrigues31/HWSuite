@@ -22,6 +22,9 @@ public enum CliCommand
     Net,
     Maintenance,
     Log,
+    Stability,
+    MemTest,
+    Batch,
 }
 
 public enum DriverAction
@@ -116,6 +119,17 @@ public sealed record CliOptions
     /// <summary>log: the CSV log to read.</summary>
     public string? LogFile { get; init; }
 
+    /// <summary>stability / memtest: minutes to run.</summary>
+    public double? Minutes { get; init; }
+
+    /// <summary>stability: leave the graphics card / the RAM out.</summary>
+    public bool NoGpu { get; init; }
+
+    public bool NoMemory { get; init; }
+
+    /// <summary>batch: the folder with the reports (default: the reports folder).</summary>
+    public string? Folder { get; init; }
+
     /// <summary>log: only sensors whose "hardware / name" contains this text.</summary>
     public string? Filter { get; init; }
 
@@ -148,6 +162,21 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("maintenance", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Maintenance };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("stability", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Stability };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("memtest", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.MemTest };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("batch", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Batch };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("log", StringComparison.OrdinalIgnoreCase))
@@ -236,6 +265,14 @@ public sealed record CliOptions
                 "--mlab" when options.Command == CliCommand.Net => options with { Mlab = true },
                 "--accept-mlab-policy" when options.Command == CliCommand.Net => options with { AcceptMlabPolicy = true },
                 "--ipv6" when options.Command == CliCommand.Net => options with { Ipv6 = true },
+                "--minutes" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Minutes = Math.Clamp(Seconds(arg), 1, 720) },
+                "--no-gpu" when options.Command == CliCommand.Stability => options with { NoGpu = true },
+                "--no-memory" when options.Command == CliCommand.Stability => options with { NoMemory = true },
+                "--client" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Client = Value(arg) },
+                "--equipment" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Equipment = Value(arg) },
+                "--order" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { OrderNumber = Value(arg) },
+                "--notes" when options.Command is CliCommand.Stability or CliCommand.MemTest => options with { Notes = Value(arg) },
+                _ when options.Command == CliCommand.Batch && options.Folder is null && !arg.StartsWith('-') => options with { Folder = arg },
                 "--filter" when options.Command == CliCommand.Log => options with { Filter = Value(arg) },
                 _ when options.Command == CliCommand.Log && options.LogFile is null && !arg.StartsWith('-') => options with { LogFile = arg },
                 "--client" when options.Command == CliCommand.Maintenance => options with { Client = Value(arg) },

@@ -209,7 +209,7 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "benchresults", "network", "report", "settings", "about"];
+        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "history", "settings", "about"];
         var saved = 0;
         try
         {
