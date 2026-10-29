@@ -8,10 +8,7 @@ using Microsoft.UI.Xaml.Media;
 
 namespace HWSuite.Gui.Pages;
 
-/// <summary>
-/// The disk half of the Benchmark page (CrystalDiskMark-style tests on a chosen drive) and the
-/// "Clear results" dialog, where the user picks which saved results (processor, graphics, disk) to delete.
-/// </summary>
+/// <summary>The disk part of the Benchmark page: CrystalDiskMark-style tests on a chosen drive.</summary>
 public sealed partial class BenchmarkPage
 {
     private static readonly int[] DiskSizesGb = [1, 4];
@@ -21,13 +18,11 @@ public sealed partial class BenchmarkPage
     private void InitializeDisk()
     {
         var s = App.Text;
-        ClearButton.Content = s["app.clear.button"];
         DiskHeader.Text = s["app.bench.diskSection"];
         DriveBox.Header = s["app.disk.drive"];
         DiskSizeBox.Header = s["app.disk.size"];
         DiskStartButton.Content = s["app.bench.start"];
         DiskNoteText.Text = s["app.disk.note"];
-        DiskHistoryTitle.Text = s["app.bench.history"];
         foreach (var gb in DiskSizesGb)
         {
             DiskSizeBox.Items.Add($"{gb} GB");
@@ -57,7 +52,6 @@ public sealed partial class BenchmarkPage
         DriveBox.SelectedIndex = _drives.Count == 0 ? -1 : Math.Max(0, _drives.ToList().FindIndex(d => d.Letter == previous));
         DiskStartButton.IsEnabled = _drives.Count > 0;
         DiskStatusText.Text = _drives.Count == 0 ? s["app.disk.none"] : "";
-        ShowDiskHistory();
     }
 
     private async void DiskStartButton_Click(object sender, RoutedEventArgs e)
@@ -107,8 +101,7 @@ public sealed partial class BenchmarkPage
             });
             ShowDiskTable(result);
             DiskBenchmarkHistory.Append(BenchmarkFiles.Disk, result);
-            DiskStatusText.Text = s.Format("bench.saved", BenchmarkFiles.Disk);
-            ShowDiskHistory();
+            DiskStatusText.Text = s["app.bench.savedHint"];
         }
         catch (OperationCanceledException)
         {
@@ -181,89 +174,5 @@ public sealed partial class BenchmarkPage
                 grid.Children.Add(text);
             }
         }
-    }
-
-    private void ShowDiskHistory()
-    {
-        var s = App.Text;
-        var c = s.Culture;
-        DiskHistoryList.Children.Clear();
-        IReadOnlyList<DiskBenchmarkResult> entries;
-        try
-        {
-            entries = DiskBenchmarkHistory.Read(BenchmarkFiles.Disk);
-        }
-        catch (IOException)
-        {
-            entries = [];
-        }
-
-        foreach (var entry in entries.Take(10))
-        {
-            var speeds = string.Join(" · ", entry.Tests.Select(t => $"{t.Name} {t.ReadMBps.ToString("N0", c)}/{t.WriteMBps.ToString("N0", c)}"));
-            DiskHistoryList.Children.Add(new TextBlock
-            {
-                Text = $"{entry.At.LocalDateTime.ToString("g", c)} · {entry.Drive} {entry.Model} · {speeds} MB/s",
-                TextWrapping = TextWrapping.Wrap,
-                IsTextSelectionEnabled = true,
-            });
-        }
-
-        DiskHistoryTitle.Visibility = entries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    /// <summary>Asks which results to delete (nothing is checked at first) and deletes only those.</summary>
-    private async void ClearButton_Click(object sender, RoutedEventArgs e)
-    {
-        var s = App.Text;
-        var cpu = new CheckBox { Content = s["app.clear.cpu"] };
-        var gpu = new CheckBox { Content = s["app.clear.gpu"] };
-        var disk = new CheckBox { Content = s["app.clear.disk"] };
-        var panel = new StackPanel { Spacing = 4 };
-        panel.Children.Add(new TextBlock { Text = s["app.clear.message"], TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) });
-        panel.Children.Add(cpu);
-        panel.Children.Add(gpu);
-        panel.Children.Add(disk);
-
-        var dialog = new ContentDialog
-        {
-            XamlRoot = XamlRoot,
-            Title = s["app.clear.title"],
-            Content = panel,
-            PrimaryButtonText = s["app.clear.confirm"],
-            CloseButtonText = s["app.clear.cancel"],
-            DefaultButton = ContentDialogButton.Close,
-            IsPrimaryButtonEnabled = false,
-        };
-
-        void Update(object? o, RoutedEventArgs a) => dialog.IsPrimaryButtonEnabled = cpu.IsChecked == true || gpu.IsChecked == true || disk.IsChecked == true;
-        foreach (var box in new[] { cpu, gpu, disk })
-        {
-            box.Checked += Update;
-            box.Unchecked += Update;
-        }
-
-        if (await dialog.ShowAsync() != ContentDialogResult.Primary)
-        {
-            return;
-        }
-
-        var kinds = (cpu.IsChecked == true ? BenchmarkKinds.Cpu : BenchmarkKinds.None)
-            | (gpu.IsChecked == true ? BenchmarkKinds.Gpu : BenchmarkKinds.None)
-            | (disk.IsChecked == true ? BenchmarkKinds.Disk : BenchmarkKinds.None);
-        try
-        {
-            BenchmarkFiles.Clear(kinds);
-            ClearStatus.Text = s["app.clear.done"];
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            ClearStatus.Text = ex.Message;
-        }
-
-        ClearStatus.Visibility = Visibility.Visible;
-        ShowHistory();
-        ShowGpuHistory();
-        ShowDiskHistory();
     }
 }

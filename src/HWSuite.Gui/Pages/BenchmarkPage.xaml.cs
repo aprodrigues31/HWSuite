@@ -40,7 +40,6 @@ public sealed partial class BenchmarkPage : Page
         SingleLabel.Text = s["app.bench.single"];
         MultiLabel.Text = s.Format("app.bench.multi", Environment.ProcessorCount);
         NoteText.Text = s["bench.note"];
-        HistoryTitle.Text = s["app.bench.history"];
         foreach (var seconds in Durations)
         {
             DurationBox.Items.Add($"{seconds} s");
@@ -55,7 +54,6 @@ public sealed partial class BenchmarkPage : Page
         {
             s_processor ??= await Task.Run(ProviderCatalog.ProcessorName);
             ProcessorText.Text = $"{s_processor} · {CpuBenchmark.Version}";
-            ShowHistory();
             ShowComparison(_lastResult);
             await LoadGpuAsync();
             await LoadDisksAsync();
@@ -97,8 +95,7 @@ public sealed partial class BenchmarkPage : Page
             _lastResult = result;
             ShowComparison(result);
             BenchmarkHistory.Append(path, result, s_processor);
-            StatusText.Text = s.Format("bench.saved", path);
-            ShowHistory();
+            StatusText.Text = s["app.bench.savedHint"];
         }
         catch (OperationCanceledException)
         {
@@ -184,34 +181,6 @@ public sealed partial class BenchmarkPage : Page
             PowerRails.Track(_rails, latest);
             RailsText.Text = _rails.Count > 0 ? s["app.psu.stressRails"] + " " + PowerRails.Summary(_rails, s) : "";
         }
-    }
-
-    private void ShowHistory()
-    {
-        var s = App.Text;
-        HistoryList.Children.Clear();
-        IReadOnlyList<BenchmarkEntry> entries;
-        try
-        {
-            entries = BenchmarkHistory.Read(HistoryPath());
-        }
-        catch (IOException)
-        {
-            entries = [];
-        }
-
-        foreach (var entry in entries.Take(10))
-        {
-            HistoryList.Children.Add(new TextBlock
-            {
-                Text = $"{entry.At.LocalDateTime.ToString("g", s.Culture)} · {s["app.bench.single"]}: {CpuBenchmark.Points(entry.SingleThread, s.Culture)}"
-                    + $" · {s.Format("app.bench.multi", entry.Threads)}: {CpuBenchmark.Points(entry.MultiThread, s.Culture)} · {entry.Processor} · {entry.Version}",
-                TextWrapping = TextWrapping.Wrap,
-                IsTextSelectionEnabled = true,
-            });
-        }
-
-        HistoryTitle.Visibility = entries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string HistoryPath() => BenchmarkFiles.Cpu;

@@ -56,10 +56,22 @@
                         <FontIcon Glyph="&#xE7F8;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
-                <NavigationViewItem x:Name="NavBench" Tag="bench">
+                <NavigationViewItem x:Name="NavBench" Tag="bench" SelectsOnInvoked="False" IsExpanded="True">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xEC4A;" />
                     </NavigationViewItem.Icon>
+                    <NavigationViewItem.MenuItems>
+                        <NavigationViewItem x:Name="NavBenchRun" Tag="bench">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE768;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                        <NavigationViewItem x:Name="NavBenchResults" Tag="benchresults">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE9D2;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
+                    </NavigationViewItem.MenuItems>
                 </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>

@@ -9,6 +9,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ## [Não lançado]
 
 ### Adicionado
+- **Benchmark → Resultados:** o Benchmark ganhou dois subitens no menu, **Testes** (onde se rodam os testes) e **Resultados**, uma página com abas Processador, Placa de vídeo e Disco. Cada aba mostra uma tabela com cabeçalho, uma linha por execução (da mais recente para a mais antiga), números alinhados, uma barra que compara cada execução com a melhor e a melhor destacada. Os botões "Limpar resultados…" e "Abrir pasta" ficam nessa página; o histórico em texto corrido saiu da página de testes.
 - **Benchmark de disco** (estilo CrystalDiskMark) na página Benchmark e em `hwsuite bench --disk C: [--size GB]`: SEQ1M Q8T1, SEQ1M Q1T1, RND4K Q32T1 e RND4K Q1T1, leitura e gravação em MB/s e IOPS nos testes aleatórios. Ignora o cache do Windows (mede o disco, não a memória), usa um arquivo temporário de 1 ou 4 GB com dados aleatórios que é apagado ao final, e mostra o modelo do disco por trás de cada letra. Resultados em `Documentos\HWSuite\disk-benchmark.csv`.
 - **Limpar resultados:** botão na página Benchmark que abre uma janela para escolher o que apagar (processador, placa de vídeo, disco, em qualquer combinação); nada vem marcado.
 

@@ -31,7 +31,6 @@ public sealed partial class BenchmarkPage
         GpuErrorsLabel.Text = s["app.stress.errors"];
         GpuTempLabel.Text = s["app.gpustress.temperature"];
         GpuNoteText.Text = s["gpubench.note"];
-        GpuHistoryTitle.Text = s["app.bench.history"];
         foreach (var seconds in Durations)
         {
             GpuDurationBox.Items.Add($"{seconds} s");
@@ -59,7 +58,6 @@ public sealed partial class BenchmarkPage
         {
             GpuStartButton.IsEnabled = GpuStressButton.IsEnabled = Adapter is not null; // a running test keeps its buttons as they are
         }
-        ShowGpuHistory();
     }
 
     private async void GpuStartButton_Click(object sender, RoutedEventArgs e)
@@ -95,8 +93,7 @@ public sealed partial class BenchmarkPage
             GpuResultValue.Text = s.Format("app.gpubench.value", GpuBenchmark.Gflops(result.Gflops, s.Culture));
             var path = GpuHistoryPath();
             GpuBenchmarkHistory.Append(path, result);
-            GpuStatusText.Text = s.Format("bench.saved", path);
-            ShowGpuHistory();
+            GpuStatusText.Text = s["app.bench.savedHint"];
         }
         catch (OperationCanceledException)
         {
@@ -194,33 +191,6 @@ public sealed partial class BenchmarkPage
             PowerRails.Track(_gpuRails, latest);
             GpuRailsText.Text = _gpuRails.Count > 0 ? s["app.psu.stressRails"] + " " + PowerRails.Summary(_gpuRails, s) : "";
         }
-    }
-
-    private void ShowGpuHistory()
-    {
-        var s = App.Text;
-        GpuHistoryList.Children.Clear();
-        IReadOnlyList<GpuBenchmarkResult> entries;
-        try
-        {
-            entries = GpuBenchmarkHistory.Read(GpuHistoryPath());
-        }
-        catch (IOException)
-        {
-            entries = [];
-        }
-
-        foreach (var entry in entries.Take(10))
-        {
-            GpuHistoryList.Children.Add(new TextBlock
-            {
-                Text = $"{entry.At.LocalDateTime.ToString("g", s.Culture)} · {s.Format("app.gpubench.value", GpuBenchmark.Gflops(entry.Gflops, s.Culture))} · {entry.Adapter} · {entry.Version}",
-                TextWrapping = TextWrapping.Wrap,
-                IsTextSelectionEnabled = true,
-            });
-        }
-
-        GpuHistoryTitle.Visibility = entries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private static string GpuHistoryPath() => BenchmarkFiles.Gpu;
