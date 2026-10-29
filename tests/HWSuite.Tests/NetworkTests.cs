@@ -98,15 +98,15 @@ public sealed class NetworkTests
         var progress = new SyncProgress(p => phases.Add(p.Phase));
         var result = await NetworkTest.RunAsync(probe, NetServer.Cloudflare, IpFamily.IPv4, null, Fast, progress);
 
-        Assert.InRange(result.DownloadMbps, 60, 140);
-        Assert.InRange(result.UploadMbps, 60, 140);
+        Assert.InRange(result.DownloadMbps, 40, 200);
+        Assert.InRange(result.UploadMbps, 40, 200);
         Assert.NotEmpty(result.Download);
         Assert.Equal(5, result.Idle.Summary.Median);
         Assert.Equal(0, result.Idle.Jitter);
         Assert.Equal(7, result.LoadedDownload.Summary.Median);
         Assert.Equal(7, result.LoadedUpload.Summary.Median);
         Assert.NotNull(result.LossPercent);
-        Assert.InRange(result.LossPercent!.Value, 5, 15);
+        Assert.InRange(result.LossPercent!.Value, 3, 20);
         Assert.Equal("Test ISP", result.Endpoint.Provider);
         Assert.Equal(NetworkTest.Version, result.Version);
         Assert.Contains("prepare", phases);

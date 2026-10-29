@@ -117,6 +117,8 @@ jobs:
           "### Teste de Internet no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           Get-Content artifacts/reports/net.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          $lines = (Get-Content artifacts/reports/net.txt | Where-Object { $_.Trim() }) -join ' | '
+          Write-Output "::notice title=Internet test::$lines"
           if ($code -ne 0) { Write-Output "::warning title=Internet test::exit code $code" }
           exit $code
 
