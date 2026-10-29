@@ -71,55 +71,64 @@ jobs:
       - name: Sample reports on the runner
         shell: pwsh
         run: |
-          New-Item -ItemType Directory -Force artifacts/reports | Out-Null
+          New-Item -ItemType Directory -Force artifacts/ci-runner-samples | Out-Null
           foreach ($format in 'txt', 'html', 'json') {
-            dotnet run --project src/HWSuite.Cli -c Release --no-build -- report --format $format --out "artifacts/reports/runner.$format" --redact --lang pt-BR
+            dotnet run --project src/HWSuite.Cli -c Release --no-build -- report --format $format --out "artifacts/ci-runner-samples/runner.$format" --redact --lang pt-BR
             # 3 = report written but a provider failed; shown in the report diagnostics, not a CI failure.
             if ($LASTEXITCODE -notin 0, 3) { exit $LASTEXITCODE }
           }
-          Get-Content artifacts/reports/runner.txt
+          Get-Content artifacts/ci-runner-samples/runner.txt
           # Also show the text report on the run page (job summary).
           "### Relatório de exemplo (runner Windows)`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          Get-Content artifacts/reports/runner.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/ci-runner-samples/runner.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           exit 0
 
       - name: Sensors smoke test on the runner
         shell: pwsh
         run: |
-          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --lang pt-BR | Tee-Object artifacts/reports/sensors.txt
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --lang pt-BR | Tee-Object artifacts/ci-runner-samples/sensors.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --log artifacts/reports/sensors.csv --interval 1 --duration 4
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- sensors --log artifacts/ci-runner-samples/sensors.csv --interval 1 --duration 4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          $rows = (Get-Content artifacts/reports/sensors.csv).Count
+          $rows = (Get-Content artifacts/ci-runner-samples/sensors.csv).Count
           Write-Host "CSV lines: $rows"
           if ($rows -lt 3) { throw "Sensor log has too few rows ($rows)" }
           "### Sensores no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          Get-Content artifacts/reports/sensors.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/ci-runner-samples/sensors.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
 
       - name: Processor benchmark on the runner
         shell: pwsh
         run: |
           # A real measurement for the reference table (runner CPUs are cloud vCPUs, labelled as such).
-          dotnet run --project src/HWSuite.Cli -c Release --no-build -- bench --duration 5 --lang pt-BR | Tee-Object artifacts/reports/bench.txt
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- bench --duration 5 --lang pt-BR | Tee-Object artifacts/ci-runner-samples/bench.txt
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Copy-Item "$([Environment]::GetFolderPath('MyDocuments'))\HWSuite\benchmark.csv" artifacts/reports/benchmark.csv
+          Copy-Item "$([Environment]::GetFolderPath('MyDocuments'))\HWSuite\benchmark.csv" artifacts/ci-runner-samples/benchmark.csv
           "### Benchmark do processador no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          Get-Content artifacts/reports/bench.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/ci-runner-samples/bench.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
+      - name: Maintenance report on the runner
+        shell: pwsh
+        run: |
+          # Exit code 1 only means "the machine has problems" (a virtual runner may); anything else is a failure.
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- maintenance --client "Runner do CI" --order CI-${{ github.run_number }} --services "Teste automatico" --load 10 --lang pt-BR -o artifacts/ci-runner-samples/maintenance-runner.html | Tee-Object artifacts/ci-runner-samples/maintenance.txt
+          if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
+          if (-not (Select-String -Quiet -Path artifacts/ci-runner-samples/maintenance-runner.html -Pattern 'CI-${{ github.run_number }}')) { throw 'order number missing from the maintenance report' }
+          exit 0
 
       - name: Internet test on the runner (Cloudflare)
         # Depends on the runner's network and a public server: informative, never fails the build.
         continue-on-error: true
         shell: pwsh
         run: |
-          dotnet run --project src/HWSuite.Cli -c Release --no-build -- net --lang pt-BR | Tee-Object artifacts/reports/net.txt
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- net --lang pt-BR | Tee-Object artifacts/ci-runner-samples/net.txt
           $code = $LASTEXITCODE
           "### Teste de Internet no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          Get-Content artifacts/reports/net.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/ci-runner-samples/net.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
-          $lines = (Get-Content artifacts/reports/net.txt | Where-Object { $_.Trim() }) -join ' | '
+          $lines = (Get-Content artifacts/ci-runner-samples/net.txt | Where-Object { $_.Trim() }) -join ' | '
           Write-Output "::notice title=Internet test::$lines"
           if ($code -ne 0) { Write-Output "::warning title=Internet test::exit code $code" }
           exit $code
@@ -182,7 +191,7 @@ jobs:
           #    The runner renders WinUI in software and sometimes stalls the UI thread inside native
           #    code; a stall is diagnosed (managed + native stacks) and retried once, with a warning.
           function Get-Stacks($processId, $name) {
-            New-Item -ItemType Directory -Force artifacts/reports | Out-Null
+            New-Item -ItemType Directory -Force artifacts/ci-runner-samples | Out-Null
             $dump = Join-Path $env:RUNNER_TEMP "$name.dmp"
             $managed = '(no managed stacks)'; $native = '(no native stacks)'
             try {
@@ -195,8 +204,8 @@ jobs:
             if ($cdb -and (Test-Path $dump)) {
               $native = (& $cdb -z $dump -c '.symfix; .reload; ~0k 40; ~*k 12; q' 2>&1 | Out-String)
             } elseif (-not $cdb) { $native = '(cdb.exe not found on the runner)' }
-            $managed | Out-File -Encoding utf8 "artifacts/reports/$name-managed.txt"
-            $native | Out-File -Encoding utf8 "artifacts/reports/$name-native.txt"
+            $managed | Out-File -Encoding utf8 "artifacts/ci-runner-samples/$name-managed.txt"
+            $native | Out-File -Encoding utf8 "artifacts/ci-runner-samples/$name-native.txt"
             return $native
           }
 
@@ -221,7 +230,7 @@ jobs:
             "### Autoteste do aplicativo travou (tentativa $attempt)`n" + '```text' + "`n$text`n" + '```' + "`n#### Pilha nativa da thread de interface`n" + '```text' + "`n$mainThread`n" + '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
             $sensorsOk = $text -match 'error: none' -and $text -notmatch 'updates: 0\b'
             if (-not $sensorsOk) { Fail "Self-test did not finish and the sensors were not healthy" }
-            Write-Host "::warning title=Interface travou no runner::A thread de interface do WinUI parou na tentativa $attempt com os sensores funcionando; pilhas em artifacts/reports/gui-hang-$attempt-*.txt"
+            Write-Host "::warning title=Interface travou no runner::A thread de interface do WinUI parou na tentativa $attempt com os sensores funcionando; pilhas em artifacts/ci-runner-samples/gui-hang-$attempt-*.txt"
           }
           if (-not $passed) { Fail "Self-test hung twice" }
 
@@ -318,7 +327,7 @@ jobs:
           name: hwsuite-${{ steps.version.outputs.label }}-win-x64
           path: |
             artifacts/publish/hwsuite.exe
-            artifacts/reports/
+            artifacts/ci-runner-samples/
             artifacts/test-results/
           if-no-files-found: warn
 
