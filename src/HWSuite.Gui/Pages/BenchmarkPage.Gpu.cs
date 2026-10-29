@@ -223,6 +223,5 @@ public sealed partial class BenchmarkPage
         GpuHistoryTitle.Visibility = entries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private static string GpuHistoryPath() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "gpu-benchmark.csv");
+    private static string GpuHistoryPath() => BenchmarkFiles.Gpu;
 }

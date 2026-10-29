@@ -95,6 +95,5 @@ internal static class GpuBenchCommand
     private static string Line(GpuStressStatus st, Strings s) =>
         s.Format("gpustress.line", BenchCommand.Elapsed(st.Elapsed), GpuBenchmark.Gflops(st.Gflops, s.Culture), st.Errors.ToString("N0", s.Culture), st.Batches.ToString("N0", s.Culture));
 
-    internal static string HistoryPath() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "gpu-benchmark.csv");
+    internal static string HistoryPath() => BenchmarkFiles.Gpu;
 }

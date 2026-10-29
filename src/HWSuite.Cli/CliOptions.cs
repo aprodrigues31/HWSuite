@@ -58,6 +58,12 @@ public sealed record CliOptions
     /// <summary>bench: test the graphics card instead of the processor.</summary>
     public bool Gpu { get; init; }
 
+    /// <summary>bench: drive letter to test ("C:"), for the disk benchmark.</summary>
+    public string? Disk { get; init; }
+
+    /// <summary>bench --disk: test file size in GB (default 1).</summary>
+    public int DiskSizeGb { get; init; } = 1;
+
     /// <summary>Show the chip's own numbered motherboard inputs, without board profiles.</summary>
     public bool Raw { get; init; }
 
@@ -129,6 +135,22 @@ public sealed record CliOptions
             return args[++i];
         }
 
+        int SizeGb(string name)
+        {
+            var text = Value(name);
+            return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var gb) && gb is >= 1 and <= 64
+                ? gb
+                : throw new CliUsageException("cli.badNumber", name, text);
+        }
+
+        static string DriveLetter(string text)
+        {
+            var t = text.Trim().TrimEnd('\\', '/').ToUpperInvariant();
+            return t.Length is 1 or 2 && char.IsAsciiLetter(t[0]) && (t.Length == 1 || t[1] == ':')
+                ? $"{t[0]}:"
+                : throw new CliUsageException("cli.unknownArgument", text);
+        }
+
         double Seconds(string name)
         {
             var text = Value(name);
@@ -156,6 +178,8 @@ public sealed record CliOptions
                 "--raw" when options.Command == CliCommand.Sensors => options with { Raw = true },
                 "--stress" when options.Command == CliCommand.Bench => options with { Stress = true },
                 "--gpu" when options.Command == CliCommand.Bench => options with { Gpu = true },
+                "--disk" when options.Command == CliCommand.Bench => options with { Disk = DriveLetter(Value(arg)) },
+                "--size" when options.Command == CliCommand.Bench => options with { DiskSizeGb = SizeGb(arg) },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
                 "--duration" when options.Command is CliCommand.Sensors or CliCommand.Bench => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },

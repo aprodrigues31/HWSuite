@@ -8,6 +8,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Benchmark de disco** (estilo CrystalDiskMark) na página Benchmark e em `hwsuite bench --disk C: [--size GB]`: SEQ1M Q8T1, SEQ1M Q1T1, RND4K Q32T1 e RND4K Q1T1, leitura e gravação em MB/s e IOPS nos testes aleatórios. Ignora o cache do Windows (mede o disco, não a memória), usa um arquivo temporário de 1 ou 4 GB com dados aleatórios que é apagado ao final, e mostra o modelo do disco por trás de cada letra. Resultados em `Documentos\HWSuite\disk-benchmark.csv`.
+- **Limpar resultados:** botão na página Benchmark que abre uma janela para escolher o que apagar (processador, placa de vídeo, disco, em qualquer combinação); nada vem marcado.
+
 ## [0.15.0] - 2026-10-28
 
 ### Alterado

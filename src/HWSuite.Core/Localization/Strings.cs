@@ -190,6 +190,33 @@ public sealed class Strings
         ["settings.language"] = "Language",
         ["settings.language.system"] = "Same as Windows",
         ["settings.language.restart"] = "Restart HWSuite to apply the new language.",
+        ["app.bench.diskSection"] = "Disk",
+        ["app.disk.drive"] = "Drive",
+        ["app.disk.size"] = "Test file",
+        ["app.disk.test"] = "Test",
+        ["app.disk.read"] = "Read (MB/s)",
+        ["app.disk.write"] = "Write (MB/s)",
+        ["app.disk.iops"] = "IOPS read / write",
+        ["app.disk.none"] = "No drive available.",
+        ["app.disk.noSpace"] = "Not enough free space on {0} for a {1} test file.",
+        ["app.disk.note"] = "Measures the drive itself (Windows file cache bypassed): sequential 1 MiB blocks with 8 and 1 requests in flight, random 4 KiB blocks with 32 and 1. RND4K Q1T1 is closest to everyday use (opening programs, booting). A temporary file is written and deleted at the end; a run writes a few GB, irrelevant for an SSD's endurance.",
+        ["app.disk.phase.prepare"] = "Preparing the test file...",
+        ["app.disk.phase"] = "{0}: {1}...",
+        ["app.disk.read.short"] = "reading",
+        ["app.disk.write.short"] = "writing",
+        ["app.disk.driveItem"] = "{0} {1} · {2} free of {3}",
+        ["app.clear.button"] = "Clear results...",
+        ["app.clear.title"] = "Clear saved results",
+        ["app.clear.message"] = "Choose which results to delete. This cannot be undone.",
+        ["app.clear.cpu"] = "Processor",
+        ["app.clear.gpu"] = "Graphics card",
+        ["app.clear.disk"] = "Disk",
+        ["app.clear.confirm"] = "Clear",
+        ["app.clear.cancel"] = "Cancel",
+        ["app.clear.done"] = "Results cleared.",
+        ["diskbench.title"] = "HWSuite disk benchmark ({0}) · {1} {2} · test file {3}",
+        ["diskbench.line"] = "  {0,-12} read {1,9} MB/s   write {2,9} MB/s",
+        ["diskbench.iops"] = "   ({0} / {1} IOPS)",
         ["app.compare.title"] = "Comparison with other processors",
         ["app.compare.processor"] = "Processor",
         ["app.compare.you"] = "{0} (this run)",
@@ -399,6 +426,8 @@ public sealed class Strings
               hwsuite bench --stress        Stability test on all threads until Ctrl+C, checking every result.
               hwsuite bench --gpu [--stress]
                                             The same for the graphics card (Direct3D 11 compute shader).
+              hwsuite bench --disk <C:> [--size <GB>] [--duration <s>]
+                                            Disk benchmark (SEQ1M Q8T1/Q1T1, RND4K Q32T1/Q1T1).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -610,6 +639,33 @@ public sealed class Strings
         ["settings.language"] = "Idioma",
         ["settings.language.system"] = "Igual ao Windows",
         ["settings.language.restart"] = "Reinicie o HWSuite para aplicar o novo idioma.",
+        ["app.bench.diskSection"] = "Disco",
+        ["app.disk.drive"] = "Unidade",
+        ["app.disk.size"] = "Arquivo de teste",
+        ["app.disk.test"] = "Teste",
+        ["app.disk.read"] = "Leitura (MB/s)",
+        ["app.disk.write"] = "Gravação (MB/s)",
+        ["app.disk.iops"] = "IOPS leitura / gravação",
+        ["app.disk.none"] = "Nenhuma unidade disponível.",
+        ["app.disk.noSpace"] = "Não há espaço livre suficiente em {0} para um arquivo de teste de {1}.",
+        ["app.disk.note"] = "Mede o próprio disco (sem o cache de arquivos do Windows): blocos sequenciais de 1 MiB com 8 e 1 pedidos simultâneos, blocos aleatórios de 4 KiB com 32 e 1. O RND4K Q1T1 é o mais próximo do uso do dia a dia (abrir programas, iniciar o Windows). Um arquivo temporário é gravado e apagado ao final; cada execução grava alguns GB, irrelevante para a vida útil de um SSD.",
+        ["app.disk.phase.prepare"] = "Preparando o arquivo de teste...",
+        ["app.disk.phase"] = "{0}: {1}...",
+        ["app.disk.read.short"] = "leitura",
+        ["app.disk.write.short"] = "gravação",
+        ["app.disk.driveItem"] = "{0} {1} · {2} livres de {3}",
+        ["app.clear.button"] = "Limpar resultados...",
+        ["app.clear.title"] = "Limpar resultados salvos",
+        ["app.clear.message"] = "Escolha quais resultados apagar. Não é possível desfazer.",
+        ["app.clear.cpu"] = "Processador",
+        ["app.clear.gpu"] = "Placa de vídeo",
+        ["app.clear.disk"] = "Disco",
+        ["app.clear.confirm"] = "Limpar",
+        ["app.clear.cancel"] = "Cancelar",
+        ["app.clear.done"] = "Resultados apagados.",
+        ["diskbench.title"] = "Benchmark de disco do HWSuite ({0}) · {1} {2} · arquivo de teste de {3}",
+        ["diskbench.line"] = "  {0,-12} leitura {1,9} MB/s   gravação {2,9} MB/s",
+        ["diskbench.iops"] = "   ({0} / {1} IOPS)",
         ["app.compare.title"] = "Comparação com outros processadores",
         ["app.compare.processor"] = "Processador",
         ["app.compare.you"] = "{0} (esta execução)",
@@ -819,6 +875,8 @@ public sealed class Strings
               hwsuite bench --stress        Teste de estabilidade em todas as threads até Ctrl+C, conferindo cada resultado.
               hwsuite bench --gpu [--stress]
                                             O mesmo para a placa de vídeo (compute shader do Direct3D 11).
+              hwsuite bench --disk <C:> [--size <GB>] [--duration <s>]
+                                            Benchmark de disco (SEQ1M Q8T1/Q1T1, RND4K Q32T1/Q1T1).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

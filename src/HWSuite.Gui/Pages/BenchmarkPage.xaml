@@ -5,7 +5,11 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer>
         <StackPanel Padding="20,12,20,16" Spacing="12" MaxWidth="820" HorizontalAlignment="Left">
-            <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+            <Grid>
+                <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+                <Button x:Name="ClearButton" HorizontalAlignment="Right" VerticalAlignment="Center" Click="ClearButton_Click" />
+            </Grid>
+            <TextBlock x:Name="ClearStatus" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Visibility="Collapsed" />
             <TextBlock x:Name="CpuHeader" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock x:Name="ProcessorText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
@@ -140,6 +144,27 @@
             <TextBlock x:Name="GpuNoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             <TextBlock x:Name="GpuHistoryTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
             <StackPanel x:Name="GpuHistoryList" Spacing="2" />
+
+            <TextBlock x:Name="DiskHeader" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,24,0,0" />
+            <StackPanel Orientation="Horizontal" Spacing="12">
+                <ComboBox x:Name="DriveBox" MinWidth="380" />
+                <ComboBox x:Name="DiskSizeBox" MinWidth="120" />
+                <Button x:Name="DiskStartButton" Click="DiskStartButton_Click" Style="{StaticResource AccentButtonStyle}" MinWidth="120" VerticalAlignment="Bottom" IsEnabled="False" />
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <ProgressBar x:Name="DiskProgress" Minimum="0" Maximum="1" Value="0" />
+                <TextBlock x:Name="DiskStatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Border Padding="16,12" CornerRadius="8" BorderThickness="1"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid x:Name="DiskGrid" ColumnSpacing="24" RowSpacing="6" />
+            </Border>
+
+            <TextBlock x:Name="DiskNoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            <TextBlock x:Name="DiskHistoryTitle" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,8,0,0" />
+            <StackPanel x:Name="DiskHistoryList" Spacing="2" />
         </StackPanel>
     </ScrollViewer>
 </Page>

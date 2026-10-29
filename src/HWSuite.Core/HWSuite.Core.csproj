@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <RootNamespace>HWSuite.Core</RootNamespace>
+    <!-- Aligned native buffers for unbuffered disk I/O (DiskBenchmark). -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Description>Hardware model, collection pipeline, decoders (CPUID, SMBIOS, storage) and report writers.</Description>
   </PropertyGroup>
   <ItemGroup>

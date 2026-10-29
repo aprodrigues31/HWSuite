@@ -50,6 +50,7 @@ public sealed partial class BenchmarkPage : Page
         CpuHeader.Text = s["app.bench.cpuSection"];
         InitializeComparison();
         InitializeGpu();
+        InitializeDisk();
         Loaded += async (_, _) =>
         {
             s_processor ??= await Task.Run(ProviderCatalog.ProcessorName);
@@ -57,6 +58,7 @@ public sealed partial class BenchmarkPage : Page
             ShowHistory();
             ShowComparison(_lastResult);
             await LoadGpuAsync();
+            await LoadDisksAsync();
         };
     }
 
@@ -212,6 +214,5 @@ public sealed partial class BenchmarkPage : Page
         HistoryTitle.Visibility = entries.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private static string HistoryPath() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "benchmark.csv");
+    private static string HistoryPath() => BenchmarkFiles.Cpu;
 }

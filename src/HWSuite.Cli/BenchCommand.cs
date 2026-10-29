@@ -19,6 +19,11 @@ internal static class BenchCommand
             return GpuBenchCommand.Run(options, s);
         }
 
+        if (options.Disk is not null)
+        {
+            return DiskBenchCommand.Run(options, s);
+        }
+
         if (options.Stress)
         {
             return Stress(s);
@@ -144,8 +149,7 @@ internal static class BenchCommand
     /// <summary>"1:05:09" (hours:minutes:seconds).</summary>
     internal static string Elapsed(TimeSpan t) => $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}";
 
-    internal static string HistoryPath() =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "benchmark.csv");
+    internal static string HistoryPath() => BenchmarkFiles.Cpu;
 
     /// <summary>Progress that reports on the calling thread (Progress&lt;T&gt; would post to the thread pool).</summary>
     private sealed class SyncProgress<T>(Action<T> report) : IProgress<T>
