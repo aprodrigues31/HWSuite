@@ -21,7 +21,7 @@ public sealed partial class SensorsPage : Page
     private static readonly SensorKind[] KindOrder =
     [
         SensorKind.Temperature, SensorKind.Voltage, SensorKind.Fan, SensorKind.Power, SensorKind.Clock, SensorKind.Load,
-        SensorKind.Current, SensorKind.Control, SensorKind.Level, SensorKind.Data, SensorKind.SmallData, SensorKind.Throughput,
+        SensorKind.Current, SensorKind.Control, SensorKind.Level, SensorKind.Data, SensorKind.Throughput,
         SensorKind.Frequency, SensorKind.Flow, SensorKind.Factor, SensorKind.Energy, SensorKind.TimeSpan, SensorKind.Timing,
         SensorKind.Noise, SensorKind.Humidity, SensorKind.Conductivity, SensorKind.Other,
     ];
@@ -193,6 +193,9 @@ public sealed partial class SensorsPage : Page
         Filters.Children.Add(_allKinds);
     }
 
+    /// <summary>GB and MB amounts share the "Data" chip.</summary>
+    private static SensorKind ChipKind(SensorKind kind) => kind == SensorKind.SmallData ? SensorKind.Data : kind;
+
     private ToggleButton KindChip(SensorKind? kind)
     {
         var s = App.Text;
@@ -219,7 +222,7 @@ public sealed partial class SensorsPage : Page
     /// </summary>
     private void RefreshKindChips()
     {
-        var present = _rows.Values.Where(r => Shown(r.Category)).Select(r => r.Reading.Kind).ToHashSet();
+        var present = _rows.Values.Where(r => Shown(r.Category)).Select(r => ChipKind(r.Reading.Kind)).ToHashSet();
         if (_filter is { } current && !present.Contains(current))
         {
             _filter = null;
@@ -257,7 +260,7 @@ public sealed partial class SensorsPage : Page
 
     private bool Visible(Row row) =>
         Shown(row.Category)
-        && (_filter is null || row.Reading.Kind == _filter)
+        && (_filter is null || ChipKind(row.Reading.Kind) == _filter)
         && (_search.Length == 0
             || row.Reading.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
             || row.Reading.Hardware.Contains(_search, StringComparison.OrdinalIgnoreCase));

@@ -77,6 +77,12 @@ public sealed class SensorMonitor : IDisposable
     public void Start()
     {
         Stop();
+        foreach (var snapshot in _seed)
+        {
+            History.Add(snapshot);
+            Timeline.Add(snapshot);
+        }
+
         Access = AccessStatus.Detect();
         var access = Access;
         _ = Task.Run(() =>
@@ -97,15 +103,16 @@ public sealed class SensorMonitor : IDisposable
         });
     }
 
-    /// <summary>Pre-fills the history (demo mode) so charts start full.</summary>
+    private IReadOnlyList<SensorSnapshot> _seed = [];
+
+    /// <summary>
+    /// Pre-fills the history (demo mode) so charts start full. Call before <see cref="Start"/>: the samples go in
+    /// after the history is reset and before the first live read, so the timeline stays in time order.
+    /// </summary>
     public void Seed(IEnumerable<SensorSnapshot> snapshots)
     {
         ArgumentNullException.ThrowIfNull(snapshots);
-        foreach (var snapshot in snapshots)
-        {
-            History.Add(snapshot);
-            Timeline.Add(snapshot);
-        }
+        _seed = [.. snapshots];
     }
 
     public void Stop()

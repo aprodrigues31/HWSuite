@@ -354,7 +354,10 @@ public sealed partial class ChartsPage : Page
         }
 
         row.Children.Add(new Rectangle { Width = 12, Height = 3, Fill = new SolidColorBrush(ColorOf(series.Sensor.Key)), VerticalAlignment = VerticalAlignment.Center });
-        var name = new TextBlock { Text = Short(series.Sensor), FontSize = 13, Foreground = HudUi.Text, TextTrimming = TextTrimming.CharacterEllipsis, VerticalAlignment = VerticalAlignment.Center };
+        // Sensor name first (what tells the lines apart), the device under it.
+        var name = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
+        name.Children.Add(new TextBlock { Text = series.Sensor.Name, FontSize = 13, Foreground = HudUi.Text, TextTrimming = TextTrimming.CharacterEllipsis });
+        name.Children.Add(new TextBlock { Text = series.Sensor.Hardware.Split('›').Last().Trim(), FontSize = 11, Foreground = HudUi.Tag, TextTrimming = TextTrimming.CharacterEllipsis });
         ToolTipService.SetToolTip(name, series.Sensor.Key);
         Grid.SetColumn(name, 1);
         row.Children.Add(name);

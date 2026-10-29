@@ -55,6 +55,16 @@ public sealed class ChartsTests
     }
 
     [Fact]
+    public void Timeline_ignores_samples_older_than_the_last()
+    {
+        var timeline = new SensorTimeline();
+        timeline.Add(Snap(10, ("Temp", SensorKind.Temperature, 50)));
+        timeline.Add(Snap(2, ("Temp", SensorKind.Temperature, 40))); // a late seed after a live read
+        timeline.Add(Snap(11, ("Temp", SensorKind.Temperature, 51)));
+        Assert.Equal([T0.AddSeconds(10), T0.AddSeconds(11)], timeline.Snapshot().Times);
+    }
+
+    [Fact]
     public void Last_window_and_selection()
     {
         var timeline = new SensorTimeline();

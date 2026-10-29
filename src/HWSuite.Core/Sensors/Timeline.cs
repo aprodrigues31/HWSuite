@@ -93,6 +93,7 @@ public sealed class SensorTimeline(int capacity = 3600)
     private readonly Queue<DateTimeOffset> _times = new();
     private readonly Dictionary<string, (TimelineSensor Sensor, List<double> Values)> _series = new(StringComparer.Ordinal);
     private int _dropped; // samples removed from the front since the last compaction
+    private DateTimeOffset _lastTime;
 
     public int Capacity { get; } = capacity >= 2 ? capacity : throw new ArgumentOutOfRangeException(nameof(capacity));
 
@@ -101,6 +102,12 @@ public sealed class SensorTimeline(int capacity = 3600)
         ArgumentNullException.ThrowIfNull(snapshot);
         lock (_gate)
         {
+            if (_times.Count > 0 && snapshot.Timestamp < _lastTime)
+            {
+                return; // samples stay in time order (charts and windows rely on it)
+            }
+
+            _lastTime = snapshot.Timestamp;
             var index = _times.Count;
             _times.Enqueue(snapshot.Timestamp);
             foreach (var r in snapshot.Readings)

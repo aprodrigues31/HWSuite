@@ -97,11 +97,12 @@ public partial class App : Application
             MainWindow.Activate();
         }
 
-        Monitor.Start();
         if (IsDemo)
         {
             Monitor.Seed(DemoSensorSource.History(TimeSpan.FromMinutes(15), Monitor.Interval)); // Charts page shows 15 min
         }
+
+        Monitor.Start();
 
         var capture = Array.FindIndex(commandLine, a => a.Equals(CaptureArgument, StringComparison.OrdinalIgnoreCase));
         if (capture >= 0 && capture + 1 < commandLine.Length)
