@@ -8,6 +8,27 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Alterado
+- **Nova interface (HUD):** visual futurista e objetivo em todo o aplicativo:
+  - fundo quase preto com grade discreta, painéis translúcidos com cantos chanfrados, um único acento luminoso (ciano por padrão) para os valores ao vivo, âmbar para "atenção" e vermelho para alertas;
+  - números em fonte monoespaçada (JetBrains Mono) para não "pularem" ao atualizar, títulos em Chakra Petch; as duas fontes são livres (SIL OFL) e vão dentro do app;
+  - menu em trilho de ícones à esquerda (Painel, Hardware, Sensores, Bench, Rede, Ajustes, Sobre) e barra de título própria;
+  - Benchmark com as abas Testes | Resultados no topo; o teste de Internet virou o item **Rede**.
+- **Configurações:** a escolha de tema claro/escuro deu lugar à **cor de destaque** (ciano, violeta, verde, magenta ou âmbar), aplicada na hora.
+
+### Adicionado
+- **Painel** (nova tela inicial), ao vivo:
+  - o processador como um "reator": anel segmentado da temperatura com a carga no arco interno, mais clock, potência, VCore e a carga de cada thread;
+  - placa de vídeo (clock, potência, temperaturas, carga, VRAM) e memória (em uso, livre);
+  - temperaturas de CPU e GPU dos últimos 5 minutos, ventoinhas e bomba, as tensões da fonte (+12 V, +5 V, +3,3 V) e os discos (temperatura e ocupação);
+  - estado geral no topo ("Sistema nominal" ou o número de alertas ativos).
+- **Sensores** redesenhado:
+  - resumo no topo (CPU e GPU mais quentes, potência total, bomba, quantos pedem atenção);
+  - filtros por tipo, busca e um painel por dispositivo com uma barra de faixa segmentada em cada canal;
+  - o gráfico do canal escolhido fica embaixo.
+- **Rede:** o resultado abre com um velocímetro (download, com o upload no arco interno).
+- **Modo demonstração** (`HWSuite.Gui.exe --demo`): leituras simuladas de um PC típico, para conhecer a interface sem acesso aos sensores. O CI usa esse modo para fotografar cada tela a cada build.
+
 ## [0.17.0] - 2026-10-29
 
 ### Adicionado

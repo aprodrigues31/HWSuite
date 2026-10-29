@@ -289,7 +289,7 @@ public sealed partial class NetworkPage : Page
         Cell(0, 0, s["net.latency"], Number(r.Idle.Summary.Median), "ms");
         Cell(0, 1, s["net.jitter"], Number(r.Idle.Jitter), "ms");
         Cell(1, 0, s["net.loss"], r.LossPercent is { } loss ? loss.ToString("0.#", c) : "—", "%");
-        Cell(1, 1, s["net.withDownload"], Number(Math.Max(r.LoadedDownload.Summary.Median, r.LoadedUpload.Summary.Median)), "ms");
+        Cell(1, 1, s["net.loaded"], Number(Math.Max(r.LoadedDownload.Summary.Median, r.LoadedUpload.Summary.Median)), "ms");
         side.Children.Add(grid);
 
         var row = new Grid { ColumnSpacing = 40, HorizontalAlignment = HorizontalAlignment.Center };

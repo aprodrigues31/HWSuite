@@ -38,11 +38,15 @@
 
         <!-- Devices, in two columns -->
         <ScrollViewer Grid.Row="3" Padding="0,0,8,0">
-            <Grid ColumnSpacing="16">
+            <Grid x:Name="DeviceGrid" ColumnSpacing="16" RowSpacing="16" SizeChanged="DeviceGrid_SizeChanged">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="SecondColumn" Width="*" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <StackPanel x:Name="ColumnA" Spacing="16" />
                 <StackPanel x:Name="ColumnB" Grid.Column="1" Spacing="16" />
             </Grid>

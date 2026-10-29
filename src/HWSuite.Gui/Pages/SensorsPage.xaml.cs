@@ -127,6 +127,16 @@ public sealed partial class SensorsPage : Page
         }
     }
 
+    /// <summary>Two columns of device panels when there is room for every column of a row; one column otherwise.</summary>
+    private void DeviceGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var wide = e.NewSize.Width >= 1060;
+        SecondColumn.Width = wide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        DeviceGrid.ColumnSpacing = wide ? 16 : 0;
+        Grid.SetColumn(ColumnB, wide ? 1 : 0);
+        Grid.SetRow(ColumnB, wide ? 0 : 1);
+    }
+
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         _search = SearchBox.Text.Trim();
@@ -229,7 +239,7 @@ public sealed partial class SensorsPage : Page
         var total = (d.Cpu.PowerW ?? 0) + (d.Gpu.PowerW ?? 0);
         Set("power", total > 0 ? $"{total.ToString("0", c)} W" : "—",
             $"CPU {(d.Cpu.PowerW ?? 0).ToString("0", c)} · GPU {(d.Gpu.PowerW ?? 0).ToString("0", c)}");
-        var fan = d.Fans.FirstOrDefault();
+        var fan = d.Fans.Count > 0 ? d.Fans[0] : null;
         Set("fan", fan is null ? "—" : $"{fan.Rpm.ToString("N0", c)}", fan is null ? "" : $"RPM · {fan.Name}");
         Set("attention", attention.Count.ToString(c), attention.Count == 0 ? s["sum.none"] : string.Join(" · ", attention.Take(3)),
             attention.Count > 0 ? HudUi.Warn : null);
