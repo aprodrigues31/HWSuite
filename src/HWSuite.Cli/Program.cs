@@ -39,5 +39,6 @@ return options.Command switch
     CliCommand.Driver => DriverCommand.Run(options, s),
     CliCommand.Vbios => VbiosCommand.Run(options, s),
     CliCommand.Bench => BenchCommand.Run(options, s),
+    CliCommand.Net => NetCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

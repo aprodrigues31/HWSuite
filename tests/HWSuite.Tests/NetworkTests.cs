@@ -417,6 +417,16 @@ public sealed class NetworkTests
         Assert.Null(WlanReader.FindBss(list, [9, 9, 9, 9, 9, 9]));
     }
 
+    [Fact]
+    public void Cli_net_options()
+    {
+        var o = HWSuite.Cli.CliOptions.Parse(["net", "--mlab", "--accept-mlab-policy", "--ipv6"]);
+        Assert.Equal(HWSuite.Cli.CliCommand.Net, o.Command);
+        Assert.True(o.Mlab && o.AcceptMlabPolicy && o.Ipv6);
+        Assert.False(HWSuite.Cli.CliOptions.Parse(["net"]).Mlab);
+        Assert.Throws<HWSuite.Cli.CliUsageException>(() => HWSuite.Cli.CliOptions.Parse(["bench", "--ipv6"]));
+    }
+
     /// <summary>Reports synchronously (Progress&lt;T&gt; posts to the thread pool, so the order would not be kept).</summary>
     private sealed class SyncProgress(Action<NetProgress> report) : IProgress<NetProgress>
     {

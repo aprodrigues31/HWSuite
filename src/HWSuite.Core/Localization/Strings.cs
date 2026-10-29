@@ -330,7 +330,10 @@ public sealed class Strings
         ["net.tip.restart.body"] = "A restart clears temporary software faults and congestion in the router. If the problem stays, compare at another time of day and with the other server before calling the provider.",
         ["net.tip.healthy.title"] = "Healthy connection",
         ["net.tip.healthy.body"] = "No problem found: steady latency, no relevant loss and no bottleneck in the Wi-Fi or the cable.",
-        ["net.cli.header"] = "Internet test",
+        ["netcli.title"] = "HWSuite Internet test ({0}) · {1} · {2}",
+        ["netcli.needConsent"] = "M-Lab publishes every test in an open data set, including your public IP address ({0}). Run again with --accept-mlab-policy to agree.",
+        ["netcli.row"] = "  {0,-26} {1}",
+        ["netcli.tips"] = "Improvements:",
         ["app.compare.title"] = "Comparison with other processors",
         ["app.compare.processor"] = "Processor",
         ["app.compare.you"] = "{0} (this run)",
@@ -542,6 +545,10 @@ public sealed class Strings
                                             The same for the graphics card (Direct3D 11 compute shader).
               hwsuite bench --disk <C:> [--size <GB>] [--duration <s>]
                                             Disk benchmark (SEQ1M Q8T1/Q1T1, RND4K Q32T1/Q1T1).
+              hwsuite net [--ipv6] [--mlab --accept-mlab-policy]
+                                            Internet test: speed, latency with and without load, jitter,
+                                            loss and Wi-Fi state (Cloudflare; M-Lab publishes each test
+                                            with your public IP, so it needs --accept-mlab-policy).
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -893,7 +900,10 @@ public sealed class Strings
         ["net.tip.restart.body"] = "Reiniciar corrige falhas temporárias de software e congestionamento no roteador. Se o problema continuar, compare em outro horário e com o outro servidor antes de falar com o provedor.",
         ["net.tip.healthy.title"] = "Conexão saudável",
         ["net.tip.healthy.body"] = "Nenhum problema encontrado: latência estável, sem perda relevante e sem gargalo no Wi-Fi ou no cabo.",
-        ["net.cli.header"] = "Teste de Internet",
+        ["netcli.title"] = "Teste de Internet do HWSuite ({0}) · {1} · {2}",
+        ["netcli.needConsent"] = "O M-Lab publica cada teste num banco de dados aberto, incluindo o seu endereço IP público ({0}). Rode de novo com --accept-mlab-policy para concordar.",
+        ["netcli.row"] = "  {0,-26} {1}",
+        ["netcli.tips"] = "Melhorias:",
         ["app.compare.title"] = "Comparação com outros processadores",
         ["app.compare.processor"] = "Processador",
         ["app.compare.you"] = "{0} (esta execução)",
@@ -1105,6 +1115,10 @@ public sealed class Strings
                                             O mesmo para a placa de vídeo (compute shader do Direct3D 11).
               hwsuite bench --disk <C:> [--size <GB>] [--duration <s>]
                                             Benchmark de disco (SEQ1M Q8T1/Q1T1, RND4K Q32T1/Q1T1).
+              hwsuite net [--ipv6] [--mlab --accept-mlab-policy]
+                                            Teste de Internet: velocidade, latência com e sem carga, jitter,
+                                            perda e estado do Wi-Fi (Cloudflare; o M-Lab publica cada teste
+                                            com o seu IP público, por isso exige --accept-mlab-policy).
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).

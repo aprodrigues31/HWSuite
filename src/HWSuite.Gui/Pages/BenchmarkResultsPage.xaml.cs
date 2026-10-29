@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using HWSuite.Core.Benchmark;
+using HWSuite.Core.Network;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -26,6 +27,7 @@ public sealed partial class BenchmarkResultsPage : Page
         CpuTab.Text = s["app.clear.cpu"];
         GpuTab.Text = s["app.clear.gpu"];
         DiskTab.Text = s["app.clear.disk"];
+        NetTab.Text = s["app.clear.net"];
         ClearButton.Content = s["app.clear.button"];
         FolderButton.Content = s["results.openFolder"];
         Loaded += (_, _) => Show();
@@ -47,6 +49,7 @@ public sealed partial class BenchmarkResultsPage : Page
             {
                 "gpu" => ResultTables.Gpu(GpuBenchmarkHistory.Read(BenchmarkFiles.Gpu), s),
                 "disk" => ResultTables.Disk(DiskBenchmarkHistory.Read(BenchmarkFiles.Disk), s),
+                "net" => ResultTables.Network(NetworkHistory.Read(BenchmarkFiles.Network), s),
                 _ => ResultTables.Cpu(BenchmarkHistory.Read(BenchmarkFiles.Cpu), s),
             };
         }
@@ -204,11 +207,13 @@ public sealed partial class BenchmarkResultsPage : Page
         var cpu = new CheckBox { Content = s["app.clear.cpu"] };
         var gpu = new CheckBox { Content = s["app.clear.gpu"] };
         var disk = new CheckBox { Content = s["app.clear.disk"] };
+        var net = new CheckBox { Content = s["app.clear.net"] };
         var panel = new StackPanel { Spacing = 4 };
         panel.Children.Add(new TextBlock { Text = s["app.clear.message"], TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 8) });
         panel.Children.Add(cpu);
         panel.Children.Add(gpu);
         panel.Children.Add(disk);
+        panel.Children.Add(net);
 
         var dialog = new ContentDialog
         {
@@ -221,8 +226,8 @@ public sealed partial class BenchmarkResultsPage : Page
             IsPrimaryButtonEnabled = false,
         };
 
-        void Update(object? o, RoutedEventArgs a) => dialog.IsPrimaryButtonEnabled = cpu.IsChecked == true || gpu.IsChecked == true || disk.IsChecked == true;
-        foreach (var box in new[] { cpu, gpu, disk })
+        void Update(object? o, RoutedEventArgs a) => dialog.IsPrimaryButtonEnabled = cpu.IsChecked == true || gpu.IsChecked == true || disk.IsChecked == true || net.IsChecked == true;
+        foreach (var box in new[] { cpu, gpu, disk, net })
         {
             box.Checked += Update;
             box.Unchecked += Update;
@@ -235,7 +240,8 @@ public sealed partial class BenchmarkResultsPage : Page
 
         var kinds = (cpu.IsChecked == true ? BenchmarkKinds.Cpu : BenchmarkKinds.None)
             | (gpu.IsChecked == true ? BenchmarkKinds.Gpu : BenchmarkKinds.None)
-            | (disk.IsChecked == true ? BenchmarkKinds.Disk : BenchmarkKinds.None);
+            | (disk.IsChecked == true ? BenchmarkKinds.Disk : BenchmarkKinds.None)
+            | (net.IsChecked == true ? BenchmarkKinds.Network : BenchmarkKinds.None);
         try
         {
             BenchmarkFiles.Clear(kinds);

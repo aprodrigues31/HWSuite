@@ -35,6 +35,7 @@ public sealed partial class MainWindow : Window
         NavInventory.Content = s["app.nav.inventory"];
         NavBench.Content = s["app.nav.bench"];
         NavBenchRun.Content = s["app.nav.benchRun"];
+        NavBenchNet.Content = s["app.nav.benchNet"];
         NavBenchResults.Content = s["app.nav.benchResults"];
         NavSettings.Content = s["app.nav.settings"];
         NavAbout.Content = s["app.nav.about"];
@@ -96,6 +97,7 @@ public sealed partial class MainWindow : Window
         {
             "inventory" => typeof(InventoryPage),
             "bench" => typeof(BenchmarkPage),
+            "benchnet" => typeof(NetworkPage),
             "benchresults" => typeof(BenchmarkResultsPage),
             "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),

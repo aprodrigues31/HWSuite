@@ -19,6 +19,7 @@ public enum CliCommand
     Driver,
     Vbios,
     Bench,
+    Net,
 }
 
 public enum DriverAction
@@ -54,6 +55,15 @@ public sealed record CliOptions
 
     /// <summary>bench: run the stability test until Ctrl+C instead of the timed benchmark.</summary>
     public bool Stress { get; init; }
+
+    /// <summary>net: use M-Lab instead of Cloudflare.</summary>
+    public bool Mlab { get; init; }
+
+    /// <summary>net: the user agrees that M-Lab publishes the test with their public IP.</summary>
+    public bool AcceptMlabPolicy { get; init; }
+
+    /// <summary>net: test over IPv6 instead of IPv4.</summary>
+    public bool Ipv6 { get; init; }
 
     /// <summary>bench: test the graphics card instead of the processor.</summary>
     public bool Gpu { get; init; }
@@ -98,6 +108,11 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("bench", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Bench };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("net", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Net };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("vbios", StringComparison.OrdinalIgnoreCase))
@@ -178,6 +193,9 @@ public sealed record CliOptions
                 "--raw" when options.Command == CliCommand.Sensors => options with { Raw = true },
                 "--stress" when options.Command == CliCommand.Bench => options with { Stress = true },
                 "--gpu" when options.Command == CliCommand.Bench => options with { Gpu = true },
+                "--mlab" when options.Command == CliCommand.Net => options with { Mlab = true },
+                "--accept-mlab-policy" when options.Command == CliCommand.Net => options with { AcceptMlabPolicy = true },
+                "--ipv6" when options.Command == CliCommand.Net => options with { Ipv6 = true },
                 "--disk" when options.Command == CliCommand.Bench => options with { Disk = DriveLetter(Value(arg)) },
                 "--size" when options.Command == CliCommand.Bench => options with { DiskSizeGb = SizeGb(arg) },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },

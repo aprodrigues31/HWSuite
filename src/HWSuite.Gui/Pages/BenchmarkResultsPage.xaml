@@ -33,6 +33,7 @@
                 <SelectorBarItem x:Name="CpuTab" Tag="cpu" IsSelected="True" />
                 <SelectorBarItem x:Name="GpuTab" Tag="gpu" />
                 <SelectorBarItem x:Name="DiskTab" Tag="disk" />
+                <SelectorBarItem x:Name="NetTab" Tag="net" />
             </SelectorBar>
             <TextBlock x:Name="CountText" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </Grid>

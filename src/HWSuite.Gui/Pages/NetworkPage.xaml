@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.NetworkPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    NavigationCacheMode="Required">
+    <ScrollViewer>
+        <StackPanel Padding="20,12,20,24" Spacing="14">
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="Subtitle" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <ComboBox x:Name="ServerBox" MinWidth="280" />
+                <StackPanel Grid.Column="1" Spacing="4">
+                    <TextBlock x:Name="ProtocolLabel" />
+                    <SelectorBar x:Name="ProtocolBar" SelectionChanged="ProtocolBar_SelectionChanged">
+                        <SelectorBarItem x:Name="Ipv4Item" Text="IPv4" Tag="IPv4" IsSelected="True" />
+                        <SelectorBarItem x:Name="Ipv6Item" Text="IPv6" Tag="IPv6" />
+                    </SelectorBar>
+                </StackPanel>
+                <Button x:Name="StartButton" Grid.Column="3" MinWidth="120" VerticalAlignment="Bottom"
+                        Style="{StaticResource AccentButtonStyle}" Click="StartButton_Click" />
+            </Grid>
+
+            <StackPanel Spacing="6">
+                <ProgressBar x:Name="Progress" Maximum="1" />
+                <TextBlock x:Name="StatusText" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                <TextBlock x:Name="NoteText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" FontSize="12" />
+            </StackPanel>
+
+            <StackPanel x:Name="ConnectionPanel" />
+
+            <SelectorBar x:Name="ResultTabs" Visibility="Collapsed" SelectionChanged="ResultTabs_SelectionChanged">
+                <SelectorBarItem x:Name="ResultTab" Tag="result" IsSelected="True" />
+                <SelectorBarItem x:Name="DetailTab" Tag="detail" />
+                <SelectorBarItem x:Name="TipsTab" Tag="tips" />
+            </SelectorBar>
+            <StackPanel x:Name="ResultPanel" Spacing="14" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

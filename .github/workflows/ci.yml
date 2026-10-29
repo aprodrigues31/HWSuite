@@ -50,6 +50,22 @@ jobs:
       - name: Test
         run: dotnet test HWSuite.slnx -c Release --no-build --logger "trx;LogFileName=results.trx" --results-directory artifacts/test-results
 
+      - name: Failed tests as annotations
+        if: failure()
+        shell: pwsh
+        run: |
+          # One annotation per failed test (name and assertion message), readable on the run page.
+          $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
+          Get-ChildItem artifacts/test-results -Filter *.trx -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            Select-Xml -Path $_.FullName -Namespace $ns -XPath '//t:UnitTestResult[@outcome="Failed"]' | ForEach-Object {
+              $r = $_.Node
+              $title = ($r.testName -replace '[:,]', ' ')
+              $msg = "$($r.Output.ErrorInfo.Message) $($r.Output.ErrorInfo.StackTrace)" -replace "`r?`n", ' | '
+              if ($msg.Length -gt 1500) { $msg = $msg.Substring(0, 1500) }
+              Write-Output "::error title=$title::$msg"
+            }
+          }
+
       - name: Sample reports on the runner
         shell: pwsh
         run: |
@@ -90,6 +106,19 @@ jobs:
           "### Benchmark do processador no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           Get-Content artifacts/reports/bench.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
           '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+
+      - name: Internet test on the runner (Cloudflare)
+        # Depends on the runner's network and a public server: informative, never fails the build.
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          dotnet run --project src/HWSuite.Cli -c Release --no-build -- net --lang pt-BR | Tee-Object artifacts/reports/net.txt
+          $code = $LASTEXITCODE
+          "### Teste de Internet no runner`n" + '```text' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          Get-Content artifacts/reports/net.txt | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          '```' | Out-File -Append -Encoding utf8 $env:GITHUB_STEP_SUMMARY
+          if ($code -ne 0) { Write-Output "::warning title=Internet test::exit code $code" }
+          exit $code
 
       - name: PawnIO installer signature (official download)
         shell: pwsh

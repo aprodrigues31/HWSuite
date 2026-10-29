@@ -66,6 +66,11 @@
                                 <FontIcon Glyph="&#xE768;" />
                             </NavigationViewItem.Icon>
                         </NavigationViewItem>
+                        <NavigationViewItem x:Name="NavBenchNet" Tag="benchnet">
+                            <NavigationViewItem.Icon>
+                                <FontIcon Glyph="&#xE774;" />
+                            </NavigationViewItem.Icon>
+                        </NavigationViewItem>
                         <NavigationViewItem x:Name="NavBenchResults" Tag="benchresults">
                             <NavigationViewItem.Icon>
                                 <FontIcon Glyph="&#xE9D2;" />
