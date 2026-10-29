@@ -531,7 +531,7 @@ public sealed partial class SensorsPage : Page
         if (_selected is null)
         {
             ChartTitle.Text = s["app.chartHint"].ToUpper(s.Culture);
-            Chart.Set([]);
+            Chart.Visibility = Visibility.Collapsed; // the list gets the room until a channel is picked
             return;
         }
 
@@ -540,6 +540,7 @@ public sealed partial class SensorsPage : Page
         ChartTitle.Text = ("// " + s.Format("app.chartTitle", _selected.Reading.Name, _selected.Value.Text,
             SensorFormat.Format(finite.Count > 0 ? finite.Min() : null, _selected.Reading.Kind, s.Culture),
             SensorFormat.Format(finite.Count > 0 ? finite.Max() : null, _selected.Reading.Kind, s.Culture))).ToUpper(s.Culture);
+        Chart.Visibility = Visibility.Visible;
         Chart.Capacity = App.Monitor.History.Capacity;
         Chart.Set([new ChartSeries(values, HudUi.Accent, Fill: true)]);
     }
