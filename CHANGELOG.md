@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.21.0] - 2026-10-29
+
 ### Adicionado
 - **Base de hardware ampliada:**
   - **placas de vídeo**: além das RX 6000/7000/9000, RTX 30/40/50 e Arc, agora Radeon RX 400/500 (Polaris), RX Vega 56/64, RX 5000 (RDNA), GeForce GT 1030, GTX 10, GTX 16 e RTX 20, com especificações de referência, dados do chip e os IDs PCI (pci.ids de 2026-10-28) usados na verificação de autenticidade, útil para pegar as falsificações mais comuns (GTX 1050 Ti, RX 580);
