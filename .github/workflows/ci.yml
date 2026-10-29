@@ -218,6 +218,7 @@ jobs:
         run: Compress-Archive -Path artifacts/gui/* -DestinationPath "artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip"
 
       - name: Installer - build and install/uninstall check
+        timeout-minutes: 10
         shell: pwsh
         run: |
           choco install innosetup -y --no-progress | Out-Null
@@ -230,7 +231,9 @@ jobs:
           if (-not (Test-Path "$installed\HWSuite.Gui.exe") -or -not (Test-Path "$installed\hwsuite.exe")) { throw "Installer did not install the app" }
           & "$installed\hwsuite.exe" --version
           # In-app update path: a silent reinstall over the existing copy must start the app again.
-          Start-Process -FilePath (Resolve-Path $setup) -ArgumentList '/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/RELAUNCH=1' -Wait
+          # Wait for the setup process only: Start-Process -Wait would also wait for the app it relaunches.
+          $reinstall = Start-Process -FilePath (Resolve-Path $setup) -ArgumentList '/SILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CLOSEAPPLICATIONS', '/RELAUNCH=1' -PassThru
+          if (-not $reinstall.WaitForExit(180000)) { throw "The silent reinstall did not finish in 3 minutes" }
           Start-Sleep -Seconds 8
           $relaunched = Get-Process HWSuite.Gui -ErrorAction SilentlyContinue
           if (-not $relaunched) { throw "The setup did not reopen the app with /RELAUNCH=1" }
