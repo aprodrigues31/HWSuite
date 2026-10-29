@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.18.0] - 2026-10-29
+
 ### Alterado
 - **Nova interface (HUD):** visual futurista e objetivo em todo o aplicativo:
   - fundo quase preto com grade discreta, painéis translúcidos com cantos chanfrados, um único acento luminoso (ciano por padrão) para os valores ao vivo, âmbar para "atenção" e vermelho para alertas;
@@ -197,7 +199,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.17.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.18.0
 [0.17.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.17.0
 [0.16.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.16.0
 [0.15.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.15.0
