@@ -30,13 +30,13 @@
             <SolidColorBrush x:Key="HudGoodBrush" Color="#FF39F5B0" />
             <SolidColorBrush x:Key="HudBackgroundBrush" Color="#FF04070B" />
             <SolidColorBrush x:Key="HudRailBrush" Color="#F203080D" />
-            <SolidColorBrush x:Key="HudPanelBrush" Color="#E0081420" />
+            <SolidColorBrush x:Key="HudPanelBrush" Color="#F0060F18" />
             <SolidColorBrush x:Key="HudPanelStrongBrush" Color="#F00A1826" />
             <SolidColorBrush x:Key="HudPanelStrokeBrush" Color="#3A4FE3FF" />
             <SolidColorBrush x:Key="HudGridLineBrush" Color="#0C4FE3FF" />
-            <SolidColorBrush x:Key="HudTagBrush" Color="#FF6FA9BC" />
-            <SolidColorBrush x:Key="HudTextBrush" Color="#FFE8F7FF" />
-            <SolidColorBrush x:Key="HudTextDimBrush" Color="#FF9CC3D1" />
+            <SolidColorBrush x:Key="HudTagBrush" Color="#FF93C6D6" />
+            <SolidColorBrush x:Key="HudTextBrush" Color="#FFF3FAFF" />
+            <SolidColorBrush x:Key="HudTextDimBrush" Color="#FFC6DDE6" />
             <SolidColorBrush x:Key="HudHoverBrush" Color="#0F4FE3FF" />
             <SolidColorBrush x:Key="HudSelectedBrush" Color="#174FE3FF" />
 
@@ -45,7 +45,7 @@
             <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#FF04070B" />
             <SolidColorBrush x:Key="SolidBackgroundFillColorSecondaryBrush" Color="#FF07101A" />
             <SolidColorBrush x:Key="LayerFillColorDefaultBrush" Color="#B3070F17" />
-            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#E0081420" />
+            <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#F0060F18" />
             <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#E00A1826" />
             <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#3A4FE3FF" />
             <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#264FE3FF" />
@@ -59,9 +59,9 @@
             <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#404FE3FF" />
             <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="#664FE3FF" />
             <SolidColorBrush x:Key="ControlElevationBorderBrush" Color="#404FE3FF" />
-            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#FFE8F7FF" />
-            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#FF9CC3D1" />
-            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#FF6FA9BC" />
+            <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#FFF3FAFF" />
+            <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#FFC6DDE6" />
+            <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#FF93C6D6" />
             <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FF031016" />
             <SolidColorBrush x:Key="SystemFillColorCautionBrush" Color="#FFFFB547" />
             <SolidColorBrush x:Key="SystemFillColorCriticalBrush" Color="#FFFF4F6E" />
@@ -80,15 +80,20 @@
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 
-    <!-- Fonts: each weight is its own file, so each gets its own family resource (with the legacy name as fallback). -->
-    <FontFamily x:Key="HudBodyFont">ms-appx:///Assets/Fonts/ChakraPetch-Regular.ttf#Chakra Petch</FontFamily>
-    <FontFamily x:Key="HudBodyMediumFont">ms-appx:///Assets/Fonts/ChakraPetch-Medium.ttf#Chakra Petch Medium, ms-appx:///Assets/Fonts/ChakraPetch-Medium.ttf#Chakra Petch</FontFamily>
+    <!--
+        Fonts: Chakra Petch only for titles and large labels (its thin strokes need size); Barlow for every
+        other text (hinted, sturdy at small sizes); JetBrains Mono Medium and up for numbers. Each weight is its
+        own file, so each gets its own family resource (with the legacy name as fallback).
+    -->
+    <FontFamily x:Key="HudBodyFont">ms-appx:///Assets/Fonts/Barlow-Medium.ttf#Barlow Medium, ms-appx:///Assets/Fonts/Barlow-Medium.ttf#Barlow</FontFamily>
+    <FontFamily x:Key="HudBodyRegularFont">ms-appx:///Assets/Fonts/Barlow-Regular.ttf#Barlow</FontFamily>
+    <FontFamily x:Key="HudBodyMediumFont">ms-appx:///Assets/Fonts/Barlow-SemiBold.ttf#Barlow SemiBold, ms-appx:///Assets/Fonts/Barlow-SemiBold.ttf#Barlow</FontFamily>
     <FontFamily x:Key="HudDisplayFont">ms-appx:///Assets/Fonts/ChakraPetch-SemiBold.ttf#Chakra Petch SemiBold, ms-appx:///Assets/Fonts/ChakraPetch-SemiBold.ttf#Chakra Petch</FontFamily>
     <FontFamily x:Key="HudBoldFont">ms-appx:///Assets/Fonts/ChakraPetch-Bold.ttf#Chakra Petch</FontFamily>
-    <FontFamily x:Key="HudMonoFont">ms-appx:///Assets/Fonts/JetBrainsMono-Regular.ttf#JetBrains Mono</FontFamily>
-    <FontFamily x:Key="HudMonoMediumFont">ms-appx:///Assets/Fonts/JetBrainsMono-Medium.ttf#JetBrains Mono Medium, ms-appx:///Assets/Fonts/JetBrainsMono-Medium.ttf#JetBrains Mono</FontFamily>
-    <FontFamily x:Key="HudMonoStrongFont">ms-appx:///Assets/Fonts/JetBrainsMono-SemiBold.ttf#JetBrains Mono SemiBold, ms-appx:///Assets/Fonts/JetBrainsMono-SemiBold.ttf#JetBrains Mono</FontFamily>
-    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/ChakraPetch-Regular.ttf#Chakra Petch</FontFamily>
+    <FontFamily x:Key="HudMonoFont">ms-appx:///Assets/Fonts/JetBrainsMono-Medium.ttf#JetBrains Mono Medium, ms-appx:///Assets/Fonts/JetBrainsMono-Medium.ttf#JetBrains Mono</FontFamily>
+    <FontFamily x:Key="HudMonoMediumFont">ms-appx:///Assets/Fonts/JetBrainsMono-SemiBold.ttf#JetBrains Mono SemiBold, ms-appx:///Assets/Fonts/JetBrainsMono-SemiBold.ttf#JetBrains Mono</FontFamily>
+    <FontFamily x:Key="HudMonoStrongFont">ms-appx:///Assets/Fonts/JetBrainsMono-Bold.ttf#JetBrains Mono</FontFamily>
+    <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/Barlow-Medium.ttf#Barlow Medium, ms-appx:///Assets/Fonts/Barlow-Medium.ttf#Barlow</FontFamily>
 
     <CornerRadius x:Key="ControlCornerRadius">2</CornerRadius>
     <CornerRadius x:Key="OverlayCornerRadius">2</CornerRadius>
@@ -114,20 +119,20 @@
     </Style>
     <Style x:Key="BodyTextBlockStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource HudBodyFont}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
     <Style x:Key="CaptionTextBlockStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource HudMonoFont}" />
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="CharacterSpacing" Value="80" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CharacterSpacing" Value="40" />
     </Style>
 
     <!-- "// SECTION" labels above values. -->
     <Style x:Key="HudTagStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource HudMonoFont}" />
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="CharacterSpacing" Value="140" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CharacterSpacing" Value="90" />
         <Setter Property="Foreground" Value="{ThemeResource HudTagBrush}" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
     </Style>
@@ -157,7 +162,7 @@
     </Style>
     <Style x:Key="HudMonoStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource HudMonoFont}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="14" />
         <Setter Property="Foreground" Value="{ThemeResource HudTextDimBrush}" />
     </Style>
 

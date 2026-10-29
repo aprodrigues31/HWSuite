@@ -471,10 +471,10 @@ public sealed partial class NetworkPage : Page
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         var secondary = Brush("TextFillColorSecondaryBrush");
-        var axisTitle = new TextBlock { Text = axis, FontSize = 11, Foreground = secondary };
+        var axisTitle = new TextBlock { Text = axis, FontSize = 12, Foreground = secondary };
         Grid.SetColumn(axisTitle, 1);
         grid.Children.Add(axisTitle);
-        var top = new TextBlock { Text = Number(maxValue), FontSize = 11, Foreground = secondary, VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Right };
+        var top = new TextBlock { Text = Number(maxValue), FontSize = 12, Foreground = secondary, VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Right };
         Grid.SetRow(top, 1);
         grid.Children.Add(top);
 
@@ -484,8 +484,8 @@ public sealed partial class NetworkPage : Page
         grid.Children.Add(canvas);
 
         var times = new Grid();
-        times.Children.Add(new TextBlock { Text = "0", FontSize = 11, Foreground = secondary });
-        times.Children.Add(new TextBlock { Text = $"{maxTime.ToString("0", CultureInfo.InvariantCulture)} s", FontSize = 11, Foreground = secondary, HorizontalAlignment = HorizontalAlignment.Right });
+        times.Children.Add(new TextBlock { Text = "0", FontSize = 12, Foreground = secondary });
+        times.Children.Add(new TextBlock { Text = $"{maxTime.ToString("0", CultureInfo.InvariantCulture)} s", FontSize = 12, Foreground = secondary, HorizontalAlignment = HorizontalAlignment.Right });
         Grid.SetRow(times, 2);
         Grid.SetColumn(times, 1);
         grid.Children.Add(times);

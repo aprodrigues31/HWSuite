@@ -63,23 +63,23 @@
                                 <StackPanel Spacing="3">
                                     <TextBlock x:Name="ClockLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="ClockValue" />
-                                    <TextBlock x:Name="ClockUnit" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" />
+                                    <TextBlock x:Name="ClockUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Spacing="3">
                                     <TextBlock x:Name="PowerLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="PowerValue" />
-                                    <TextBlock x:Name="PowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" />
+                                    <TextBlock x:Name="PowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                                 </StackPanel>
                                 <StackPanel Grid.Column="2" Spacing="3">
                                     <TextBlock x:Name="VoltLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="VoltValue" />
-                                    <TextBlock x:Name="VoltUnit" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" />
+                                    <TextBlock x:Name="VoltUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                                 </StackPanel>
                             </Grid>
                             <StackPanel Spacing="6">
                                 <Grid>
                                     <TextBlock x:Name="ThreadsLabel" Style="{StaticResource HudTagStyle}" />
-                                    <TextBlock x:Name="ThreadsCount" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                                    <TextBlock x:Name="ThreadsCount" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
                                 </Grid>
                                 <hud:ColumnBars x:Name="ThreadBars" Height="38" />
                             </StackPanel>
@@ -92,7 +92,7 @@
                         <StackPanel Spacing="10">
                             <Grid>
                                 <TextBlock x:Name="GpuTag" Style="{StaticResource HudTagStyle}" />
-                                <TextBlock x:Name="GpuTemps" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="GpuTemps" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
                             </Grid>
                             <TextBlock x:Name="GpuName" Style="{StaticResource HudNameStyle}" />
                             <Grid ColumnSpacing="10">
@@ -105,8 +105,8 @@
                             </Grid>
                             <hud:SegmentBar x:Name="GpuBar" Height="10" />
                             <Grid>
-                                <TextBlock x:Name="GpuLoad" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" />
-                                <TextBlock x:Name="GpuVram" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="GpuLoad" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                                <TextBlock x:Name="GpuVram" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
                             </Grid>
                         </StackPanel>
                     </hud:HudPanel>
@@ -122,7 +122,7 @@
                                 <TextBlock x:Name="MemPercent" Grid.Column="1" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
                             </Grid>
                             <hud:SegmentBar x:Name="MemBar" Height="10" />
-                            <TextBlock x:Name="MemFree" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" />
+                            <TextBlock x:Name="MemFree" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                         </StackPanel>
                     </hud:HudPanel>
                 </StackPanel>
@@ -141,11 +141,11 @@
                             <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Rectangle Width="14" Height="2" Fill="{ThemeResource HudAccentBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Text="CPU" Style="{StaticResource HudMonoStyle}" FontSize="11" />
+                                    <TextBlock Text="CPU" Style="{StaticResource HudMonoStyle}" FontSize="12" />
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal" Spacing="6">
                                     <Rectangle Width="14" Height="2" Fill="{ThemeResource HudWarnBrush}" VerticalAlignment="Center" />
-                                    <TextBlock Text="GPU" Style="{StaticResource HudMonoStyle}" FontSize="11" />
+                                    <TextBlock Text="GPU" Style="{StaticResource HudMonoStyle}" FontSize="12" />
                                 </StackPanel>
                             </StackPanel>
                         </Grid>

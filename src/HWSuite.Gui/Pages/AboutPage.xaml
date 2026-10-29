@@ -32,6 +32,6 @@
                 </StackPanel>
             </Grid>
         </hud:HudPanel>
-        <TextBlock x:Name="FontsText" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" TextWrapping="Wrap" />
+        <TextBlock x:Name="FontsText" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" TextWrapping="Wrap" />
     </StackPanel>
 </Page>

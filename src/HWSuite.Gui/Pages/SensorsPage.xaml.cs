@@ -87,7 +87,7 @@ public sealed partial class SensorsPage : Page
             var stack = new StackPanel { Spacing = 2 };
             stack.Children.Add(HudUi.TagText(s[$"sum.{keys[i]}"], s.Culture));
             var value = new TextBlock { Text = "—", Style = HudUi.Style("HudValueStyle"), FontSize = 24, Foreground = HudUi.Text };
-            var note = new TextBlock { Style = HudUi.Style("HudMonoStyle"), FontSize = 11, Foreground = HudUi.Tag, TextTrimming = TextTrimming.CharacterEllipsis };
+            var note = new TextBlock { Style = HudUi.Style("HudMonoStyle"), FontSize = 12, Foreground = HudUi.Tag, TextTrimming = TextTrimming.CharacterEllipsis };
             stack.Children.Add(value);
             stack.Children.Add(note);
             var panel = new HudPanel { Content = stack, Padding = new Thickness(16, 12, 16, 12), Chamfer = 10 };
@@ -107,7 +107,7 @@ public sealed partial class SensorsPage : Page
             {
                 Content = label.ToUpper(s.Culture),
                 FontFamily = HudUi.Font("HudMonoFont"),
-                FontSize = 11,
+                FontSize = 12,
                 CharacterSpacing = 120,
                 Padding = new Thickness(14, 7, 14, 7),
                 IsChecked = kind is null,
@@ -327,7 +327,7 @@ public sealed partial class SensorsPage : Page
         string[] titles = [s["sensors.colChannel"], s["sensors.colRange"], s["sensors.colNow"], s["sensors.min"], s["sensors.max"]];
         for (var i = 0; i < titles.Length; i++)
         {
-            Add(columns, new TextBlock { Text = titles[i].ToUpper(c), Style = HudUi.Style("HudTagStyle"), FontSize = 10 }, i);
+            Add(columns, new TextBlock { Text = titles[i].ToUpper(c), Style = HudUi.Style("HudTagStyle"), FontSize = 11 }, i);
         }
 
         stack.Children.Add(columns);

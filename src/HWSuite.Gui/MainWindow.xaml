@@ -7,7 +7,7 @@
 
     <Grid x:Name="Root" Background="{ThemeResource HudBackgroundBrush}" RequestedTheme="Dark">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="88" />
+            <ColumnDefinition Width="92" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 

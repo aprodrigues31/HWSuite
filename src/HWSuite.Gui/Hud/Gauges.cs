@@ -124,7 +124,7 @@ public sealed partial class RingGauge : Grid
             _value.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
             _value.Text.Foreground = HudUi.Text;
             _sub.FontFamily = HudUi.Font("HudMonoFont");
-            _sub.FontSize = 11;
+            _sub.FontSize = 12;
             _sub.Foreground = HudUi.Warn;
             Layout();
             Glow.Attach(_glowHost, _lit, HudUi.Accent, 10, 0.9f);
@@ -240,7 +240,7 @@ public sealed partial class ArcGauge : Grid
             foreach (var t in new[] { _min, _mid, _max })
             {
                 t.FontFamily = HudUi.Font("HudMonoFont");
-                t.FontSize = 10;
+                t.FontSize = 11;
                 t.Foreground = HudUi.Tag;
             }
 
@@ -464,7 +464,7 @@ public sealed partial class LineChart : Grid
             {
                 Text = (high - ((high - low) * i / GridLines)).ToString("0", App.Text.Culture),
                 FontFamily = HudUi.Font("HudMonoFont"),
-                FontSize = 10,
+                FontSize = 11,
                 Foreground = HudUi.Tag,
             };
             Canvas.SetLeft(label, 0);

@@ -85,8 +85,8 @@ public sealed partial class MainWindow : Window
         {
             Text = label.ToUpper(App.Text.Culture),
             FontFamily = Hud.HudUi.Font("HudMonoFont"),
-            FontSize = 9,
-            CharacterSpacing = 40,
+            FontSize = 10.5,
+            CharacterSpacing = 20,
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             MaxWidth = 82,

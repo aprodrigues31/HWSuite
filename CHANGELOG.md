@@ -11,7 +11,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 ### Alterado
 - **Nova interface (HUD):** visual futurista e objetivo em todo o aplicativo:
   - fundo quase preto com grade discreta, painéis translúcidos com cantos chanfrados, um único acento luminoso (ciano por padrão) para os valores ao vivo, âmbar para "atenção" e vermelho para alertas;
-  - números em fonte monoespaçada (JetBrains Mono) para não "pularem" ao atualizar, títulos em Chakra Petch; as duas fontes são livres (SIL OFL) e vão dentro do app;
+  - números em fonte monoespaçada (JetBrains Mono) para não "pularem" ao atualizar, títulos em Chakra Petch e textos em Barlow, escolhida pela nitidez em tamanhos pequenos; as três fontes são livres (SIL OFL) e vão dentro do app;
   - menu em trilho de ícones à esquerda (Painel, Hardware, Sensores, Bench, Rede, Ajustes, Sobre) e barra de título própria;
   - Benchmark com as abas Testes | Resultados no topo; o teste de Internet virou o item **Rede**.
 - **Configurações:** a escolha de tema claro/escuro deu lugar à **cor de destaque** (ciano, violeta, verde, magenta ou âmbar), aplicada na hora.

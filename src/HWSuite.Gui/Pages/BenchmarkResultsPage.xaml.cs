@@ -163,7 +163,7 @@ public sealed partial class BenchmarkResultsPage : Page
                     CornerRadius = new CornerRadius(4),
                     Padding = new Thickness(6, 0, 6, 1),
                     VerticalAlignment = VerticalAlignment.Center,
-                    Child = new TextBlock { Text = s["results.best"], FontSize = 11, Foreground = Brush("TextOnAccentFillColorPrimaryBrush") },
+                    Child = new TextBlock { Text = s["results.best"], FontSize = 12, Foreground = Brush("TextOnAccentFillColorPrimaryBrush") },
                 });
                 cell = stack;
             }
