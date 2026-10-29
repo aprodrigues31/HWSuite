@@ -80,6 +80,8 @@ public static class MaintenanceSession
         var stress = Task.Run(() => final = CpuStressTest.Run(null, cancel: stop.Token), CancellationToken.None);
 
         double? maxTemp = null, maxPower = null, minClock = null;
+        var times = new List<DateTimeOffset>();
+        List<double> temps = [], powers = [], clocks = [];
         var clock = System.Diagnostics.Stopwatch.StartNew();
         while (!stress.IsCompleted)
         {
@@ -87,6 +89,10 @@ public static class MaintenanceSession
             if (read() is { } snapshot)
             {
                 var cpu = Dashboard.From(snapshot).Cpu;
+                times.Add(snapshot.Timestamp);
+                temps.Add(cpu.Temperature ?? double.NaN);
+                powers.Add(cpu.PowerW ?? double.NaN);
+                clocks.Add(cpu.ClockMhz ?? double.NaN);
                 maxTemp = Max(maxTemp, cpu.Temperature);
                 maxPower = Max(maxPower, cpu.PowerW);
                 if (clock.Elapsed > TimeSpan.FromSeconds(3) && cpu.ClockMhz is { } mhz)
@@ -99,7 +105,15 @@ public static class MaintenanceSession
         }
 
         cancel.ThrowIfCancellationRequested();
-        return new LoadTest(clock.Elapsed, final?.Errors ?? 0, maxTemp, maxPower, minClock);
+        return new LoadTest(clock.Elapsed, final?.Errors ?? 0, maxTemp, maxPower, minClock)
+        {
+            Timeline = new TimelineData(times,
+            [
+                new(new TimelineSensor("cpu.temperature", "CPU", "Temperature", SensorKind.Temperature), temps),
+                new(new TimelineSensor("cpu.power", "CPU", "Power", SensorKind.Power), powers),
+                new(new TimelineSensor("cpu.clock", "CPU", "Clock", SensorKind.Clock), clocks),
+            ]),
+        };
     }
 
     private static double? Max(double? a, double? b) => a is null ? b : b is null ? a : Math.Max(a.Value, b.Value);

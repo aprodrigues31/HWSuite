@@ -48,7 +48,11 @@ public sealed record VolumeSpace(string Name, long TotalBytes, long FreeBytes, b
 /// <param name="MaxCpuTemperature">Hottest processor reading during the test.</param>
 /// <param name="MaxCpuPower">Highest package power.</param>
 /// <param name="MinCpuClockMhz">Lowest average core clock under load (a big drop is throttling).</param>
-public sealed record LoadTest(TimeSpan Duration, long Errors, double? MaxCpuTemperature, double? MaxCpuPower, double? MinCpuClockMhz);
+public sealed record LoadTest(TimeSpan Duration, long Errors, double? MaxCpuTemperature, double? MaxCpuPower, double? MinCpuClockMhz)
+{
+    /// <summary>Processor temperature, power and clock every second of the test, for the report's charts.</summary>
+    public Sensors.TimelineData? Timeline { get; init; }
+}
 
 /// <summary>Everything the checks look at. Only the inventory is required.</summary>
 public sealed record MaintenanceInput(HardwareInventory Inventory, DateTimeOffset Now)
@@ -104,6 +108,9 @@ public sealed record MaintenanceReport(
     string AppVersion,
     bool IncludeInventory = true)
 {
+    /// <summary>The load test, when one ran (its charts go in the report).</summary>
+    public LoadTest? Load { get; init; }
+
     public Verdict Overall => Checks.Count == 0 ? Verdict.Info : Checks.Max(c => c.Verdict);
 
     public int Count(Verdict verdict) => Checks.Count(c => c.Verdict == verdict);

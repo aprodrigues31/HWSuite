@@ -41,5 +41,6 @@ return options.Command switch
     CliCommand.Bench => BenchCommand.Run(options, s),
     CliCommand.Net => NetCommand.Run(options, s),
     CliCommand.Maintenance => MaintenanceCommand.Run(options, s),
+    CliCommand.Log => LogCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

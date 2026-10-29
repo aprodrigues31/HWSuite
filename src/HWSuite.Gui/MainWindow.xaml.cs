@@ -50,6 +50,7 @@ public sealed partial class MainWindow : Window
         RailTop.Children.Add(RailItem("dashboard", "\uF246", s["rail.dashboard"], s["rail.dashboard.tip"]));
         RailTop.Children.Add(RailItem("inventory", "\uE950", s["rail.hardware"], s["app.nav.inventory"]));
         RailTop.Children.Add(RailItem("sensors", "\uE9D9", s["rail.sensors"], s["app.nav.sensors"]));
+        RailTop.Children.Add(RailItem("charts", "\uE9D2", s["rail.charts"], s["charts.title"]));
         RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
         RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
         RailTop.Children.Add(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
@@ -129,6 +130,7 @@ public sealed partial class MainWindow : Window
             "benchresults" => typeof(BenchmarkResultsPage),
             "network" => typeof(NetworkPage),
             "report" => typeof(ReportPage),
+            "charts" => typeof(ChartsPage),
             "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),
             _ => typeof(SensorsPage),

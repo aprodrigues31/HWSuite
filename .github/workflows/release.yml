@@ -51,7 +51,23 @@ jobs:
       - name: Build and test
         run: |
           dotnet build HWSuite.slnx -c Release
-          dotnet test HWSuite.slnx -c Release --no-build
+          dotnet test HWSuite.slnx -c Release --no-build --logger "trx;LogFileName=results.trx" --results-directory artifacts/test-results
+
+      - name: Failed tests as annotations
+        if: failure()
+        shell: pwsh
+        run: |
+          # One annotation per failed test (name and assertion message), readable on the run page.
+          $ns = @{ t = 'http://microsoft.com/schemas/VisualStudio/TeamTest/2010' }
+          Get-ChildItem artifacts/test-results -Filter *.trx -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
+            Select-Xml -Path $_.FullName -Namespace $ns -XPath '//t:UnitTestResult[@outcome="Failed"]' | ForEach-Object {
+              $r = $_.Node
+              $title = ($r.testName -replace '[:,]', ' ')
+              $msg = "$($r.Output.ErrorInfo.Message) $($r.Output.ErrorInfo.StackTrace)" -replace "`r?`n", ' | '
+              if ($msg.Length -gt 1500) { $msg = $msg.Substring(0, 1500) }
+              Write-Output "::error title=$title::$msg"
+            }
+          }
 
       - name: Publish and package
         shell: pwsh

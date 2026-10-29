@@ -25,6 +25,9 @@ public sealed class SensorMonitor : IDisposable
 
     public SensorHistory History { get; } = new(capacity: 300);
 
+    /// <summary>The last hour of readings with their time, for the Charts page.</summary>
+    public SensorTimeline Timeline { get; } = new(capacity: 3600);
+
     /// <summary>Creates the sensor source; replaced by the demo mode before monitoring starts.</summary>
     public static Func<AccessStatus, ISensorSource> SourceFactory { get; set; } = access => ProviderCatalog.CreateSensorSource(access);
 
@@ -101,6 +104,7 @@ public sealed class SensorMonitor : IDisposable
         foreach (var snapshot in snapshots)
         {
             History.Add(snapshot);
+            Timeline.Add(snapshot);
         }
     }
 
@@ -127,6 +131,7 @@ public sealed class SensorMonitor : IDisposable
 
         source?.Dispose();
         History.Clear();
+        Timeline.Clear();
         Latest = null;
     }
 
@@ -162,6 +167,7 @@ public sealed class SensorMonitor : IDisposable
             // The pump's fan header gets its name before anyone (history, alerts, log, pages) sees the reading.
             var snapshot = PowerRails.NamePump(source.Read(), _settings.PumpSensorId, App.Text);
             History.Add(snapshot);
+            Timeline.Add(snapshot);
             Latest = snapshot;
 
             IReadOnlyList<AlertEvent> events;

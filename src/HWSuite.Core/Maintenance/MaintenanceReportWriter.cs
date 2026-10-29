@@ -74,6 +74,9 @@ public static class MaintenanceReportWriter
             ol.actions { margin: 4px 0 0 0; padding-left: 22px; }
             ol.actions li { margin: 5px 0; page-break-inside: avoid; }
             ol.actions .tag { margin-right: 4px; vertical-align: 1px; }
+            .charts svg { display: block; margin: 4px 0 10px 0; page-break-inside: avoid; }
+            .keep { page-break-inside: avoid; }
+            .note { color: #4a5a68; font-size: 9.5pt; margin: 2px 0 6px 0; }
             </style>
             </head>
             <body><div class="page">
@@ -181,6 +184,29 @@ public static class MaintenanceReportWriter
         }
 
         w.Write("</tbody></table>");
+
+        // Load test: what the processor did over time.
+        if (report.Load?.Timeline is { Times.Count: > 2 } timeline)
+        {
+            var load = report.Load;
+            // The title stays with the first chart (no heading alone at the bottom of a page).
+            w.Write($"<div class=\"charts\"><div class=\"keep\"><h2>{E(s["mnt.report.loadChart"])}</h2><p class=\"note\">{E(s.Format("mnt.report.loadChartText", Reporting.SvgChart.Elapsed(load.Duration), load.Errors))}</p>");
+            var first = true;
+            foreach (var (key, label) in new[] { ("cpu.temperature", "mnt.report.chartTemp"), ("cpu.power", "mnt.report.chartPower"), ("cpu.clock", "mnt.report.chartClock") })
+            {
+                if (timeline.Find(key) is { } series && Sensors.SeriesStats.Of(series.Values) is not null)
+                {
+                    w.Write(Reporting.SvgChart.Render(timeline with { Series = [series] }, series.Sensor.Unit, c, [s[label] + $" ({s["mnt.report.chartRange"]})"], elapsed: true, height: 150));
+                    if (first)
+                    {
+                        w.Write("</div>");
+                        first = false;
+                    }
+                }
+            }
+
+            w.Write(first ? "</div></div>" : "</div>");
+        }
 
         // Services performed and notes.
         if (!string.IsNullOrWhiteSpace(order.ServicesDone))

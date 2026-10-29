@@ -100,7 +100,7 @@ public partial class App : Application
         Monitor.Start();
         if (IsDemo)
         {
-            Monitor.Seed(DemoSensorSource.History(TimeSpan.FromMinutes(5), Monitor.Interval));
+            Monitor.Seed(DemoSensorSource.History(TimeSpan.FromMinutes(15), Monitor.Interval)); // Charts page shows 15 min
         }
 
         var capture = Array.FindIndex(commandLine, a => a.Equals(CaptureArgument, StringComparison.OrdinalIgnoreCase));
@@ -208,7 +208,7 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        string[] pages = ["dashboard", "sensors", "inventory", "bench", "benchresults", "network", "report", "settings", "about"];
+        string[] pages = ["dashboard", "sensors", "charts", "inventory", "bench", "benchresults", "network", "report", "settings", "about"];
         var saved = 0;
         try
         {

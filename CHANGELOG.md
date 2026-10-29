@@ -8,6 +8,15 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Gráficos** (novo item no menu): escolha até 8 sensores e veja cada um ao longo do tempo, um gráfico por unidade (°C, W, RPM, MHz, V, %):
+  - ao vivo, com a última hora guardada pelo app, em janelas de 1, 5, 15 ou 60 minutos;
+  - ou de um **log gravado** (CSV do app ou do `hwsuite sensors --log`), escolhido numa lista;
+  - passando o mouse aparecem o horário e o valor de cada sensor naquele instante; a legenda traz mínimo, média, máximo e valor atual;
+  - botão **Gravar log** para ligar e desligar a gravação em CSV ali mesmo; a escolha de sensores e da janela fica salva.
+- **Relatório de manutenção:** o teste de carga agora vem com os gráficos de temperatura, consumo e clock do processador ao longo do teste.
+- **`hwsuite log <arquivo.csv>`:** resumo de um log de sensores (mínimo, média e máximo de cada sensor); com `-o grafico.html`, uma página com os gráficos por dispositivo e unidade; `--filter` escolhe os sensores.
+
 ## [0.19.0] - 2026-10-29
 
 ### Adicionado

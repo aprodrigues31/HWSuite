@@ -180,7 +180,7 @@ public sealed partial class ReportPage : Page
             var checks = MaintenanceChecks.Run(input, s);
             var order = new ServiceOrder(Text(ClientBox), Text(ClientContactBox), Text(EquipmentBox), Text(OrderBox), Text(ServicesBox), Text(NotesBox));
             var company = new CompanyProfile(Text(CompanyBox), Text(DocumentBox), Text(ContactBox), Text(AddressBox), Text(TechnicianBox), MaintenanceSession.LogoDataUri());
-            _report = new MaintenanceReport(company, order, checks, inventory, input.Now, BuildInfo.Current.Display, InventoryCheck.IsChecked == true);
+            _report = new MaintenanceReport(company, order, checks, inventory, input.Now, BuildInfo.Current.Display, InventoryCheck.IsChecked == true) { Load = input.Load };
             ShowResult(_report);
             StatusText.Text = s.Format("rep.done", checks.Count);
         }

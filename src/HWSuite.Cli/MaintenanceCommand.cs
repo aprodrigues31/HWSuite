@@ -92,7 +92,7 @@ internal static class MaintenanceCommand
 
         var checks = MaintenanceChecks.Run(input, s);
         var order = new ServiceOrder(options.Client, options.ClientContact, options.Equipment, options.OrderNumber, options.Services, options.Notes);
-        var report = new MaintenanceReport(MaintenanceSession.Company(settings), order, checks, inventory, input.Now, BuildInfo.Current.Display, !options.NoInventory);
+        var report = new MaintenanceReport(MaintenanceSession.Company(settings), order, checks, inventory, input.Now, BuildInfo.Current.Display, !options.NoInventory) { Load = input.Load };
 
         Console.WriteLine();
         Console.WriteLine($"{s[$"mnt.overall.{report.Overall}"]}  ({report.Count(Verdict.Ok)} OK, {report.Count(Verdict.Attention)} {s["mnt.verdict.Attention"]}, {report.Count(Verdict.Problem)} {s["mnt.verdict.Problem"]})");

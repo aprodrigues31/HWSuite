@@ -74,6 +74,12 @@ public sealed record AppSettings
     /// <summary>Components shown on the Sensors page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? SensorCategories { get; init; }
 
+    /// <summary>Sensors on the Charts page ("Hardware / Name" per line); null picks the CPU and GPU temperatures.</summary>
+    public string? ChartSensors { get; init; }
+
+    /// <summary>Charts page time window in minutes (live data).</summary>
+    public int ChartMinutes { get; init; } = 5;
+
     /// <summary>The user agreed, once and for all, that M-Lab publishes their Internet tests (with the public IP).</summary>
     public bool MlabConsent { get; init; }
 

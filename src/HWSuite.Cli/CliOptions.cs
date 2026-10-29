@@ -21,6 +21,7 @@ public enum CliCommand
     Bench,
     Net,
     Maintenance,
+    Log,
 }
 
 public enum DriverAction
@@ -112,6 +113,12 @@ public sealed record CliOptions
     /// <summary>bench / maintenance: run the processor benchmark.</summary>
     public bool Bench { get; init; }
 
+    /// <summary>log: the CSV log to read.</summary>
+    public string? LogFile { get; init; }
+
+    /// <summary>log: only sensors whose "hardware / name" contains this text.</summary>
+    public string? Filter { get; init; }
+
     public static CliOptions Parse(IReadOnlyList<string> args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -141,6 +148,11 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("maintenance", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Maintenance };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("log", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Log };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("vbios", StringComparison.OrdinalIgnoreCase))
@@ -224,6 +236,8 @@ public sealed record CliOptions
                 "--mlab" when options.Command == CliCommand.Net => options with { Mlab = true },
                 "--accept-mlab-policy" when options.Command == CliCommand.Net => options with { AcceptMlabPolicy = true },
                 "--ipv6" when options.Command == CliCommand.Net => options with { Ipv6 = true },
+                "--filter" when options.Command == CliCommand.Log => options with { Filter = Value(arg) },
+                _ when options.Command == CliCommand.Log && options.LogFile is null && !arg.StartsWith('-') => options with { LogFile = arg },
                 "--client" when options.Command == CliCommand.Maintenance => options with { Client = Value(arg) },
                 "--contact" when options.Command == CliCommand.Maintenance => options with { ClientContact = Value(arg) },
                 "--equipment" when options.Command == CliCommand.Maintenance => options with { Equipment = Value(arg) },

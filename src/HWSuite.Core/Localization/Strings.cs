@@ -236,6 +236,12 @@ public sealed class Strings
         ["results.count"] = "{0} run(s)",
         ["results.openFolder"] = "Open folder",
         ["mnt.report.actions"] = "Recommended actions",
+        ["mnt.report.loadChart"] = "Processor load test",
+        ["mnt.report.loadChartText"] = "{0} with every core under full load ({1} calculation errors). Temperature, power and clock along the test.",
+        ["mnt.report.chartTemp"] = "Temperature",
+        ["mnt.report.chartPower"] = "Power",
+        ["mnt.report.chartClock"] = "Clock",
+        ["mnt.report.chartRange"] = "min / avg / max",
         ["mnt.area.System"] = "System",
         ["mnt.area.Processor"] = "Processor",
         ["mnt.area.Memory"] = "Memory",
@@ -408,6 +414,23 @@ public sealed class Strings
         ["rail.bench"] = "Bench",
         ["rail.network"] = "Network",
         ["rail.report"] = "Report",
+        ["rail.charts"] = "Charts",
+        ["charts.tag"] = "History",
+        ["charts.title"] = "Charts",
+        ["charts.subtitle"] = "Sensors over time: live (last hour) or from a recorded log.",
+        ["charts.sensors"] = "Sensors",
+        ["charts.search"] = "Search (temperature, fan, CPU...)",
+        ["charts.clear"] = "Clear",
+        ["charts.selected"] = "{0} of {1} selected",
+        ["charts.live"] = "Live · last hour",
+        ["charts.window"] = "{0} min",
+        ["charts.window.all"] = "Everything",
+        ["charts.record"] = "Record log",
+        ["charts.recording"] = "● Recording",
+        ["charts.recordingTo"] = "Recording every reading to {0}",
+        ["charts.recordHint"] = "Record log saves every reading to a CSV in {0}; recorded logs show up in the list above.",
+        ["charts.empty"] = "Pick sensors on the list to see their charts (up to 8, one chart per unit).",
+        ["charts.now"] = "Now",
         ["rep.tag"] = "Maintenance",
         ["rep.subtitle"] = "Diagnosis of the equipment with advice, ready to hand over to the client as PDF.",
         ["rep.order"] = "Service order",
@@ -788,6 +811,9 @@ public sealed class Strings
                                             Internet test: speed, latency with and without load, jitter,
                                             loss and Wi-Fi state (Cloudflare; M-Lab publishes each test
                                             with your public IP, so it needs --accept-mlab-policy).
+              hwsuite log <file.csv> [--filter <text>] [-o <file.html>]
+                                            Summary of a sensor log (min / average / max of each sensor);
+                                            with -o, a page with the charts.
               hwsuite maintenance [options]
                                             Maintenance report for the client: diagnosis with advice,
                                             saved as HTML in HWSuite\Reports next to hwsuite.exe.
@@ -832,6 +858,13 @@ public sealed class Strings
         ["cli.badFormat"] = "Unsupported format '{0}'. Use txt, html or json.",
         ["cli.badNumber"] = "Invalid number for {0}: {1}",
         ["cli.written"] = "Report written to {0}",
+        ["log.title"] = "Sensor log",
+        ["log.cannotRead"] = "Could not read {0}: {1}",
+        ["log.empty"] = "{0}: no samples.",
+        ["log.header"] = "{0} · started {1} · {2} long · {3} samples · {4} sensors",
+        ["log.min"] = "Min",
+        ["log.avg"] = "Average",
+        ["log.max"] = "Max",
     };
 
     private static readonly Dictionary<string, string> Portuguese = new(StringComparer.Ordinal)
@@ -1062,6 +1095,12 @@ public sealed class Strings
         ["results.count"] = "{0} execução(ões)",
         ["results.openFolder"] = "Abrir pasta",
         ["mnt.report.actions"] = "Ações recomendadas",
+        ["mnt.report.loadChart"] = "Teste de carga do processador",
+        ["mnt.report.loadChartText"] = "{0} com todos os núcleos em carga máxima ({1} erros de cálculo). Temperatura, consumo e clock ao longo do teste.",
+        ["mnt.report.chartTemp"] = "Temperatura",
+        ["mnt.report.chartPower"] = "Consumo",
+        ["mnt.report.chartClock"] = "Clock",
+        ["mnt.report.chartRange"] = "mín. / méd. / máx.",
         ["mnt.area.System"] = "Sistema",
         ["mnt.area.Processor"] = "Processador",
         ["mnt.area.Memory"] = "Memória",
@@ -1234,6 +1273,23 @@ public sealed class Strings
         ["rail.bench"] = "Bench",
         ["rail.network"] = "Rede",
         ["rail.report"] = "Relatório",
+        ["rail.charts"] = "Gráficos",
+        ["charts.tag"] = "Histórico",
+        ["charts.title"] = "Gráficos",
+        ["charts.subtitle"] = "Sensores ao longo do tempo: ao vivo (última hora) ou de um log gravado.",
+        ["charts.sensors"] = "Sensores",
+        ["charts.search"] = "Buscar (temperatura, ventoinha, CPU...)",
+        ["charts.clear"] = "Limpar",
+        ["charts.selected"] = "{0} de {1} selecionados",
+        ["charts.live"] = "Ao vivo · última hora",
+        ["charts.window"] = "{0} min",
+        ["charts.window.all"] = "Tudo",
+        ["charts.record"] = "Gravar log",
+        ["charts.recording"] = "● Gravando",
+        ["charts.recordingTo"] = "Gravando todas as leituras em {0}",
+        ["charts.recordHint"] = "Gravar log salva todas as leituras em CSV em {0}; os logs gravados aparecem na lista acima.",
+        ["charts.empty"] = "Escolha sensores na lista para ver os gráficos (até 8, um gráfico por unidade).",
+        ["charts.now"] = "Atual",
         ["rep.tag"] = "Manutenção",
         ["rep.subtitle"] = "Diagnóstico do equipamento com orientações, pronto para entregar ao cliente em PDF.",
         ["rep.order"] = "Ordem de serviço",
@@ -1614,6 +1670,9 @@ public sealed class Strings
                                             Teste de Internet: velocidade, latência com e sem carga, jitter,
                                             perda e estado do Wi-Fi (Cloudflare; o M-Lab publica cada teste
                                             com o seu IP público, por isso exige --accept-mlab-policy).
+              hwsuite log <arquivo.csv> [--filter <texto>] [-o <arquivo.html>]
+                                            Resumo de um log de sensores (mínimo / média / máximo de cada
+                                            sensor); com -o, uma página com os gráficos.
               hwsuite maintenance [opções]
                                             Relatório de manutenção para o cliente: diagnóstico com
                                             orientações, salvo em HTML em HWSuite\Reports, ao lado do hwsuite.exe.
@@ -1658,6 +1717,13 @@ public sealed class Strings
         ["cli.badFormat"] = "Formato '{0}' não suportado. Use txt, html ou json.",
         ["cli.badNumber"] = "Número inválido para {0}: {1}",
         ["cli.written"] = "Relatório gravado em {0}",
+        ["log.title"] = "Log de sensores",
+        ["log.cannotRead"] = "Não foi possível ler {0}: {1}",
+        ["log.empty"] = "{0}: nenhuma amostra.",
+        ["log.header"] = "{0} · início {1} · duração {2} · {3} amostras · {4} sensores",
+        ["log.min"] = "Mín.",
+        ["log.avg"] = "Média",
+        ["log.max"] = "Máx.",
     };
 
     private readonly Dictionary<string, string> _table;
