@@ -27,6 +27,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
   - filtros por tipo, busca e um painel por dispositivo com uma barra de faixa segmentada em cada canal;
   - o gráfico do canal escolhido fica embaixo.
 - **Rede:** o resultado abre com um velocímetro (download, com o upload no arco interno).
+- **Winget:** o workflow **Winget (update)** envia à mão uma versão publicada (a mais recente, por padrão). O passo do Release agora verifica antes se o pacote já está no winget e se a versão já foi enviada, e explica o resultado no lugar de falhar.
 - **Modo demonstração** (`HWSuite.Gui.exe --demo`): leituras simuladas de um PC típico, para conhecer a interface sem acesso aos sensores. O CI usa esse modo para fotografar cada tela a cada build.
 
 ## [0.17.0] - 2026-10-29

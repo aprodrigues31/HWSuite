@@ -112,15 +112,12 @@ jobs:
         run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
 
       - name: Update winget
-        # Opens a pull request in microsoft/winget-pkgs for this version. Runs only when the WINGET_TOKEN
-        # secret exists, and does not fail the release (the package must already be in winget).
+        # Opens a pull request in microsoft/winget-pkgs for this version (tools/winget-update.ps1: skipped with a
+        # notice while the package is not in winget yet). Runs only when the WINGET_TOKEN secret exists, and
+        # never fails the release.
         if: ${{ env.HAS_WINGET_TOKEN == 'true' }}
         continue-on-error: true
         shell: pwsh
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: |
-          $version = "${{ steps.version.outputs.version }}"
-          $url = "https://github.com/aprodrigues31/HWSuite/releases/download/v$version/hwsuite-setup-$version.exe"
-          Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
-          .\wingetcreate.exe update aprodrigues31.HWSuite --version $version --urls $url --submit --token $env:WINGET_TOKEN
+        run: ./tools/winget-update.ps1 -Version "${{ steps.version.outputs.version }}" -Token $env:WINGET_TOKEN

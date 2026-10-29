@@ -35,7 +35,7 @@ winget install aprodrigues31.HWSuite
 winget upgrade aprodrigues31.HWSuite
 ```
 
-Para quem mantém o projeto: os manifestos ficam em `winget/manifests`. O envio usa o *secret* `WINGET_TOKEN`, um token clássico do GitHub com o escopo `public_repo`. O workflow **Winget (first submission)** faz o primeiro envio; depois disso, cada versão publicada pelo workflow **Release** abre sozinha o pedido de atualização.
+Para quem mantém o projeto: os manifestos ficam em `winget/manifests`. O envio usa o *secret* `WINGET_TOKEN`, um token clássico do GitHub com o escopo `public_repo`. O workflow **Winget (first submission)** faz o primeiro envio; depois disso, cada versão publicada pelo workflow **Release** abre sozinha o pedido de atualização (enquanto o primeiro envio não é aprovado, esse passo só avisa e não faz nada). O workflow **Winget (update)** envia uma versão à mão, por exemplo a mais recente logo depois da aprovação.
 
 ## Uso
 

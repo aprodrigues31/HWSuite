@@ -1,0 +1,34 @@
+name: Winget (update)
+
+# Submits a released version to winget by hand: after the first submission is merged (to bring the package
+# up to date with the latest release), or to retry. Releases do this automatically (release.yml).
+# Requires the repository secret WINGET_TOKEN (classic token with the public_repo scope).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to submit (empty = the latest release)
+        required: false
+        default: ''
+
+jobs:
+  update:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Submit to winget
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if (-not $env:WINGET_TOKEN) {
+            Write-Output "::error title=WINGET_TOKEN missing::Add the repository secret WINGET_TOKEN (Settings > Secrets and variables > Actions)."
+            exit 1
+          }
+          $version = "${{ inputs.version }}"
+          if (-not $version) {
+            $version = (gh release view --repo "${{ github.repository }}" --json tagName --jq .tagName).TrimStart('v')
+          }
+          ./tools/winget-update.ps1 -Version $version -Token $env:WINGET_TOKEN
