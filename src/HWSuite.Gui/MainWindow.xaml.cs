@@ -1,8 +1,8 @@
 using HWSuite.Core;
-using HWSuite.Core.Settings;
 using HWSuite.Gui.Pages;
 using HWSuite.Gui.Services;
 using HWSuite.Providers.Windows;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -17,33 +17,155 @@ public sealed partial class MainWindow : Window
     private bool _toldAboutTray;
     private volatile bool _isShown;
 
+    private readonly Dictionary<string, RadioButton> _rail = new(StringComparer.Ordinal);
+
     public MainWindow()
     {
         InitializeComponent();
         var s = App.Text;
         Title = $"HWSuite {BuildInfo.Current.Display}";
-        AppWindow.Resize(new SizeInt32(1180, 820));
+        AppWindow.Resize(new SizeInt32(1440, 900));
         if (File.Exists(App.IconPath))
         {
             AppWindow.SetIcon(App.IconPath);
         }
 
+        // The HUD title bar: content extends under it; caption buttons keep their place, recolored.
+        ExtendsContentIntoTitleBar = true;
+        SetTitleBar(TitleBar);
+        var bar = AppWindow.TitleBar;
+        bar.ButtonBackgroundColor = Colors.Transparent;
+        bar.ButtonInactiveBackgroundColor = Colors.Transparent;
+        bar.ButtonForegroundColor = Windows.UI.Color.FromArgb(255, 0xE8, 0xF7, 0xFF);
+        bar.ButtonInactiveForegroundColor = Windows.UI.Color.FromArgb(255, 0x6F, 0xA9, 0xBC);
+        bar.ButtonHoverBackgroundColor = Windows.UI.Color.FromArgb(0x30, 0x4F, 0xE3, 0xFF);
+        bar.ButtonHoverForegroundColor = Windows.UI.Color.FromArgb(255, 0xE8, 0xF7, 0xFF);
+        bar.ButtonPressedBackgroundColor = Windows.UI.Color.FromArgb(0x50, 0x4F, 0xE3, 0xFF);
+        TitleVersion.Text = $"// {BuildInfo.Current.Display}".ToUpper(s.Culture);
+        TitleMode.Text = App.IsDemo ? "// DEMO" : "";
+
         AppWindow.Closing += AppWindow_Closing;
         Activated += (_, _) => _isShown = AppWindow.IsVisible;
 
-        NavSensors.Content = s["app.nav.sensors"];
-        NavInventory.Content = s["app.nav.inventory"];
-        NavBench.Content = s["app.nav.bench"];
-        NavBenchRun.Content = s["app.nav.benchRun"];
-        NavBenchNet.Content = s["app.nav.benchNet"];
-        NavBenchResults.Content = s["app.nav.benchResults"];
-        NavSettings.Content = s["app.nav.settings"];
-        NavAbout.Content = s["app.nav.about"];
-        Nav.SelectedItem = NavSensors;
+        RailTop.Children.Add(RailItem("dashboard", "\uF246", s["rail.dashboard"], s["rail.dashboard.tip"]));
+        RailTop.Children.Add(RailItem("inventory", "\uE950", s["rail.hardware"], s["app.nav.inventory"]));
+        RailTop.Children.Add(RailItem("sensors", "\uE9D9", s["rail.sensors"], s["app.nav.sensors"]));
+        RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
+        RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
+        RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
+        RailBottom.Children.Add(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
+        BenchRunTab.Text = s["app.nav.benchRun"];
+        BenchResultsTab.Text = s["app.nav.benchResults"];
+        Navigate("dashboard");
 
-        ApplyTheme(App.Settings.Current.Theme);
-        App.Settings.Changed += (_, settings) => ApplyTheme(settings.Theme);
         UpdateAccessBar(App.Monitor.Access);
+    }
+
+    /// <summary>Opens a page by its tag ("dashboard", "sensors", "inventory", "bench", "benchresults", "network", "settings", "about").</summary>
+    public void Navigate(string tag)
+    {
+        var railTag = tag == "benchresults" ? "bench" : tag;
+        if (_rail.TryGetValue(railTag, out var item) && item.IsChecked != true)
+        {
+            _navigating = tag;
+            item.IsChecked = true; // raises Checked, which shows the page
+            _navigating = null;
+        }
+
+        Show(tag);
+    }
+
+    private string? _navigating;
+
+    private RadioButton RailItem(string tag, string glyph, string label, string tooltip)
+    {
+        var content = new StackPanel { Spacing = 6 };
+        content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 20, HorizontalAlignment = HorizontalAlignment.Center });
+        content.Children.Add(new TextBlock
+        {
+            Text = label.ToUpper(App.Text.Culture),
+            FontFamily = Hud.HudUi.Font("HudMonoFont"),
+            FontSize = 9.5,
+            CharacterSpacing = 100,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            TextAlignment = TextAlignment.Center,
+            MaxWidth = 82,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+        });
+        var item = new RadioButton { Content = content, Tag = tag, Style = Hud.HudUi.Style("HudRailItemStyle") };
+        ToolTipService.SetToolTip(item, tooltip);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(item, tooltip);
+        item.Checked += (_, _) =>
+        {
+            if (_navigating is null)
+            {
+                Show(tag);
+            }
+        };
+        _rail[tag] = item;
+        return item;
+    }
+
+    private void Show(string tag)
+    {
+        var isBench = tag is "bench" or "benchresults";
+        BenchTabs.Visibility = isBench ? Visibility.Visible : Visibility.Collapsed;
+        if (isBench)
+        {
+            var tab = tag == "benchresults" ? BenchResultsTab : BenchRunTab;
+            if (!ReferenceEquals(BenchTabs.SelectedItem, tab))
+            {
+                BenchTabs.SelectedItem = tab; // raises SelectionChanged, which navigates
+                return;
+            }
+        }
+
+        var page = tag switch
+        {
+            "dashboard" => typeof(DashboardPage),
+            "inventory" => typeof(InventoryPage),
+            "bench" => typeof(BenchmarkPage),
+            "benchresults" => typeof(BenchmarkResultsPage),
+            "network" => typeof(NetworkPage),
+            "settings" => typeof(SettingsPage),
+            "about" => typeof(AboutPage),
+            _ => typeof(SensorsPage),
+        };
+
+        if (ContentFrame.CurrentSourcePageType != page)
+        {
+            ContentFrame.Navigate(page, null, new Microsoft.UI.Xaml.Media.Animation.EntranceNavigationTransitionInfo());
+        }
+    }
+
+    /// <summary>Saves the window content as a PNG (the capture mode used by CI).</summary>
+    public async Task SaveScreenshotAsync(string path)
+    {
+        var bitmap = new Microsoft.UI.Xaml.Media.Imaging.RenderTargetBitmap();
+        await bitmap.RenderAsync(Root);
+        var pixels = await bitmap.GetPixelsAsync();
+        using var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream();
+        var encoder = await Windows.Graphics.Imaging.BitmapEncoder.CreateAsync(Windows.Graphics.Imaging.BitmapEncoder.PngEncoderId, stream);
+        encoder.SetPixelData(
+            Windows.Graphics.Imaging.BitmapPixelFormat.Bgra8,
+            Windows.Graphics.Imaging.BitmapAlphaMode.Premultiplied,
+            (uint)bitmap.PixelWidth,
+            (uint)bitmap.PixelHeight,
+            96,
+            96,
+            System.Runtime.InteropServices.WindowsRuntime.WindowsRuntimeBufferExtensions.ToArray(pixels));
+        await encoder.FlushAsync();
+        stream.Seek(0);
+        await using var file = File.Create(path);
+        await System.IO.WindowsRuntimeStreamExtensions.AsStreamForRead(stream).CopyToAsync(file);
+    }
+
+    private void BenchTabs_SelectionChanged(SelectorBar sender, SelectorBarSelectionChangedEventArgs args)
+    {
+        if (sender.SelectedItem?.Tag is string tag)
+        {
+            Show(tag);
+        }
     }
 
     /// <summary>
@@ -81,32 +203,6 @@ public sealed partial class MainWindow : Window
         {
             _toldAboutTray = true;
             tray.Notify("HWSuite", App.Text["app.tray.stillRunning"], warning: false);
-        }
-    }
-
-    private void ApplyTheme(AppTheme theme) => Root.RequestedTheme = theme switch
-    {
-        AppTheme.Light => ElementTheme.Light,
-        AppTheme.Dark => ElementTheme.Dark,
-        _ => ElementTheme.Default,
-    };
-
-    private void Nav_SelectionChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
-    {
-        var page = ((args.SelectedItem as NavigationViewItem)?.Tag as string) switch
-        {
-            "inventory" => typeof(InventoryPage),
-            "bench" => typeof(BenchmarkPage),
-            "benchnet" => typeof(NetworkPage),
-            "benchresults" => typeof(BenchmarkResultsPage),
-            "settings" => typeof(SettingsPage),
-            "about" => typeof(AboutPage),
-            _ => typeof(SensorsPage),
-        };
-
-        if (ContentFrame.CurrentSourcePageType != page)
-        {
-            ContentFrame.Navigate(page);
         }
     }
 

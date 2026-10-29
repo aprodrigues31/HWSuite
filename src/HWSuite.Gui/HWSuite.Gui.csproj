@@ -30,6 +30,10 @@
     <!-- Loaded at run time for the window and the notification-area icon. -->
     <Content Remove="Assets\HWSuite.ico" />
     <Content Include="Assets\HWSuite.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Interface fonts (SIL Open Font License 1.1, licenses next to them): Chakra Petch and JetBrains Mono. -->
+    <Content Remove="Assets\Fonts\**" />
+    <None Remove="Assets\Fonts\**" />
+    <Content Include="Assets\Fonts\*.ttf;Assets\Fonts\*.txt" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HWSuite.Core\HWSuite.Core.csproj" />

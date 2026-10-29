@@ -54,6 +54,9 @@ public sealed record AppSettings
     /// <summary>Alert when the pump turns slower than this.</summary>
     public int PumpMinRpm { get; init; } = DefaultPumpMinRpm;
 
+    /// <summary>Accent color of the interface ("cyan", "violet", "green", "magenta", "amber"); null is cyan.</summary>
+    public string? Accent { get; init; }
+
     /// <summary>The user agreed, once and for all, that M-Lab publishes their Internet tests (with the public IP).</summary>
     public bool MlabConsent { get; init; }
 

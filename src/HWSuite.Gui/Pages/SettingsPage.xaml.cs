@@ -12,7 +12,6 @@ namespace HWSuite.Gui.Pages;
 /// <summary>Interval, theme, tray and startup behavior, alert limits and CSV logging. Every change is saved immediately.</summary>
 public sealed partial class SettingsPage : Page
 {
-    private static readonly AppTheme[] Themes = [AppTheme.System, AppTheme.Light, AppTheme.Dark];
     private static readonly string?[] Languages = [null, "pt-BR", "en"];
     private bool _loading;
 
@@ -30,10 +29,11 @@ public sealed partial class SettingsPage : Page
         LanguageBox.Items.Add("Português (Brasil)");
         LanguageBox.Items.Add("English");
         LanguageHint.Text = s["settings.language.restart"];
-        ThemeChoice.Header = s["settings.theme"];
-        foreach (var theme in Themes)
+        // The HUD is always dark; what can be chosen is its accent color (applied at once).
+        ThemeChoice.Header = s["settings.accent"];
+        foreach (var (id, _) in Hud.HudAccents.All)
         {
-            ThemeChoice.Items.Add(s[$"settings.theme.{theme.ToString().ToLowerInvariant()}"]);
+            ThemeChoice.Items.Add(s[$"accent.{id}"]);
         }
 
         CloseToTraySwitch.Header = s["settings.closeToTray"];
@@ -61,7 +61,7 @@ public sealed partial class SettingsPage : Page
         _loading = true;
         var settings = App.Settings.Current;
         IntervalBox.Value = settings.IntervalSeconds;
-        ThemeChoice.SelectedIndex = Array.IndexOf(Themes, settings.Theme);
+        ThemeChoice.SelectedIndex = Math.Max(0, Hud.HudAccents.All.ToList().FindIndex(a => a.Id == settings.Accent));
         LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, settings.Language));
         CloseToTraySwitch.IsOn = settings.CloseToTray;
         UpdatesSwitch.IsOn = settings.CheckForUpdates;
@@ -97,8 +97,9 @@ public sealed partial class SettingsPage : Page
     {
         if (!_loading && ThemeChoice.SelectedIndex >= 0)
         {
-            var theme = Themes[ThemeChoice.SelectedIndex];
-            App.Settings.Update(s => s with { Theme = theme });
+            var accent = Hud.HudAccents.All[ThemeChoice.SelectedIndex].Id;
+            App.Settings.Update(s => s with { Accent = accent });
+            Hud.HudAccents.Apply(accent);
         }
     }
 

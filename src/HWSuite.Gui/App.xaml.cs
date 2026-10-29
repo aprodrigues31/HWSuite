@@ -17,6 +17,12 @@ public partial class App : Application
     /// <summary>CI check: run normally for a few seconds, then write what the sensors did to a file and exit.</summary>
     public const string SelfTestArgument = "--self-test";
 
+    /// <summary>Shows plausible made-up readings instead of the real sensors (screenshots, machines without access).</summary>
+    public const string DemoArgument = "--demo";
+
+    /// <summary>CI: opens every page in turn, saves each as a PNG into the given folder, then exits.</summary>
+    public const string CaptureArgument = "--capture";
+
     private const string InstanceMutexName = @"Local\HWSuite.Gui.Instance";
 
     private Mutex? _instance;
@@ -47,6 +53,9 @@ public partial class App : Application
 
     public static TrayIcon? Tray { get; private set; }
 
+    /// <summary>Running on <see cref="DemoSensorSource"/> data (title bar says DEMO; nothing is saved as a real reading).</summary>
+    public static bool IsDemo { get; private set; }
+
     public static string IconPath => Path.Combine(AppContext.BaseDirectory, "Assets", "HWSuite.ico");
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -60,6 +69,14 @@ public partial class App : Application
         }
 
         _ui = DispatcherQueue.GetForCurrentThread();
+        IsDemo = commandLine.Contains(DemoArgument, StringComparer.OrdinalIgnoreCase);
+        if (IsDemo)
+        {
+            // Five minutes of history from the start, so charts are full; the live source continues from there.
+            SensorMonitor.SourceFactory = _ => new MinMaxTrackingSource(new DemoSensorSource(elapsedAtStart: TimeSpan.FromMinutes(5)));
+        }
+
+        Hud.HudAccents.Apply(Settings.Current.Accent);
         Monitor.Configure(Settings.Current, Settings.EffectiveRules, Settings.LogFolder);
         Settings.Changed += (_, s) => Monitor.Configure(s, Settings.EffectiveRules, Settings.LogFolder);
         Monitor.Alerted += OnAlerted;
@@ -81,6 +98,17 @@ public partial class App : Application
         }
 
         Monitor.Start();
+        if (IsDemo)
+        {
+            Monitor.Seed(DemoSensorSource.History(TimeSpan.FromMinutes(5), Monitor.Interval));
+        }
+
+        var capture = Array.FindIndex(commandLine, a => a.Equals(CaptureArgument, StringComparison.OrdinalIgnoreCase));
+        if (capture >= 0 && capture + 1 < commandLine.Length)
+        {
+            _ = CaptureAsync(commandLine[capture + 1]);
+            return;
+        }
 
         var selfTest = Array.FindIndex(commandLine, a => a.Equals(SelfTestArgument, StringComparison.OrdinalIgnoreCase));
         if (selfTest >= 0 && selfTest + 1 < commandLine.Length)
@@ -172,6 +200,34 @@ public partial class App : Application
             }
         })
         { IsBackground = true, Name = "HWSuite self-test watchdog" }.Start();
+    }
+
+    /// <summary>
+    /// Saves a PNG of every page (window content, 1440 × 900) into <paramref name="folder"/> and exits; CI publishes
+    /// them so the interface can be reviewed without a Windows machine. Exit code 0 when every page was saved.
+    /// </summary>
+    private async Task CaptureAsync(string folder)
+    {
+        string[] pages = ["dashboard", "sensors", "inventory", "bench", "benchresults", "network", "settings", "about"];
+        var saved = 0;
+        try
+        {
+            Directory.CreateDirectory(folder);
+            await Task.Delay(TimeSpan.FromSeconds(6)).ConfigureAwait(true); // window shown, first sensor reads in
+            for (var i = 0; i < pages.Length; i++)
+            {
+                MainWindow!.Navigate(pages[i]);
+                await Task.Delay(TimeSpan.FromSeconds(4)).ConfigureAwait(true);
+                await MainWindow.SaveScreenshotAsync(Path.Combine(folder, $"{i + 1:00}-{pages[i]}.png")).ConfigureAwait(true);
+                saved++;
+            }
+        }
+        catch (Exception ex)
+        {
+            File.WriteAllText(Path.Combine(folder, "capture-error.txt"), ex.ToString());
+        }
+
+        Environment.Exit(saved == pages.Length ? 0 : 4);
     }
 
     /// <summary>Exits for real (tray menu "Exit"), bypassing close-to-tray.</summary>

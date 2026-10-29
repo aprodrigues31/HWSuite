@@ -25,6 +25,9 @@ public sealed class SensorMonitor : IDisposable
 
     public SensorHistory History { get; } = new(capacity: 300);
 
+    /// <summary>Creates the sensor source; replaced by the demo mode before monitoring starts.</summary>
+    public static Func<AccessStatus, ISensorSource> SourceFactory { get; set; } = access => ProviderCatalog.CreateSensorSource(access);
+
     public AccessStatus Access { get; private set; } = AccessStatus.Detect();
 
     public SensorSnapshot? Latest { get; private set; }
@@ -77,7 +80,7 @@ public sealed class SensorMonitor : IDisposable
         {
             try
             {
-                var source = ProviderCatalog.CreateSensorSource(access);
+                var source = SourceFactory(access);
                 lock (_gate)
                 {
                     _source = source;
@@ -89,6 +92,16 @@ public sealed class SensorMonitor : IDisposable
                 Failed?.Invoke(this, ex);
             }
         });
+    }
+
+    /// <summary>Pre-fills the history (demo mode) so charts start full.</summary>
+    public void Seed(IEnumerable<SensorSnapshot> snapshots)
+    {
+        ArgumentNullException.ThrowIfNull(snapshots);
+        foreach (var snapshot in snapshots)
+        {
+            History.Add(snapshot);
+        }
     }
 
     public void Stop()
