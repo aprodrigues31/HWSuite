@@ -96,8 +96,8 @@ public sealed partial class MainWindow : Window
         {
             Text = label.ToUpper(App.Text.Culture),
             FontFamily = Hud.HudUi.Font("HudMonoFont"),
-            FontSize = 10.5,
-            CharacterSpacing = 20,
+            FontSize = label.Length > 9 ? 9.5 : 10.5, // "MANUTENÇÃO" / "MAINTENANCE" fit the rail
+            CharacterSpacing = label.Length > 9 ? 0 : 20,
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
             MaxWidth = 82,
