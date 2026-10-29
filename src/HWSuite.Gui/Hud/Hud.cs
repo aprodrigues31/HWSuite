@@ -133,16 +133,13 @@ public static class HudUi
     }
 
     /// <summary>Label on the left, value on the right, a dashed line under it (lists of facts).</summary>
-    public static Grid FactRow(string label, UIElement value)
+    public static Grid FactRow(string label, FrameworkElement value)
     {
         var grid = new Grid { ColumnSpacing = 12, Padding = new Thickness(0, 7, 0, 7), BorderBrush = Brush("HudAccentFaintBrush"), BorderThickness = new Thickness(0, 0, 0, 1) };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.Children.Add(new TextBlock { Text = label, Foreground = TextDim, VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis });
-        if (value is FrameworkElement e)
-        {
-            e.HorizontalAlignment = HorizontalAlignment.Right;
-        }
+        value.HorizontalAlignment = HorizontalAlignment.Right;
 
         Grid.SetColumn(value, 1);
         grid.Children.Add(value);
