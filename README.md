@@ -4,7 +4,7 @@ Monitoramento e inventário de hardware para Windows 11 (CPU, GPU, sensores) em 
 
 *Hardware inventory and monitoring for Windows 11 in C#/.NET. One tool covering what CPU-Z, GPU-Z and HWMonitor do separately.*
 
-> **Status: 0.14.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória, link PCIe, telemetria extra de placas AMD, S.M.A.R.T. de discos SATA/USB, banco de dados de GPUs no estilo GPU-Z, clocks da placa lidos do driver AMD, detecção de GPU falsificada, backup da BIOS de vídeo e benchmark/stress test de processador e placa de vídeo, saúde da fonte, bomba do water cooler, NPU, bateria/nobreak, AMD EXPO e instalador com aviso de nova versão.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
+> **Status: 0.15.0 lançada: inventário e sensores em tempo real na linha de comando e no aplicativo de desktop, com área de notificação, alertas, log, perfis de placa-mãe, SPD/XMP da memória, link PCIe, telemetria extra de placas AMD, S.M.A.R.T. de discos SATA/USB, banco de dados de GPUs no estilo GPU-Z, clocks da placa lidos do driver AMD, detecção de GPU falsificada, backup da BIOS de vídeo e benchmark/stress test de processador e placa de vídeo, saúde da fonte, bomba do water cooler, NPU, bateria/nobreak, AMD EXPO , instalador com atualização automática, winget e interface em português ou inglês.** Identifica o hardware sem instalar nenhum driver, gera relatórios em texto, HTML e JSON, mostra os sensores ao vivo e instala o driver PawnIO quando necessário.
 
 ## O que a fase 1 já faz
 

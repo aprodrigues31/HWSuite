@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.15.0] - 2026-10-28
+
 ### Alterado
 - **Sensores:** os nomes das colunas (Sensor, Tipo, Valor, Mín., Máx.) ficam abaixo do título de cada dispositivo, em vez de uma única linha no topo da página.
 
@@ -156,7 +158,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.14.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.15.0
 [0.14.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.14.0
 [0.13.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.13.0
 [0.12.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.12.0
