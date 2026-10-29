@@ -1,6 +1,5 @@
 using System.Globalization;
 using Microsoft.UI;
-using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
@@ -155,8 +154,6 @@ public static class HudUi
 
     public static TextBlock Strong(string text, double size = 15) =>
         new() { Text = text, FontFamily = Font("HudDisplayFont"), FontSize = size, CharacterSpacing = 30, Foreground = Text, TextTrimming = TextTrimming.CharacterEllipsis };
-
-    public static FontWeight SemiBold => FontWeights.SemiBold;
 }
 
 /// <summary>Arc geometry for the gauges: angles in degrees, clockwise, 0° pointing right (screen coordinates).</summary>

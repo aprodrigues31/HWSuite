@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Hosting;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Windows.Foundation;
+using Path = Microsoft.UI.Xaml.Shapes.Path;
 using Windows.UI;
 
 namespace HWSuite.Gui.Hud;
