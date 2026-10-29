@@ -1,5 +1,6 @@
 using System.Globalization;
 using HWSuite.Core.Localization;
+using HWSuite.Core.Network;
 
 namespace HWSuite.Core.Benchmark;
 
@@ -89,6 +90,40 @@ public static class ResultTables
                     : "—"));
                 return new ResultRow(cells, Fraction(Headline(r), best), Headline(r) == best && best > 0);
             })]);
+    }
+
+    /// <summary>Download, upload, latency (idle / under load), jitter, loss and connection; the bar follows download.</summary>
+    public static ResultTable Network(IReadOnlyList<NetHistoryEntry> runs, Strings s)
+    {
+        ArgumentNullException.ThrowIfNull(runs);
+        ArgumentNullException.ThrowIfNull(s);
+        var c = s.Culture;
+        var best = runs.Count == 0 ? 0 : runs.Max(r => r.DownloadMbps);
+        return new ResultTable(
+            [
+                new(s["results.when"], false),
+                new(s["results.server"], false),
+                new(s["results.download"], true),
+                new(s["results.upload"], true),
+                new(s["results.latency"], true),
+                new(s["results.jitter"], true),
+                new(s["results.loss"], true),
+                new(s["results.connection"], false),
+            ],
+            BarColumn: 2,
+            [.. runs.Select(r => new ResultRow(
+                [
+                    When(r.At, c),
+                    $"{r.ServerName ?? r.Server.ToString()} · {r.Family}",
+                    r.DownloadMbps.ToString("N0", c),
+                    r.UploadMbps.ToString("N0", c),
+                    $"{r.LatencyMs.ToString("N0", c)} / {Math.Max(r.LatencyDownloadMs, r.LatencyUploadMs).ToString("N0", c)}",
+                    r.JitterMs.ToString("N1", c),
+                    r.LossPercent is { } loss ? loss.ToString("0.#", c) + "%" : "—",
+                    r.Connection ?? "—",
+                ],
+                Fraction(r.DownloadMbps, best),
+                r.DownloadMbps == best && best > 0))]);
     }
 
     private static string When(DateTimeOffset at, CultureInfo c) => at.LocalDateTime.ToString("g", c);
