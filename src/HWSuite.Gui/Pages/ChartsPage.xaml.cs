@@ -311,7 +311,7 @@ public sealed partial class ChartsPage : Page
             }
 
             content.Children.Add(new TextBlock { Text = sensor.Name, FontSize = 13 });
-            content.Children.Add(new TextBlock { Text = sensor.Unit, FontSize = 11, Foreground = HudUi.Tag, VerticalAlignment = VerticalAlignment.Center });
+            content.Children.Add(new TextBlock { Text = sensor.Unit, FontSize = 11, Opacity = 0.7, VerticalAlignment = VerticalAlignment.Center }); // chip's own text color: readable on and off
             var chip = new ToggleButton { Content = content, IsChecked = on, IsEnabled = on || !full, Padding = new Thickness(10, 5, 10, 5) };
             ToolTipService.SetToolTip(chip, sensor.Key);
             chip.Click += (_, _) =>
