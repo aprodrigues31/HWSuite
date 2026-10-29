@@ -11,6 +11,17 @@ namespace HWSuite.Gui.Hud;
 /// </summary>
 public sealed partial class MasonryPanel : Panel
 {
+    /// <summary>
+    /// Re-flows the blocks now. Pages call it after showing or hiding children: a visibility change alone does not
+    /// always make WinUI measure a custom panel again.
+    /// </summary>
+    public void Reflow()
+    {
+        InvalidateMeasure();
+        InvalidateArrange();
+        UpdateLayout();
+    }
+
     public double MinColumnWidth { get; set; } = 480;
 
     public double Spacing { get; set; } = 16;
@@ -40,7 +51,6 @@ public sealed partial class MasonryPanel : Panel
         {
             if (child.Visibility != Visibility.Visible)
             {
-                child.Measure(new Size(0, 0));
                 continue;
             }
 

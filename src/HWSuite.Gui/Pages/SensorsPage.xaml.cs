@@ -277,6 +277,8 @@ public sealed partial class SensorsPage : Page
         {
             device.Panel.Visibility = Shown(device.Category) && device.Rows.Any(r => r.Root.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
         }
+
+        DeviceGrid.Reflow();
     }
 
     // ---- Live values -------------------------------------------------------------------------------------------

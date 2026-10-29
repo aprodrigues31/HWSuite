@@ -194,6 +194,7 @@ public sealed partial class InventoryPage : Page
         }
 
         EmptyText.Visibility = shown == 0 && _blocks.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        Sections.Reflow();
     }
 
     /// <summary>Writes the HTML report to the reports folder (chosen in Settings, or asked the first time) and opens it.</summary>

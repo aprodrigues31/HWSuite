@@ -339,6 +339,8 @@ public sealed partial class ChartsPage : Page
             ChartsHost.Children.Add(HudUi.Panel(title, content, s.Culture));
             _charts[$"{kind}:{unit}"] = (chart, legend);
         }
+
+        ChartsHost.Reflow();
     }
 
     private Grid LegendRow(TimelineSeries series, System.Globalization.CultureInfo c)
