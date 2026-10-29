@@ -75,4 +75,15 @@ public sealed class SensorItem(SensorReading reading, string kindLabel) : INotif
 public sealed class SensorGroup(string title) : ObservableCollection<SensorItem>
 {
     public string Title { get; } = title;
+
+    // Column names, repeated under each device title.
+    public string NameHeader { get; } = App.Text["sensors.sensor"];
+
+    public string KindHeader { get; } = App.Text["app.columnKind"];
+
+    public string ValueHeader { get; } = App.Text["sensors.value"];
+
+    public string MinHeader { get; } = App.Text["sensors.min"];
+
+    public string MaxHeader { get; } = App.Text["sensors.max"];
 }

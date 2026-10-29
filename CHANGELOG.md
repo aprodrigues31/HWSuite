@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Alterado
+- **Sensores:** os nomes das colunas (Sensor, Tipo, Valor, Mín., Máx.) ficam abaixo do título de cada dispositivo, em vez de uma única linha no topo da página.
+
 ### Adicionado
 - **Idioma:** em Configurações, escolha entre Português (Brasil), English ou o idioma do Windows (padrão); vale ao reabrir o app. Todos os textos existem nos dois idiomas, conferidos por teste.
 - **Atualização automática:** quando o HWSuite foi instalado pelo instalador, a barra de nova versão oferece "Atualizar agora". O app baixa o instalador, confere o SHA-256 publicado pelo GitHub (se não conferir, nada é instalado), instala em modo silencioso, fecha e reabre já na versão nova. A versão portátil continua com o botão de download.

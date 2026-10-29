@@ -27,32 +27,48 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Grid Padding="16,0,28,0" ColumnSpacing="12">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="3*" />
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="120" />
-                </Grid.ColumnDefinitions>
-                <TextBlock x:Name="HeaderName" Grid.Column="0" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                <TextBlock x:Name="HeaderKind" Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                <TextBlock x:Name="HeaderValue" Grid.Column="2" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                <TextBlock x:Name="HeaderMin" Grid.Column="3" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                <TextBlock x:Name="HeaderMax" Grid.Column="4" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            </Grid>
-
             <ListView
                 x:Name="SensorList"
-                Grid.Row="1"
+                Grid.Row="0"
+                Grid.RowSpan="2"
                 ItemsSource="{Binding Source={StaticResource GroupedSensors}}"
                 SelectionChanged="SensorList_SelectionChanged"
                 SelectionMode="Single">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="16,0,16,0" />
+                    </Style>
+                </ListView.ItemContainerStyle>
                 <ListView.GroupStyle>
                     <GroupStyle>
+                        <GroupStyle.HeaderContainerStyle>
+                            <!-- Stretch so the column names line up with the rows below (same 16 px side padding as the items). -->
+                            <Style TargetType="ListViewHeaderItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="16,12,16,0" />
+                                <Setter Property="Margin" Value="0" />
+                            </Style>
+                        </GroupStyle.HeaderContainerStyle>
                         <GroupStyle.HeaderTemplate>
                             <DataTemplate x:DataType="vm:SensorGroup">
-                                <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Title}" />
+                                <StackPanel Spacing="6">
+                                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Title}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="3*" />
+                                            <ColumnDefinition Width="2*" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="120" />
+                                            <ColumnDefinition Width="120" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind NameHeader}" />
+                                        <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind KindHeader}" />
+                                        <TextBlock Grid.Column="2" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ValueHeader}" />
+                                        <TextBlock Grid.Column="3" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MinHeader}" />
+                                        <TextBlock Grid.Column="4" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MaxHeader}" />
+                                    </Grid>
+                                </StackPanel>
                             </DataTemplate>
                         </GroupStyle.HeaderTemplate>
                     </GroupStyle>

@@ -25,11 +25,6 @@ public sealed partial class SensorsPage : Page
         var s = App.Text;
         PageTitle.Text = s["app.nav.sensors"];
         StatusText.Text = s["app.sensorsStarting"];
-        HeaderName.Text = s["sensors.sensor"];
-        HeaderKind.Text = s["app.columnKind"];
-        HeaderValue.Text = s["sensors.value"];
-        HeaderMin.Text = s["sensors.min"];
-        HeaderMax.Text = s["sensors.max"];
         ChartTitle.Text = s["app.chartHint"];
         AlertButtonText.Text = s["app.createAlert"];
         GroupedSensors.Source = _groups;
