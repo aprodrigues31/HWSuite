@@ -6,6 +6,7 @@ name: Winget (first submission)
 #
 # Requires the repository secret WINGET_TOKEN: a GitHub token of the repository owner with the
 # public_repo scope (classic token). wingetcreate forks winget-pkgs under that account if needed.
+# Every failure is reported as a workflow annotation (shown on the run page), with the tool's own output.
 on:
   workflow_dispatch:
     inputs:
@@ -20,14 +21,50 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      - name: Check the token
+        shell: pwsh
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if (-not $env:WINGET_TOKEN) {
+            Write-Output "::error title=WINGET_TOKEN missing::The repository secret WINGET_TOKEN is empty or has another name (Settings > Secrets and variables > Actions > Repository secrets)."
+            exit 1
+          }
+          # Who the token belongs to and which scopes it has (the token itself is never printed).
+          $headers = @{ Authorization = "Bearer $env:WINGET_TOKEN"; 'User-Agent' = 'HWSuite-winget' }
+          try {
+            $response = Invoke-WebRequest https://api.github.com/user -Headers $headers -UseBasicParsing
+          } catch {
+            Write-Output "::error title=Token rejected by GitHub::$($_.Exception.Message) - the token may be expired, revoked or pasted incompletely."
+            exit 1
+          }
+          $login = ($response.Content | ConvertFrom-Json).login
+          $scopes = "$($response.Headers['X-OAuth-Scopes'])"
+          Write-Output "::notice title=Token OK::Account $login, scopes: $(if ($scopes) { $scopes } else { 'none listed (fine-grained token)' })"
+          if ($scopes -and $scopes -notmatch 'public_repo|(^|, )repo(,|$)') {
+            Write-Output "::error title=Missing scope::The token has scopes '$scopes' but needs public_repo (classic token)."
+            exit 1
+          }
+
       - name: Submit with wingetcreate
         shell: pwsh
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         run: |
-          if (-not $env:WINGET_TOKEN) { throw "Add the WINGET_TOKEN repository secret first (see README, section Winget)." }
           $dir = "winget/manifests/a/aprodrigues31/HWSuite/${{ inputs.version }}"
-          if (-not (Test-Path $dir)) { throw "No manifests in $dir" }
+          if (-not (Test-Path $dir)) {
+            Write-Output "::error title=No manifests::No manifests in $dir"
+            exit 1
+          }
           Invoke-WebRequest https://aka.ms/wingetcreate/latest -OutFile wingetcreate.exe
-          .\wingetcreate.exe submit --prtitle "New package: aprodrigues31.HWSuite version ${{ inputs.version }}" --token $env:WINGET_TOKEN $dir
-          if ($LASTEXITCODE -ne 0) { throw "wingetcreate submit failed ($LASTEXITCODE)" }
+          $output = & .\wingetcreate.exe submit --prtitle "New package: aprodrigues31.HWSuite version ${{ inputs.version }}" --token $env:WINGET_TOKEN $dir 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Host $output
+          # Annotations are one line each: keep the meaningful lines of the tool's output.
+          $lines = ($output -split "`r?`n" | Where-Object { $_.Trim() } | Select-Object -Last 12) -join ' | '
+          $lines = $lines.Replace($env:WINGET_TOKEN, '***')
+          if ($code -ne 0) {
+            Write-Output "::error title=wingetcreate failed ($code)::$lines"
+            exit 1
+          }
+          Write-Output "::notice title=Submitted::$lines"
