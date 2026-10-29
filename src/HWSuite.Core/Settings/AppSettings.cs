@@ -57,6 +57,9 @@ public sealed record AppSettings
     /// <summary>Accent color of the interface ("cyan", "violet", "green", "magenta", "amber"); null is cyan.</summary>
     public string? Accent { get; init; }
 
+    /// <summary>Components shown on the Sensors page ("Cpu,Gpu"); null shows all of them.</summary>
+    public string? SensorCategories { get; init; }
+
     /// <summary>The user agreed, once and for all, that M-Lab publishes their Internet tests (with the public IP).</summary>
     public bool MlabConsent { get; init; }
 

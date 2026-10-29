@@ -33,8 +33,23 @@
         <!-- Summary -->
         <Grid x:Name="SummaryGrid" Grid.Row="1" ColumnSpacing="12" />
 
-        <!-- Filters by kind -->
-        <StackPanel x:Name="Filters" Grid.Row="2" Orientation="Horizontal" Spacing="8" />
+        <!-- Filters: which components (several at once) and which kind of reading -->
+        <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">
+            <Grid ColumnSpacing="14" RowSpacing="8" Padding="0,0,0,4">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock x:Name="CategoryLabel" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                <StackPanel x:Name="CategoryFilters" Grid.Column="1" Orientation="Horizontal" Spacing="8" />
+                <TextBlock x:Name="KindLabel" Grid.Row="1" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                <StackPanel x:Name="Filters" Grid.Row="1" Grid.Column="1" Orientation="Horizontal" Spacing="8" />
+            </Grid>
+        </ScrollViewer>
 
         <!-- Devices, in two columns -->
         <ScrollViewer Grid.Row="3" Padding="0,0,8,0">

@@ -184,3 +184,51 @@ public static class SensorScale
         return Math.Clamp(f, 0, 1);
     }
 }
+
+/// <summary>The component a sensor belongs to, as the Sensors page groups and filters them.</summary>
+public enum SensorCategory
+{
+    Motherboard,
+    Cpu,
+    Memory,
+    Storage,
+    Gpu,
+    Network,
+    Battery,
+    Other,
+}
+
+/// <summary>Maps the hardware kind libraries report ("CPU", "Super I/O", "Storage"...) to a <see cref="SensorCategory"/>.</summary>
+public static class SensorCategories
+{
+    public static SensorCategory Of(SensorReading reading)
+    {
+        ArgumentNullException.ThrowIfNull(reading);
+        return Of(reading.HardwareKind);
+    }
+
+    public static SensorCategory Of(string hardwareKind) => hardwareKind.ToUpperInvariant() switch
+    {
+        "MOTHERBOARD" or "SUPER I/O" or "SUPERIO" or "EC" or "EMBEDDEDCONTROLLER" => SensorCategory.Motherboard,
+        "CPU" => SensorCategory.Cpu,
+        "MEMORY" => SensorCategory.Memory,
+        "STORAGE" => SensorCategory.Storage,
+        "GPU" or "GPUAMD" or "GPUNVIDIA" or "GPUINTEL" => SensorCategory.Gpu,
+        "NETWORK" => SensorCategory.Network,
+        "BATTERY" => SensorCategory.Battery,
+        _ => SensorCategory.Other,
+    };
+
+    /// <summary>Saved choice ("Cpu,Gpu") back to categories; unknown names are ignored, nothing means everything.</summary>
+    public static IReadOnlySet<SensorCategory> Parse(string? saved) =>
+        (saved ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(x => Enum.TryParse<SensorCategory>(x, out var c) ? (SensorCategory?)c : null)
+            .OfType<SensorCategory>()
+            .ToHashSet();
+
+    public static string? Format(IEnumerable<SensorCategory> categories)
+    {
+        var list = categories.Distinct().Order().ToList();
+        return list.Count == 0 ? null : string.Join(",", list);
+    }
+}

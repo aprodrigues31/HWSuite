@@ -106,4 +106,33 @@ public sealed class DashboardTests
         var rail = new SensorReading("v", "chip", "Super I/O", "+12V", SensorKind.Voltage, 12, null, null);
         Assert.Equal(0.5, SensorScale.Fraction(rail), 3);
     }
+
+    [Theory]
+    [InlineData("CPU", SensorCategory.Cpu)]
+    [InlineData("Super I/O", SensorCategory.Motherboard)]
+    [InlineData("Motherboard", SensorCategory.Motherboard)]
+    [InlineData("EC", SensorCategory.Motherboard)]
+    [InlineData("Memory", SensorCategory.Memory)]
+    [InlineData("Storage", SensorCategory.Storage)]
+    [InlineData("GPU", SensorCategory.Gpu)]
+    [InlineData("Network", SensorCategory.Network)]
+    [InlineData("Battery", SensorCategory.Battery)]
+    [InlineData("PSU", SensorCategory.Other)]
+    public void Category_of_hardware_kind(string kind, SensorCategory expected) => Assert.Equal(expected, SensorCategories.Of(kind));
+
+    [Fact]
+    public void Demo_covers_the_main_categories()
+    {
+        var categories = Demo().Readings.Select(SensorCategories.Of).ToHashSet();
+        Assert.Superset(new HashSet<SensorCategory> { SensorCategory.Cpu, SensorCategory.Gpu, SensorCategory.Memory, SensorCategory.Storage, SensorCategory.Motherboard }, categories);
+    }
+
+    [Fact]
+    public void Category_choice_round_trip()
+    {
+        Assert.Equal("Cpu,Gpu", SensorCategories.Format([SensorCategory.Gpu, SensorCategory.Cpu, SensorCategory.Gpu]));
+        Assert.Null(SensorCategories.Format([]));
+        Assert.Equal(new HashSet<SensorCategory> { SensorCategory.Cpu, SensorCategory.Storage }, SensorCategories.Parse("Storage, Cpu,Nonsense"));
+        Assert.Empty(SensorCategories.Parse(null));
+    }
 }

@@ -26,6 +26,9 @@ public sealed partial class SensorsPage : Page
     private readonly Dictionary<string, (TextBlock Value, TextBlock Note)> _summary = [];
     private int _rowsA;
     private int _rowsB;
+    private readonly HashSet<SensorCategory> _categories = [.. SensorCategories.Parse(App.Settings.Current.SensorCategories)];
+    private readonly SortedDictionary<SensorCategory, ToggleButton> _categoryButtons = [];
+    private ToggleButton? _allCategories;
     private SensorKind? _filter;
     private string _search = "";
     private Row? _selected;
@@ -40,7 +43,10 @@ public sealed partial class SensorsPage : Page
         SearchBox.PlaceholderText = s["sensors.search"];
         ChartTitle.Text = s["app.chartHint"].ToUpper(s.Culture);
         AlertButtonText.Text = s["app.createAlert"];
+        CategoryLabel.Text = s["sensors.components"].ToUpper(s.Culture);
+        KindLabel.Text = s["sensors.kinds"].ToUpper(s.Culture);
         BuildSummary();
+        BuildCategoryFilters();
         BuildFilters();
     }
 
@@ -97,6 +103,84 @@ public sealed partial class SensorsPage : Page
         }
     }
 
+    /// <summary>"All" plus one button per component present (added as devices appear); several can be on.</summary>
+    private void BuildCategoryFilters()
+    {
+        var s = App.Text;
+        _allCategories = Chip(s["sensors.filter.all"]);
+        _allCategories.Click += (_, _) =>
+        {
+            _categories.Clear();
+            CategoryChanged();
+        };
+        CategoryFilters.Children.Add(_allCategories);
+        RefreshCategoryChips();
+    }
+
+    private ToggleButton CategoryChip(SensorCategory category)
+    {
+        if (_categoryButtons.TryGetValue(category, out var existing))
+        {
+            return existing;
+        }
+
+        var button = Chip(App.Text[$"category.{category}"]);
+        button.Click += (_, _) =>
+        {
+            if (!_categories.Remove(category))
+            {
+                _categories.Add(category);
+            }
+
+            CategoryChanged();
+        };
+        _categoryButtons[category] = button;
+
+        // Keep the buttons in the fixed component order after "All".
+        CategoryFilters.Children.Insert(1 + _categoryButtons.Keys.ToList().IndexOf(category), button);
+        RefreshCategoryChips();
+        return button;
+    }
+
+    private void CategoryChanged()
+    {
+        // Everything picked is the same as "All".
+        if (_categoryButtons.Count > 0 && _categoryButtons.Keys.All(_categories.Contains))
+        {
+            _categories.Clear();
+        }
+
+        RefreshCategoryChips();
+        var saved = SensorCategories.Format(_categories);
+        App.Settings.Update(x => x with { SensorCategories = saved });
+        ApplyFilter();
+    }
+
+    private void RefreshCategoryChips()
+    {
+        var c = App.Text.Culture;
+        if (_allCategories is not null)
+        {
+            _allCategories.IsChecked = _categories.Count == 0;
+        }
+
+        foreach (var (category, button) in _categoryButtons)
+        {
+            var devices = _devices.Values.Count(d => d.Category == category);
+            button.Content = (App.Text[$"category.{category}"] + (devices > 1 ? $" · {devices}" : "")).ToUpper(c);
+            button.IsChecked = _categories.Contains(category);
+        }
+    }
+
+    private static ToggleButton Chip(string label) => new()
+    {
+        Content = label.ToUpper(App.Text.Culture),
+        FontFamily = HudUi.Font("HudMonoFont"),
+        FontSize = 12,
+        CharacterSpacing = 80,
+        Padding = new Thickness(14, 7, 14, 7),
+    };
+
     private void BuildFilters()
     {
         var s = App.Text;
@@ -143,8 +227,11 @@ public sealed partial class SensorsPage : Page
         ApplyFilter();
     }
 
+    private bool Shown(SensorCategory category) => _categories.Count == 0 || _categories.Contains(category);
+
     private bool Visible(Row row) =>
-        (_filter is null || row.Reading.Kind == _filter)
+        Shown(row.Category)
+        && (_filter is null || row.Reading.Kind == _filter)
         && (_search.Length == 0
             || row.Reading.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
             || row.Reading.Hardware.Contains(_search, StringComparison.OrdinalIgnoreCase));
@@ -158,7 +245,7 @@ public sealed partial class SensorsPage : Page
 
         foreach (var device in _devices.Values)
         {
-            device.Panel.Visibility = device.Rows.Any(r => r.Root.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
+            device.Panel.Visibility = Shown(device.Category) && device.Rows.Any(r => r.Root.Visibility == Visibility.Visible) ? Visibility.Visible : Visibility.Collapsed;
         }
     }
 
@@ -258,7 +345,7 @@ public sealed partial class SensorsPage : Page
     private Row AddRow(SensorReading r)
     {
         var device = DeviceFor(r);
-        var row = new Row(r);
+        var row = new Row(r) { Category = device.Category };
         var grid = Columns();
         grid.Padding = new Thickness(6, 6, 0, 6);
         grid.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
@@ -309,8 +396,14 @@ public sealed partial class SensorsPage : Page
             FontSize = 15,
             Margin = new Thickness(0, 0, 90, 0),
         });
-        var count = new TextBlock { Style = HudUi.Style("HudTagStyle"), HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
-        header.Children.Add(count);
+        var count = new TextBlock { Style = HudUi.Style("HudTagStyle"), VerticalAlignment = VerticalAlignment.Center };
+        var chevron = new FontIcon { Glyph = "\uE70D", FontSize = 12, Foreground = HudUi.Tag, VerticalAlignment = VerticalAlignment.Center };
+        var right = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Right };
+        right.Children.Add(count);
+        right.Children.Add(chevron);
+        header.Children.Add(right);
+        header.Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent); // clickable everywhere
+        ToolTipService.SetToolTip(header, s["sensors.collapse"]);
 
         var stack = new StackPanel();
         stack.Children.Add(header);
@@ -338,8 +431,23 @@ public sealed partial class SensorsPage : Page
         var column = _rowsA <= _rowsB ? ColumnA : ColumnB;
         var panel = new HudPanel { Content = stack };
         column.Children.Add(panel);
-        device = new Device(panel, body, count, column);
+        var category = SensorCategories.Of(r);
+        device = new Device(panel, body, count, column, category);
         _devices[key] = device;
+
+        // Clicking the title folds the panel to its header (and back).
+        var folded = device;
+        header.Tapped += (_, _) =>
+        {
+            folded.Collapsed = !folded.Collapsed;
+            var shown = folded.Collapsed ? Visibility.Collapsed : Visibility.Visible;
+            columns.Visibility = shown;
+            body.Visibility = shown;
+            chevron.Glyph = folded.Collapsed ? "\uE76C" : "\uE70D";
+        };
+
+        CategoryChip(category);
+        RefreshCategoryChips();
         return device;
     }
 
@@ -440,6 +548,8 @@ public sealed partial class SensorsPage : Page
     {
         public SensorReading Reading { get; set; } = reading;
 
+        public SensorCategory Category { get; init; }
+
         public Grid Root { get; set; } = new();
 
         public Rectangle Dot { get; } = new() { Width = 6, Height = 6, VerticalAlignment = VerticalAlignment.Center };
@@ -453,8 +563,10 @@ public sealed partial class SensorsPage : Page
         public TextBlock Max { get; } = new() { FontFamily = HudUi.Font("HudMonoFont"), FontSize = 12, Foreground = HudUi.Tag };
     }
 
-    private sealed record Device(HudPanel Panel, StackPanel Body, TextBlock Count, StackPanel Column)
+    private sealed record Device(HudPanel Panel, StackPanel Body, TextBlock Count, StackPanel Column, SensorCategory Category)
     {
         public List<Row> Rows { get; } = [];
+
+        public bool Collapsed { get; set; }
     }
 }

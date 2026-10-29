@@ -24,7 +24,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
   - estado geral no topo ("Sistema nominal" ou o número de alertas ativos).
 - **Sensores** redesenhado:
   - resumo no topo (CPU e GPU mais quentes, potência total, bomba, quantos pedem atenção);
-  - filtros por tipo, busca e um painel por dispositivo com uma barra de faixa segmentada em cada canal;
+  - filtro por **componente** (Placa-mãe, Processador, Memória, Discos, Placa de vídeo, Rede, Bateria; vários ao mesmo tempo, ou Todos), lembrado entre as aberturas do app;
+  - filtro por tipo de leitura, busca e um painel por dispositivo com uma barra de faixa segmentada em cada canal; clicar no título do painel recolhe ou expande;
   - o gráfico do canal escolhido fica embaixo.
 - **Rede:** o resultado abre com um velocímetro (download, com o upload no arco interno).
 - **Winget:** o workflow **Winget (update)** envia à mão uma versão publicada (a mais recente, por padrão). O passo do Release agora verifica antes se o pacote já está no winget e se a versão já foi enviada, e explica o resultado no lugar de falhar.
