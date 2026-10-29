@@ -143,16 +143,9 @@ public static class NetStats
         return sum / (rtts.Count - 1);
     }
 
-    /// <summary>Packet loss in percent, or null when no probe got an answer although the connection works (ICMP blocked).</summary>
-    public static double? Loss(int sent, int answered, bool connectionWorks)
-    {
-        if (sent <= 0 || (answered == 0 && connectionWorks))
-        {
-            return null;
-        }
-
-        return 100.0 * (sent - answered) / sent;
-    }
+    /// <summary>Packet loss in percent: probes without an answer out of probes sent (null when none was sent).</summary>
+    public static double? Loss(int sent, int answered) =>
+        sent <= 0 ? null : 100.0 * Math.Clamp(sent - answered, 0, sent) / sent;
 }
 
 /// <summary>A test that could not run (server unreachable, no IPv6, rate limited). The key is a string key.</summary>

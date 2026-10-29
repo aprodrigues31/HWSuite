@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
@@ -11,7 +10,7 @@ namespace HWSuite.Core.Network;
 
 /// <summary>
 /// What both probes share: the server address pinned for one IP version, round trips as TCP handshakes to it,
-/// ICMP echoes, and an HTTP handler whose every connection goes to that address.
+/// and an HTTP handler whose every connection goes to that address.
 /// </summary>
 public abstract class PinnedProbe : INetworkProbe
 {
@@ -99,8 +98,9 @@ public abstract class PinnedProbe : INetworkProbe
             return null;
         }
 
+        // One second without a SYN-ACK counts as a lost packet (Windows only resends the SYN after that).
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-        timeout.CancelAfter(TimeSpan.FromSeconds(2));
+        timeout.CancelAfter(TimeSpan.FromSeconds(1));
         using var socket = new Socket(Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
         var clock = Stopwatch.StartNew();
         try
@@ -113,29 +113,6 @@ public abstract class PinnedProbe : INetworkProbe
             return null; // timed out
         }
         catch (SocketException)
-        {
-            return null;
-        }
-    }
-
-    public async Task<bool?> EchoAsync(CancellationToken cancel)
-    {
-        if (Address is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            using var ping = new Ping();
-            var reply = await ping.SendPingAsync(Address, TimeSpan.FromSeconds(1), null, null, cancel).ConfigureAwait(false);
-            return reply.Status == IPStatus.Success;
-        }
-        catch (PingException)
-        {
-            return null;
-        }
-        catch (PlatformNotSupportedException)
         {
             return null;
         }

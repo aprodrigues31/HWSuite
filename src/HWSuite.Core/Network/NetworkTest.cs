@@ -14,11 +14,8 @@ public interface INetworkProbe : IDisposable
     /// <summary>Finds the server and checks it answers over the chosen IP version; throws <see cref="NetworkTestException"/>.</summary>
     Task PrepareAsync(CancellationToken cancel);
 
-    /// <summary>One round trip in ms (a TCP handshake to the server), or null when it failed.</summary>
+    /// <summary>One round trip in ms (a TCP handshake to the server), or null when no answer came in time (a lost packet).</summary>
     Task<double?> RttAsync(CancellationToken cancel);
-
-    /// <summary>One ICMP echo: true answered, false lost, null when echo is not possible here.</summary>
-    Task<bool?> EchoAsync(CancellationToken cancel);
 
     /// <summary>Receives as fast as possible until cancelled (or the server ends), reporting bytes as they arrive.</summary>
     Task DownloadAsync(Action<long> onBytes, TimeSpan duration, CancellationToken cancel);
@@ -33,28 +30,29 @@ public readonly record struct NetProgress(string Phase, double Fraction, double?
 /// <summary>Timing of a test; the defaults are what the app and the CLI use, tests shorten them.</summary>
 public sealed record NetTestOptions
 {
-    public int IdleSamples { get; init; } = 20;
+    /// <summary>Probes without load: the idle latency and jitter, and the packet loss (100 probes: 1% resolution).</summary>
+    public int IdleSamples { get; init; } = 100;
 
-    public TimeSpan IdleInterval { get; init; } = TimeSpan.FromMilliseconds(100);
+    public TimeSpan IdleInterval { get; init; } = TimeSpan.FromMilliseconds(25);
 
     public TimeSpan PhaseDuration { get; init; } = TimeSpan.FromSeconds(10);
 
     public TimeSpan SampleInterval { get; init; } = TimeSpan.FromMilliseconds(100);
 
     public TimeSpan LoadedRttInterval { get; init; } = TimeSpan.FromMilliseconds(250);
-
-    public TimeSpan EchoInterval { get; init; } = TimeSpan.FromMilliseconds(250);
 }
 
 /// <summary>
 /// Internet speed test in the style of the common speed test sites: latency without load, then download and
 /// upload for a fixed time while latency keeps being measured (the latency "under load", which shows
-/// bufferbloat). Throughput is sampled every 100 ms; the headline speed is the median sample. Packet loss
-/// comes from ICMP echoes sent through the whole test.
+/// bufferbloat). Throughput is sampled every 100 ms; the headline speed is the median sample.
+/// Packet loss is measured without load, like SIMET and Speedtest do: the share of the idle probes (TCP
+/// handshakes, which servers answer reliably, unlike ping) that got no answer. Under load a saturated link
+/// drops packets on purpose (that is how TCP finds the available speed), so that would not be "loss".
 /// </summary>
 public static class NetworkTest
 {
-    public const string Version = "Net v1";
+    public const string Version = "Net v2";
 
     public static async Task<NetworkTestResult> RunAsync(
         INetworkProbe probe,
@@ -71,52 +69,31 @@ public static class NetworkTest
         progress?.Report(new("prepare", 0, null));
         await probe.PrepareAsync(cancel).ConfigureAwait(false);
 
-        // ICMP echoes through the whole test, for packet loss.
-        using var echoStop = CancellationTokenSource.CreateLinkedTokenSource(cancel);
-        var echo = EchoLoopAsync(probe, options.EchoInterval, echoStop.Token);
-
-        try
+        var (idle, sent) = await IdleAsync(probe, options, progress, cancel).ConfigureAwait(false);
+        if (idle.Count == 0)
         {
-            var idle = await IdleAsync(probe, options, progress, cancel).ConfigureAwait(false);
-            if (idle.Count == 0)
-            {
-                throw new NetworkTestException("net.error.unreachable");
-            }
-
-            var (down, downRtt) = await LoadAsync(probe, probe.DownloadAsync, "download", 0.15, options, progress, cancel).ConfigureAwait(false);
-            var (up, upRtt) = await LoadAsync(probe, probe.UploadAsync, "upload", 0.575, options, progress, cancel).ConfigureAwait(false);
-
-            await echoStop.CancelAsync().ConfigureAwait(false);
-            var (sent, answered, possible) = await echo.ConfigureAwait(false);
-            progress?.Report(new("done", 1, null));
-            return new NetworkTestResult(
-                Version,
-                server,
-                family,
-                probe.Endpoint,
-                down,
-                up,
-                new LatencyPhase(idle),
-                new LatencyPhase(downRtt),
-                new LatencyPhase(upRtt),
-                possible ? NetStats.Loss(sent, answered, connectionWorks: true) : null,
-                connection,
-                DateTimeOffset.Now);
+            throw new NetworkTestException("net.error.unreachable");
         }
-        finally
-        {
-            await echoStop.CancelAsync().ConfigureAwait(false);
-            try
-            {
-                await echo.ConfigureAwait(false);
-            }
-            catch (OperationCanceledException)
-            {
-            }
-        }
+
+        var (down, downRtt) = await LoadAsync(probe, probe.DownloadAsync, "download", 0.15, options, progress, cancel).ConfigureAwait(false);
+        var (up, upRtt) = await LoadAsync(probe, probe.UploadAsync, "upload", 0.575, options, progress, cancel).ConfigureAwait(false);
+        progress?.Report(new("done", 1, null));
+        return new NetworkTestResult(
+            Version,
+            server,
+            family,
+            probe.Endpoint,
+            down,
+            up,
+            new LatencyPhase(idle),
+            new LatencyPhase(downRtt),
+            new LatencyPhase(upRtt),
+            NetStats.Loss(sent, idle.Count),
+            connection,
+            DateTimeOffset.Now);
     }
 
-    private static async Task<List<NetSample>> IdleAsync(INetworkProbe probe, NetTestOptions options, IProgress<NetProgress>? progress, CancellationToken cancel)
+    private static async Task<(List<NetSample> Samples, int Sent)> IdleAsync(INetworkProbe probe, NetTestOptions options, IProgress<NetProgress>? progress, CancellationToken cancel)
     {
         var samples = new List<NetSample>();
         var clock = Stopwatch.StartNew();
@@ -131,7 +108,7 @@ public static class NetworkTest
             await Task.Delay(options.IdleInterval, cancel).ConfigureAwait(false);
         }
 
-        return samples;
+        return (samples, options.IdleSamples);
     }
 
     /// <summary>Runs one transfer direction for the phase duration, sampling throughput and loaded latency.</summary>
@@ -219,30 +196,5 @@ public static class NetworkTest
 
             await Task.Delay(interval, cancel).ConfigureAwait(false);
         }
-    }
-
-    private static async Task<(int Sent, int Answered, bool Possible)> EchoLoopAsync(INetworkProbe probe, TimeSpan interval, CancellationToken cancel)
-    {
-        int sent = 0, answered = 0;
-        try
-        {
-            while (!cancel.IsCancellationRequested)
-            {
-                var reply = await probe.EchoAsync(cancel).ConfigureAwait(false);
-                if (reply is null)
-                {
-                    return (0, 0, false);
-                }
-
-                sent++;
-                answered += reply.Value ? 1 : 0;
-                await Task.Delay(interval, cancel).ConfigureAwait(false);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-
-        return (sent, answered, true);
     }
 }

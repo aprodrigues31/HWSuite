@@ -11,27 +11,24 @@ public sealed class NetworkTests
 {
     private static readonly NetTestOptions Fast = new()
     {
-        IdleSamples = 6,
+        IdleSamples = 20,
         IdleInterval = TimeSpan.FromMilliseconds(1),
         PhaseDuration = TimeSpan.FromMilliseconds(600),
         SampleInterval = TimeSpan.FromMilliseconds(50),
         LoadedRttInterval = TimeSpan.FromMilliseconds(20),
-        EchoInterval = TimeSpan.FromMilliseconds(5),
     };
 
     /// <summary>A server that sends and receives at a fixed rate; latency rises while loaded.</summary>
     private sealed class FakeProbe : INetworkProbe
     {
         private volatile bool _loaded;
-        private int _echoes;
+        private int _probes;
 
         public long BytesPer10Ms { get; init; } = 125_000; // 100 Mbps
 
         public double IdleRtt { get; init; } = 5;
 
         public double LoadedRtt { get; init; } = 7;
-
-        public bool? EchoReply { get; init; } = true;
 
         public int LoseEvery { get; init; }
 
@@ -45,17 +42,11 @@ public sealed class NetworkTests
             return Task.CompletedTask;
         }
 
-        public Task<double?> RttAsync(CancellationToken cancel) => Task.FromResult<double?>(_loaded ? LoadedRtt : IdleRtt);
-
-        public Task<bool?> EchoAsync(CancellationToken cancel)
+        /// <summary>Every <see cref="LoseEvery"/>th probe gets no answer (a lost packet).</summary>
+        public Task<double?> RttAsync(CancellationToken cancel)
         {
-            if (EchoReply is null)
-            {
-                return Task.FromResult<bool?>(null);
-            }
-
-            var n = Interlocked.Increment(ref _echoes);
-            return Task.FromResult<bool?>(LoseEvery > 0 && n % LoseEvery == 0 ? false : EchoReply);
+            var n = Interlocked.Increment(ref _probes);
+            return Task.FromResult<double?>(LoseEvery > 0 && n % LoseEvery == 0 ? null : _loaded ? LoadedRtt : IdleRtt);
         }
 
         public Task DownloadAsync(Action<long> onBytes, TimeSpan duration, CancellationToken cancel) =>
@@ -105,8 +96,8 @@ public sealed class NetworkTests
         Assert.Equal(0, result.Idle.Jitter);
         Assert.Equal(7, result.LoadedDownload.Summary.Median);
         Assert.Equal(7, result.LoadedUpload.Summary.Median);
-        Assert.NotNull(result.LossPercent);
-        Assert.InRange(result.LossPercent!.Value, 3, 20);
+        Assert.Equal(10, result.LossPercent); // 2 of the 20 idle probes unanswered
+        Assert.Equal(18, result.Idle.Samples.Count);
         Assert.Equal("Test ISP", result.Endpoint.Provider);
         Assert.Equal(NetworkTest.Version, result.Version);
         Assert.Contains("prepare", phases);
@@ -117,11 +108,12 @@ public sealed class NetworkTests
     }
 
     [Fact]
-    public async Task Run_reports_no_loss_when_echo_is_not_possible()
+    public async Task Run_without_loss()
     {
-        using var probe = new FakeProbe { EchoReply = null };
+        using var probe = new FakeProbe();
         var result = await NetworkTest.RunAsync(probe, NetServer.MLab, IpFamily.IPv6, null, Fast);
-        Assert.Null(result.LossPercent);
+        Assert.Equal(0, result.LossPercent);
+        Assert.Equal(20, result.Idle.Samples.Count);
         Assert.Equal(IpFamily.IPv6, result.Family);
     }
 
@@ -160,12 +152,12 @@ public sealed class NetworkTests
     }
 
     [Fact]
-    public void Loss_is_unknown_when_echo_is_blocked()
+    public void Loss_counts_unanswered_probes()
     {
-        Assert.Null(NetStats.Loss(40, 0, connectionWorks: true));
-        Assert.Equal(100, NetStats.Loss(40, 0, connectionWorks: false));
-        Assert.Equal(25, NetStats.Loss(40, 30, connectionWorks: true));
-        Assert.Null(NetStats.Loss(0, 0, connectionWorks: true));
+        Assert.Equal(25, NetStats.Loss(40, 30));
+        Assert.Equal(0, NetStats.Loss(100, 100));
+        Assert.Equal(100, NetStats.Loss(100, 0));
+        Assert.Null(NetStats.Loss(0, 0));
     }
 
     private static NetworkTestResult Result(
