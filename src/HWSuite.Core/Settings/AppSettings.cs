@@ -74,6 +74,9 @@ public sealed record AppSettings
     /// <summary>Components shown on the Sensors page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? SensorCategories { get; init; }
 
+    /// <summary>Components shown on the Hardware page ("Cpu,Gpu"); null shows all of them.</summary>
+    public string? InventoryCategories { get; init; }
+
     /// <summary>Sensors on the Charts page ("Hardware / Name" per line); null picks the CPU and GPU temperatures.</summary>
     public string? ChartSensors { get; init; }
 

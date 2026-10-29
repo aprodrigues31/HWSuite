@@ -17,6 +17,10 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - **Relatório de manutenção:** o teste de carga agora vem com os gráficos de temperatura, consumo e clock do processador ao longo do teste.
 - **`hwsuite log <arquivo.csv>`:** resumo de um log de sensores (mínimo, média e máximo de cada sensor); com `-o grafico.html`, uma página com os gráficos por dispositivo e unidade; `--filter` escolhe os sensores.
 
+### Alterado
+- **Hardware (inventário)** no mesmo estilo dos Sensores: filtro por componente (Sistema, Placa-mãe, Processador, Memória, Placa de vídeo, NPU, Discos, Bateria, Diagnóstico; vários ao mesmo tempo, ou Todos), lembrado entre as aberturas, e busca que mostra só as linhas que combinam (modelo, serial, driver...).
+- **Blocos que se ajustam à tela** em Hardware, Sensores e Gráficos: quantas colunas couberem na largura da janela, e os blocos se redistribuem conforme o filtro (um bloco ocupa a largura toda; vários dividem as colunas), sem espaços vazios.
+
 ## [0.19.0] - 2026-10-29
 
 ### Adicionado

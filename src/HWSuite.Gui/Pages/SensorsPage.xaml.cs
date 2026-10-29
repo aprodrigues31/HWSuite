@@ -24,8 +24,6 @@ public sealed partial class SensorsPage : Page
     private readonly Dictionary<string, Device> _devices = new(StringComparer.Ordinal);
     private readonly List<ToggleButton> _filterButtons = [];
     private readonly Dictionary<string, (TextBlock Value, TextBlock Note)> _summary = [];
-    private int _rowsA;
-    private int _rowsB;
     private readonly HashSet<SensorCategory> _categories = [.. SensorCategories.Parse(App.Settings.Current.SensorCategories)];
     private readonly SortedDictionary<SensorCategory, ToggleButton> _categoryButtons = [];
     private ToggleButton? _allCategories;
@@ -211,16 +209,6 @@ public sealed partial class SensorsPage : Page
         }
     }
 
-    /// <summary>Two columns of device panels when there is room for every column of a row; one column otherwise.</summary>
-    private void DeviceGrid_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        var wide = e.NewSize.Width >= 1060;
-        SecondColumn.Width = wide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-        DeviceGrid.ColumnSpacing = wide ? 16 : 0;
-        Grid.SetColumn(ColumnB, wide ? 1 : 0);
-        Grid.SetRow(ColumnB, wide ? 0 : 1);
-    }
-
     private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         _search = SearchBox.Text.Trim();
@@ -365,15 +353,6 @@ public sealed partial class SensorsPage : Page
         device.Rows.Add(row);
         device.Body.Children.Add(grid);
         device.Count.Text = $"{device.Rows.Count} CH";
-        if (ReferenceEquals(device.Column, ColumnA))
-        {
-            _rowsA++;
-        }
-        else
-        {
-            _rowsB++;
-        }
-
         _rows[r.Id] = row;
         return row;
     }
@@ -427,12 +406,11 @@ public sealed partial class SensorsPage : Page
         var body = new StackPanel();
         stack.Children.Add(body);
 
-        // Each new device goes to the shorter column.
-        var column = _rowsA <= _rowsB ? ColumnA : ColumnB;
+        // The masonry panel places it (and re-flows when panels are filtered out or the window is resized).
         var panel = new HudPanel { Content = stack };
-        column.Children.Add(panel);
+        DeviceGrid.Children.Add(panel);
         var category = SensorCategories.Of(r);
-        device = new Device(panel, body, count, column, category);
+        device = new Device(panel, body, count, category);
         _devices[key] = device;
 
         // Clicking the title folds the panel to its header (and back).
@@ -564,7 +542,7 @@ public sealed partial class SensorsPage : Page
         public TextBlock Max { get; } = new() { FontFamily = HudUi.Font("HudMonoFont"), FontSize = 12, Foreground = HudUi.Tag };
     }
 
-    private sealed record Device(HudPanel Panel, StackPanel Body, TextBlock Count, StackPanel Column, SensorCategory Category)
+    private sealed record Device(HudPanel Panel, StackPanel Body, TextBlock Count, SensorCategory Category)
     {
         public List<Row> Rows { get; } = [];
 

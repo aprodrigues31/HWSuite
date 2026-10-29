@@ -9,7 +9,37 @@ public sealed record ReportRow(string Label, string Value);
 /// <summary>A block of rows, optionally titled (e.g. one memory module).</summary>
 public sealed record ReportGroup(string? Title, IReadOnlyList<ReportRow> Rows);
 
-public sealed record ReportSection(string Title, IReadOnlyList<ReportGroup> Groups);
+/// <param name="Key">The section's string key ("section.cpu"), stable across languages.</param>
+public sealed record ReportSection(string Title, IReadOnlyList<ReportGroup> Groups, string Key = "")
+{
+    /// <summary>The component the section belongs to, for the inventory page's filters.</summary>
+    public InventoryCategory Category => Key switch
+    {
+        "section.os" or "section.system" => InventoryCategory.System,
+        "section.motherboard" or "section.bios" => InventoryCategory.Motherboard,
+        "section.cpu" or "section.caches" => InventoryCategory.Cpu,
+        "section.memory" => InventoryCategory.Memory,
+        "section.gpu" => InventoryCategory.Gpu,
+        "section.npu" => InventoryCategory.Npu,
+        "section.disks" or "section.smart" => InventoryCategory.Storage,
+        "section.battery" => InventoryCategory.Battery,
+        _ => InventoryCategory.Diagnostics,
+    };
+}
+
+/// <summary>Components the inventory is grouped by (filter chips on the Hardware page), in display order.</summary>
+public enum InventoryCategory
+{
+    System,
+    Motherboard,
+    Cpu,
+    Memory,
+    Gpu,
+    Npu,
+    Storage,
+    Battery,
+    Diagnostics,
+}
 
 /// <summary>
 /// Flattens the inventory into localized, display-ready sections. Text and HTML writers
@@ -29,7 +59,7 @@ public static class ReportModel
             var kept = groups.Where(g => g is { Rows.Count: > 0 }).Cast<ReportGroup>().ToList();
             if (kept.Count > 0)
             {
-                sections.Add(new ReportSection(s[titleKey], kept));
+                sections.Add(new ReportSection(s[titleKey], kept, titleKey));
             }
         }
 

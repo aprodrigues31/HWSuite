@@ -157,4 +157,18 @@ public sealed class ChartsTests
         Assert.Contains("Log de sensores", html, StringComparison.Ordinal);
         Assert.Equal(2, html.Split("<svg").Length - 1);
     }
+
+    [Fact]
+    public void Inventory_sections_know_their_component()
+    {
+        var inv = new HWSuite.Core.Model.HardwareInventory { MachineName = "PC" };
+        inv.OperatingSystem = new() { Name = "Windows 11 Pro", Build = "26200.1" };
+        inv.Bios = new() { Vendor = "AMI", Version = "1.0" };
+        inv.Memory = new() { TotalInstalledBytes = 16L << 30, SlotCount = 2 };
+        var sections = ReportModel.Build(inv, HWSuite.Core.Localization.Strings.For("en"));
+        Assert.All(sections, x => Assert.StartsWith("section.", x.Key, StringComparison.Ordinal));
+        Assert.Equal(InventoryCategory.System, sections.Single(x => x.Key == "section.os").Category);
+        Assert.Equal(InventoryCategory.Motherboard, sections.Single(x => x.Key == "section.bios").Category);
+        Assert.Equal(InventoryCategory.Memory, sections.Single(x => x.Key == "section.memory").Category);
+    }
 }

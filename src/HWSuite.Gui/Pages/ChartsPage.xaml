@@ -60,7 +60,7 @@
                 <!-- One chart per unit -->
                 <StackPanel x:Name="ChartsColumn" Grid.Column="1" Spacing="16">
                     <TextBlock x:Name="EmptyText" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" Visibility="Collapsed" />
-                    <StackPanel x:Name="ChartsHost" Spacing="16" />
+                    <hud:MasonryPanel x:Name="ChartsHost" MinColumnWidth="560" Spacing="16" />
                 </StackPanel>
             </Grid>
         </StackPanel>
