@@ -49,7 +49,7 @@ internal static class StabilityCommand
             ? new StabilityOptions(TimeSpan.FromMinutes(minutes), Cpu: false, Gpu: false, Memory: true) { MemoryShare = 1.0 }
             : new StabilityOptions(TimeSpan.FromMinutes(minutes), Cpu: true, Gpu: !options.NoGpu, Memory: !options.NoMemory);
         Func<IGpuComputeRunner>? gpu = stabilityOptions.Gpu && D3D11ComputeRunner.Adapters() is { Count: > 0 } adapters
-            ? () => D3D11ComputeRunner.Create(adapters[0])
+            ? () => OperatingSystem.IsWindows() ? D3D11ComputeRunner.Create(adapters[0]) : throw new PlatformNotSupportedException()
             : null;
 
         using var cancel = new CancellationTokenSource();
