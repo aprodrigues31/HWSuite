@@ -22,6 +22,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - **Blocos que se ajustam à tela** em Hardware, Sensores e Gráficos: quantas colunas couberem na largura da janela, e os blocos se redistribuem conforme o filtro (um bloco ocupa a largura toda; vários dividem as colunas), sem espaços vazios.
 - **Sensores:** os botões de tipo de leitura acompanham os componentes escolhidos e mostram só os tipos que eles têm (placa-mãe: tensões, ventoinhas, temperaturas...; discos: temperatura, dados...). Tipos além dos seis principais (corrente, nível, vazão, taxa de transferência...) aparecem quando existem; se o tipo escolhido deixa de existir na nova seleção, volta para "Todos".
 
+- **Configurações › Arquivos:** o usuário define **onde salvar os relatórios** e **qual logo** vai neles (ou "sem logo"). Sem essa definição, o primeiro relatório pergunta a pasta e o logo, com a opção **Memorizar esta escolha**. Vale para o relatório de manutenção (PDF/HTML), o relatório de hardware, o backup da BIOS de vídeo e o `hwsuite maintenance` (que pergunta no console na primeira vez). As janelas de escolha de pasta e de arquivo são as do Windows e funcionam também com o HWSuite aberto como administrador.
+
 ### Corrigido
 - **Atualização sempre pelo próprio app:** ao encontrar uma versão nova, o botão é sempre **Atualizar agora**, e o HWSuite baixa, confere a soma SHA-256 publicada pelo GitHub, instala e reabre sozinho, sem baixar instalador nem abrir o navegador:
   - versão instalada (instalador ou winget): reconhecida pelo desinstalador ao lado do app, em qualquer pasta escolhida na instalação; instala em silêncio por cima;

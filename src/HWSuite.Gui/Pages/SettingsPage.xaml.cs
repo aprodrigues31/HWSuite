@@ -44,6 +44,14 @@ public sealed partial class SettingsPage : Page
         AlertsSwitch.Header = s["settings.alertsEnabled"];
         AlertsHint.Text = s["settings.alertsHint"];
         RestoreButton.Content = s["settings.alertsRestore"];
+        FilesTitle.Text = s["files.title"];
+        ReportsLabel.Text = s["files.reports.label"];
+        ReportsBrowseButton.Content = s["files.browse"];
+        ReportsResetButton.Content = s["files.askNext"];
+        LogoLabel.Text = s["files.logo.label"];
+        LogoBrowseButton.Content = s["files.browse"];
+        LogoNoneButton.Content = s["files.logo.without"];
+        LogoResetButton.Content = s["files.askNext"];
         LogTitle.Text = s["settings.logging"];
         LogSwitch.Header = s["settings.logEnabled"];
         OpenFolderButton.Content = s["settings.openFolder"];
@@ -68,6 +76,7 @@ public sealed partial class SettingsPage : Page
         AlertsSwitch.IsOn = settings.AlertsEnabled;
         LogSwitch.IsOn = settings.LogEnabled;
         LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
+        ShowFiles();
         PsuSwitch.IsOn = settings.PsuAlertsEnabled;
         PumpMinBox.Value = settings.PumpMinRpm;
         LoadPumpChoices(settings.PumpSensorId);
@@ -336,5 +345,59 @@ public sealed partial class SettingsPage : Page
         {
             App.Settings.Update(s => s with { PumpMinRpm = (int)args.NewValue });
         }
+    }
+
+    // ---- Files: where reports go and which logo they carry --------------------------------------------------------
+
+    private void ShowFiles()
+    {
+        var s = App.Text;
+        var settings = App.Settings.Current;
+        ReportsFolderText.Text = settings.ReportsFolder is { Length: > 0 } folder ? folder : s["files.reports.notSet"];
+        LogoFileText.Text = settings.LogoFile switch
+        {
+            "" => s["files.logo.noneSaved"],
+            { } file => file,
+            null => s["files.logo.notSet"],
+        };
+    }
+
+    private void ReportsBrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var start = App.Settings.Current.ReportsFolder ?? Services.OutputLocations.SuggestedReportsFolder;
+        if (Services.ShellDialogs.PickFolder(App.Text["files.reports.pick"], start) is { } folder)
+        {
+            App.Settings.Update(x => x with { ReportsFolder = folder });
+            ShowFiles();
+        }
+    }
+
+    private void ReportsResetButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Update(x => x with { ReportsFolder = null });
+        ShowFiles();
+    }
+
+    private void LogoBrowseButton_Click(object sender, RoutedEventArgs e)
+    {
+        var s = App.Text;
+        var start = App.Settings.Current.LogoFile is { Length: > 0 } current ? current : Core.Benchmark.BenchmarkFiles.Folder;
+        if (Services.ShellDialogs.PickFile(s["files.logo.pick"], start, (s["files.logo.images"], "*.png;*.jpg;*.jpeg;*.svg")) is { } file)
+        {
+            App.Settings.Update(x => x with { LogoFile = file });
+            ShowFiles();
+        }
+    }
+
+    private void LogoNoneButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Update(x => x with { LogoFile = "" });
+        ShowFiles();
+    }
+
+    private void LogoResetButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Update(x => x with { LogoFile = null });
+        ShowFiles();
     }
 }

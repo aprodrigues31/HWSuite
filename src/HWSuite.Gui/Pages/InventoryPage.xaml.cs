@@ -196,19 +196,14 @@ public sealed partial class InventoryPage : Page
         EmptyText.Visibility = shown == 0 && _blocks.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    /// <summary>
-    /// Writes the HTML report to Documents\HWSuite and opens it. (File pickers do not work in an
-    /// elevated unpackaged app, so a fixed, predictable folder is used instead.)
-    /// </summary>
-    private void SaveButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>Writes the HTML report to the reports folder (chosen in Settings, or asked the first time) and opens it.</summary>
+    private async void SaveButton_Click(object sender, RoutedEventArgs e)
     {
-        if (s_cached is null)
+        if (s_cached is null || await Services.OutputLocations.ReportsFolderAsync(XamlRoot) is not { } folder)
         {
             return;
         }
 
-        var folder = HWSuite.Core.Benchmark.BenchmarkFiles.Folder;
-        Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, $"hwsuite-{s_cached.MachineName}-{DateTime.Now:yyyyMMdd-HHmmss}.html");
         using (var file = new StreamWriter(path, append: false, new UTF8Encoding(false)))
         {
@@ -219,16 +214,14 @@ public sealed partial class InventoryPage : Page
         Process.Start(new ProcessStartInfo(path) { UseShellExecute = true })?.Dispose();
     }
 
-    /// <summary>Writes each available video BIOS to Documents\HWSuite and shows it in Explorer.</summary>
-    private void SaveVbiosButton_Click(object sender, RoutedEventArgs e)
+    /// <summary>Writes each available video BIOS to the reports folder and shows it in Explorer.</summary>
+    private async void SaveVbiosButton_Click(object sender, RoutedEventArgs e)
     {
-        if (s_cached is null)
+        if (s_cached is null || await Services.OutputLocations.ReportsFolderAsync(XamlRoot) is not { } folder)
         {
             return;
         }
 
-        var folder = HWSuite.Core.Benchmark.BenchmarkFiles.Folder;
-        Directory.CreateDirectory(folder);
         string? last = null;
         foreach (var gpu in s_cached.Gpus.Where(g => g.VideoBios is not null))
         {

@@ -18,9 +18,74 @@ namespace HWSuite.Cli;
 /// </summary>
 internal static class MaintenanceCommand
 {
-    /// <summary>A portable copy's own settings (company, pump) when it has them, else the installed app's.</summary>
-    private static AppSettings LoadSettings() =>
-        File.Exists(DataLocation.SettingsPath) ? new SettingsStore(DataLocation.SettingsPath).Load() : new SettingsStore(SettingsStore.DefaultPath).Load();
+    /// <summary>A portable copy's own settings (company, pump, folders) when it has them, else the installed app's.</summary>
+    private static SettingsStore SettingsFile() =>
+        new(File.Exists(DataLocation.SettingsPath) || !File.Exists(SettingsStore.DefaultPath) ? DataLocation.SettingsPath : SettingsStore.DefaultPath);
+
+    /// <summary>
+    /// Where the report goes and which logo it carries come from the settings. When never chosen and someone is at
+    /// the keyboard, they are asked once here (before the tests) and can have the answer remembered.
+    /// </summary>
+    private static (string Folder, AppSettings Settings) AskFiles(SettingsStore store, AppSettings settings, bool needFolder, Strings s)
+    {
+        var interactive = !Console.IsInputRedirected;
+        var folder = settings.ReportsFolder is { Length: > 0 } saved ? saved : MaintenanceSession.ReportsFolder;
+        if (needFolder && settings.ReportsFolder is null && interactive)
+        {
+            Console.Write(s.Format("cli.files.folder", folder));
+            if (Console.ReadLine()?.Trim().Trim('"') is { Length: > 0 } typed)
+            {
+                folder = Path.GetFullPath(typed);
+            }
+
+            if (Confirm(s["cli.files.remember"]))
+            {
+                settings = settings with { ReportsFolder = folder };
+                Save(store, settings);
+            }
+        }
+
+        if (settings.LogoFile is null && interactive)
+        {
+            var found = MaintenanceSession.LogoPath();
+            Console.Write(s.Format("cli.files.logo", found ?? s["files.logo.without"]));
+            var typed = Console.ReadLine()?.Trim().Trim('"');
+            var logo = typed is { Length: > 0 } ? (typed == "-" ? "" : Path.GetFullPath(typed)) : found ?? "";
+            if (logo.Length > 0 && MaintenanceSession.LogoFromFile(logo) is null)
+            {
+                Console.WriteLine(s.Format("cli.files.badLogo", logo));
+                logo = "";
+            }
+
+            var remember = Confirm(s["cli.files.remember"]);
+            settings = settings with { LogoFile = logo };
+            if (remember)
+            {
+                Save(store, settings);
+            }
+        }
+
+        return (folder, settings);
+    }
+
+    private static bool Confirm(string question)
+    {
+        Console.Write(question);
+        var answer = Console.ReadLine()?.Trim();
+        return string.IsNullOrEmpty(answer) || answer.StartsWith('s') || answer.StartsWith('S') || answer.StartsWith('y') || answer.StartsWith('Y');
+    }
+
+    private static void Save(SettingsStore store, AppSettings settings)
+    {
+        try
+        {
+            store.Save(settings);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine(ex.Message);
+        }
+    }
 
     public static int Run(CliOptions options, Strings s)
     {
@@ -32,7 +97,8 @@ internal static class MaintenanceCommand
 
         var access = AccessStatus.Detect();
         SensorsCommand.WriteAccessNotes(access, s, Console.Out);
-        var settings = LoadSettings();
+        var store = SettingsFile();
+        var (folder, settings) = AskFiles(store, store.Load(), options.OutputPath is null, s);
 
         Console.WriteLine(s["rep.step.inventory"]);
         var inventory = new InventoryCollector(ProviderCatalog.Default()).Collect();
@@ -107,7 +173,7 @@ internal static class MaintenanceCommand
 
         var path = options.OutputPath is { } output
             ? Path.GetFullPath(output)
-            : Path.Combine(MaintenanceSession.ReportsFolder, MaintenanceReportWriter.FileName(report, "html"));
+            : Path.Combine(folder, MaintenanceReportWriter.FileName(report, "html"));
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, s), new UTF8Encoding(false));
         Console.WriteLine();

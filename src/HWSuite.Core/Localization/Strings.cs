@@ -417,6 +417,27 @@ public sealed class Strings
         ["rail.network"] = "Network",
         ["rail.report"] = "Report",
         ["rail.charts"] = "Charts",
+        ["files.title"] = "Files",
+        ["files.reports.label"] = "Reports folder",
+        ["files.reports.notSet"] = "Not chosen yet: you will be asked when you save the first report.",
+        ["files.reports.title"] = "Where should reports be saved?",
+        ["files.reports.body"] = "Choose the folder for reports (maintenance report, hardware report, video BIOS). It can be changed later in Settings › Files.",
+        ["files.reports.pick"] = "Folder for HWSuite reports",
+        ["files.logo.label"] = "Company logo on reports",
+        ["files.logo.notSet"] = "Not chosen yet: you will be asked when you save the first maintenance report.",
+        ["files.logo.noneSaved"] = "Reports without a logo.",
+        ["files.logo.none"] = "No image chosen.",
+        ["files.logo.title"] = "Company logo",
+        ["files.logo.body"] = "Choose the image (PNG, JPG or SVG, up to 2 MB) printed in the report header, or continue without a logo.",
+        ["files.logo.pick"] = "Company logo",
+        ["files.logo.images"] = "Images (PNG, JPG, SVG)",
+        ["files.logo.use"] = "Use this logo",
+        ["files.logo.without"] = "No logo",
+        ["files.logo.choose"] = "Choose logo...",
+        ["files.browse"] = "Choose...",
+        ["files.askNext"] = "Ask on the next report",
+        ["files.remember"] = "Remember this choice",
+        ["files.save"] = "Save here",
         ["inv.cat.System"] = "System",
         ["inv.cat.Motherboard"] = "Motherboard",
         ["inv.cat.Cpu"] = "Processor",
@@ -458,9 +479,7 @@ public sealed class Strings
         ["rep.document"] = "Tax id (CNPJ)",
         ["rep.contact"] = "Phone / e-mail / site",
         ["rep.address"] = "Address",
-        ["rep.logoFolder"] = "Logo folder",
         ["rep.logoFound"] = "Logo: {0}",
-        ["rep.logoMissing"] = "No logo. Save logo.png (or .jpg/.svg) in {0}.",
         ["rep.load"] = "Processor load test ({0:0} s)",
         ["rep.bench"] = "Processor benchmark (about 1 min)",
         ["rep.inventory"] = "Include the full inventory in the report",
@@ -830,7 +849,7 @@ public sealed class Strings
                                             with -o, a page with the charts.
               hwsuite maintenance [options]
                                             Maintenance report for the client: diagnosis with advice,
-                                            saved as HTML in HWSuite\Reports next to hwsuite.exe.
+                                            saved as HTML in the reports folder.
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -845,8 +864,8 @@ public sealed class Strings
                   --bench                   Also run the processor benchmark.
                   --no-inventory            Leave the full inventory out of the report.
               -o, --out <file.html>         Where to save the report.
-            The company (name, CNPJ, technician) comes from the app's Report page; the logo is
-            HWSuite\logo.png next to hwsuite.exe.
+            The company (name, CNPJ, technician) comes from the app's Report page; the reports folder and
+            the logo come from Settings › Files (asked here the first time, if never chosen).
 
             Run from a pen drive or an unzipped folder, everything HWSuite writes (reports, benchmark
             history, settings) goes into the HWSuite folder next to the executable; the installed
@@ -873,6 +892,10 @@ public sealed class Strings
         ["cli.badNumber"] = "Invalid number for {0}: {1}",
         ["cli.written"] = "Report written to {0}",
         ["log.title"] = "Sensor log",
+        ["cli.files.folder"] = "Folder for the report [{0}]: ",
+        ["cli.files.logo"] = "Company logo file, PNG/JPG/SVG (Enter = {0}, \"-\" = no logo): ",
+        ["cli.files.badLogo"] = "{0} is not a usable image (PNG, JPG or SVG up to 2 MB); the report goes without a logo.",
+        ["cli.files.remember"] = "Remember this choice? (Y/n) ",
         ["log.cannotRead"] = "Could not read {0}: {1}",
         ["log.empty"] = "{0}: no samples.",
         ["log.header"] = "{0} · started {1} · {2} long · {3} samples · {4} sensors",
@@ -1290,6 +1313,27 @@ public sealed class Strings
         ["rail.network"] = "Rede",
         ["rail.report"] = "Relatório",
         ["rail.charts"] = "Gráficos",
+        ["files.title"] = "Arquivos",
+        ["files.reports.label"] = "Pasta dos relatórios",
+        ["files.reports.notSet"] = "Ainda não escolhida: será perguntado ao salvar o primeiro relatório.",
+        ["files.reports.title"] = "Onde salvar os relatórios?",
+        ["files.reports.body"] = "Escolha a pasta dos relatórios (relatório de manutenção, relatório de hardware, BIOS de vídeo). Dá para trocar depois em Configurações › Arquivos.",
+        ["files.reports.pick"] = "Pasta para os relatórios do HWSuite",
+        ["files.logo.label"] = "Logo da empresa nos relatórios",
+        ["files.logo.notSet"] = "Ainda não escolhido: será perguntado ao salvar o primeiro relatório de manutenção.",
+        ["files.logo.noneSaved"] = "Relatórios sem logo.",
+        ["files.logo.none"] = "Nenhuma imagem escolhida.",
+        ["files.logo.title"] = "Logo da empresa",
+        ["files.logo.body"] = "Escolha a imagem (PNG, JPG ou SVG, até 2 MB) impressa no cabeçalho do relatório, ou continue sem logo.",
+        ["files.logo.pick"] = "Logo da empresa",
+        ["files.logo.images"] = "Imagens (PNG, JPG, SVG)",
+        ["files.logo.use"] = "Usar este logo",
+        ["files.logo.without"] = "Sem logo",
+        ["files.logo.choose"] = "Escolher logo...",
+        ["files.browse"] = "Escolher...",
+        ["files.askNext"] = "Perguntar no próximo relatório",
+        ["files.remember"] = "Memorizar esta escolha",
+        ["files.save"] = "Salvar aqui",
         ["inv.cat.System"] = "Sistema",
         ["inv.cat.Motherboard"] = "Placa-mãe",
         ["inv.cat.Cpu"] = "Processador",
@@ -1331,9 +1375,7 @@ public sealed class Strings
         ["rep.document"] = "CNPJ",
         ["rep.contact"] = "Telefone / e-mail / site",
         ["rep.address"] = "Endereço",
-        ["rep.logoFolder"] = "Pasta do logo",
         ["rep.logoFound"] = "Logo: {0}",
-        ["rep.logoMissing"] = "Sem logo. Salve logo.png (ou .jpg/.svg) em {0}.",
         ["rep.load"] = "Teste de carga do processador ({0:0} s)",
         ["rep.bench"] = "Benchmark do processador (cerca de 1 min)",
         ["rep.inventory"] = "Incluir o inventário completo no relatório",
@@ -1703,7 +1745,7 @@ public sealed class Strings
                                             sensor); com -o, uma página com os gráficos.
               hwsuite maintenance [opções]
                                             Relatório de manutenção para o cliente: diagnóstico com
-                                            orientações, salvo em HTML em HWSuite\Reports, ao lado do hwsuite.exe.
+                                            orientações, salvo em HTML na pasta dos relatórios.
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).
@@ -1718,8 +1760,8 @@ public sealed class Strings
                   --bench                   Executa também o benchmark do processador.
                   --no-inventory            Não inclui o inventário completo no relatório.
               -o, --out <arquivo.html>      Onde salvar o relatório.
-            A empresa (nome, CNPJ, técnico) vem da página Relatório do app; o logo é
-            HWSuite\logo.png, ao lado do hwsuite.exe.
+            A empresa (nome, CNPJ, técnico) vem da página Relatório do app; a pasta dos relatórios e o
+            logo vêm de Configurações › Arquivos (perguntados aqui na primeira vez, se nunca escolhidos).
 
             Executado de um pendrive ou de uma pasta descompactada, tudo o que o HWSuite grava
             (relatórios, histórico de benchmarks, configurações) fica na pasta HWSuite ao lado do
@@ -1746,6 +1788,10 @@ public sealed class Strings
         ["cli.badNumber"] = "Número inválido para {0}: {1}",
         ["cli.written"] = "Relatório gravado em {0}",
         ["log.title"] = "Log de sensores",
+        ["cli.files.folder"] = "Pasta para o relatório [{0}]: ",
+        ["cli.files.logo"] = "Arquivo do logo da empresa, PNG/JPG/SVG (Enter = {0}, \"-\" = sem logo): ",
+        ["cli.files.badLogo"] = "{0} não é uma imagem utilizável (PNG, JPG ou SVG até 2 MB); o relatório sai sem logo.",
+        ["cli.files.remember"] = "Memorizar esta escolha? (S/n) ",
         ["log.cannotRead"] = "Não foi possível ler {0}: {1}",
         ["log.empty"] = "{0}: nenhuma amostra.",
         ["log.header"] = "{0} · início {1} · duração {2} · {3} amostras · {4} sensores",

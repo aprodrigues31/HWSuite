@@ -45,26 +45,44 @@ public static class MaintenanceSession
         LogoNames.Select(n => Path.Combine(folder ?? BenchmarkFiles.Folder, n)).FirstOrDefault(File.Exists);
 
     /// <summary>The logo as a data URI, so the report is one self-contained file (null above 2 MB or without a logo).</summary>
-    public static string? LogoDataUri(string? folder = null)
+    public static string? LogoDataUri(string? folder = null) => LogoPath(folder) is { } path ? LogoFromFile(path) : null;
+
+    /// <summary>An image file (PNG, JPEG or SVG, up to 2 MB) as a data URI; null when it is missing or not usable.</summary>
+    public static string? LogoFromFile(string path)
     {
-        if (LogoPath(folder) is not { } path || new FileInfo(path).Length > 2 << 20)
+        try
+        {
+            var mime = Path.GetExtension(path).ToLowerInvariant() switch
+            {
+                ".png" => "image/png",
+                ".svg" => "image/svg+xml",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                _ => null,
+            };
+            return mime is null || !File.Exists(path) || new FileInfo(path).Length > 2 << 20
+                ? null
+                : $"data:{mime};base64,{Convert.ToBase64String(File.ReadAllBytes(path))}";
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or ArgumentException or NotSupportedException)
         {
             return null;
         }
-
-        var mime = Path.GetExtension(path).ToLowerInvariant() switch
-        {
-            ".png" => "image/png",
-            ".svg" => "image/svg+xml",
-            _ => "image/jpeg",
-        };
-        return $"data:{mime};base64,{Convert.ToBase64String(File.ReadAllBytes(path))}";
     }
 
+    /// <summary>
+    /// The company for the report. The logo is the one chosen in the settings ("" = none); when never chosen, a
+    /// logo.png/.jpg/.svg in the HWSuite folder is used if there is one.
+    /// </summary>
     public static CompanyProfile Company(AppSettings settings, string? logoFolder = null)
     {
         ArgumentNullException.ThrowIfNull(settings);
-        return new CompanyProfile(settings.CompanyName, settings.CompanyDocument, settings.CompanyContact, settings.CompanyAddress, settings.TechnicianName, LogoDataUri(logoFolder));
+        var logo = settings.LogoFile switch
+        {
+            "" => null,
+            { } file => LogoFromFile(file),
+            null => LogoDataUri(logoFolder),
+        };
+        return new CompanyProfile(settings.CompanyName, settings.CompanyDocument, settings.CompanyContact, settings.CompanyAddress, settings.TechnicianName, logo);
     }
 
     /// <summary>

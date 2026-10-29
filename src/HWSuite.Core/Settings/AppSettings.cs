@@ -74,6 +74,12 @@ public sealed record AppSettings
     /// <summary>Components shown on the Sensors page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? SensorCategories { get; init; }
 
+    /// <summary>Where reports are saved; null until the user chooses (they are asked on the first report).</summary>
+    public string? ReportsFolder { get; init; }
+
+    /// <summary>The company logo for reports; null = ask on the first report, "" = reports without a logo.</summary>
+    public string? LogoFile { get; init; }
+
     /// <summary>Components shown on the Hardware page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? InventoryCategories { get; init; }
 

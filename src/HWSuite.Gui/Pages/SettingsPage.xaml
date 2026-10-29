@@ -73,6 +73,29 @@
                 </StackPanel>
             </Border>
 
+            <TextBlock x:Name="FilesTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="16">
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Name="ReportsLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="ReportsFolderText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="ReportsBrowseButton" Click="ReportsBrowseButton_Click" />
+                            <Button x:Name="ReportsResetButton" Click="ReportsResetButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Name="LogoLabel" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Name="LogoFileText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="LogoBrowseButton" Click="LogoBrowseButton_Click" />
+                            <Button x:Name="LogoNoneButton" Click="LogoNoneButton_Click" />
+                            <Button x:Name="LogoResetButton" Click="LogoResetButton_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <TextBlock x:Name="LogTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Style="{StaticResource Card}">
                 <StackPanel Spacing="10">

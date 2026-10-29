@@ -225,6 +225,14 @@ public sealed class MaintenanceTests
             Assert.Equal("MML", company.Name);
             Assert.False(company.IsEmpty);
             Assert.NotNull(company.LogoDataUri);
+
+            // A logo chosen in the settings wins; "" means reports without a logo.
+            var chosen = Path.Combine(dir.FullName, "marca.jpg");
+            File.WriteAllBytes(chosen, [0xFF, 0xD8, 0xFF]);
+            Assert.StartsWith("data:image/jpeg;base64,", MaintenanceSession.Company(new HWSuite.Core.Settings.AppSettings { LogoFile = chosen }, dir.FullName).LogoDataUri, StringComparison.Ordinal);
+            Assert.Null(MaintenanceSession.Company(new HWSuite.Core.Settings.AppSettings { LogoFile = "" }, dir.FullName).LogoDataUri);
+            Assert.Null(MaintenanceSession.LogoFromFile(Path.Combine(dir.FullName, "nope.png")));
+            Assert.Null(MaintenanceSession.LogoFromFile(Path.Combine(dir.FullName, "logo.gif")));
         }
         finally
         {

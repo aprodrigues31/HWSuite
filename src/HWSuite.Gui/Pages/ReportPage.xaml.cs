@@ -47,7 +47,7 @@ public sealed partial class ReportPage : Page
         TechnicianBox.Header = s["mnt.report.technician"];
         ContactBox.Header = s["rep.contact"];
         AddressBox.Header = s["rep.address"];
-        LogoButton.Content = s["rep.logoFolder"];
+        LogoButton.Content = s["files.logo.choose"];
         LoadCheck.Content = s.Format("rep.load", LoadDuration.TotalSeconds);
         BenchCheck.Content = s["rep.bench"];
         InventoryCheck.Content = s["rep.inventory"];
@@ -97,9 +97,12 @@ public sealed partial class ReportPage : Page
     private void ShowLogo()
     {
         var s = App.Text;
-        LogoText.Text = MaintenanceSession.LogoPath() is { } path
-            ? s.Format("rep.logoFound", Path.GetFileName(path))
-            : s.Format("rep.logoMissing", BenchmarkFiles.Folder);
+        LogoText.Text = App.Settings.Current.LogoFile switch
+        {
+            "" => s["files.logo.noneSaved"],
+            { } file => s.Format("rep.logoFound", file),
+            null => s["files.logo.notSet"],
+        };
     }
 
     private void Company_LostFocus(object sender, RoutedEventArgs e)
@@ -122,9 +125,13 @@ public sealed partial class ReportPage : Page
 
     private void LogoButton_Click(object sender, RoutedEventArgs e)
     {
-        Directory.CreateDirectory(BenchmarkFiles.Folder);
-        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{BenchmarkFiles.Folder}\"") { UseShellExecute = true })?.Dispose();
-        ShowLogo();
+        var s = App.Text;
+        var start = App.Settings.Current.LogoFile is { Length: > 0 } current ? current : BenchmarkFiles.Folder;
+        if (Services.ShellDialogs.PickFile(s["files.logo.pick"], start, (s["files.logo.images"], "*.png;*.jpg;*.jpeg;*.svg")) is { } file)
+        {
+            App.Settings.Update(x => x with { LogoFile = file });
+            ShowLogo();
+        }
     }
 
     private async void RunButton_Click(object sender, RoutedEventArgs e) => await RunAsync();
@@ -179,7 +186,7 @@ public sealed partial class ReportPage : Page
 
             var checks = MaintenanceChecks.Run(input, s);
             var order = new ServiceOrder(Text(ClientBox), Text(ClientContactBox), Text(EquipmentBox), Text(OrderBox), Text(ServicesBox), Text(NotesBox));
-            var company = new CompanyProfile(Text(CompanyBox), Text(DocumentBox), Text(ContactBox), Text(AddressBox), Text(TechnicianBox), MaintenanceSession.LogoDataUri());
+            var company = new CompanyProfile(Text(CompanyBox), Text(DocumentBox), Text(ContactBox), Text(AddressBox), Text(TechnicianBox), null); // the logo is added when saving
             _report = new MaintenanceReport(company, order, checks, inventory, input.Now, BuildInfo.Current.Display, InventoryCheck.IsChecked == true) { Load = input.Load };
             ShowResult(_report);
             StatusText.Text = s.Format("rep.done", checks.Count);
@@ -267,24 +274,53 @@ public sealed partial class ReportPage : Page
 
     // ---- Saving ------------------------------------------------------------------------------------------------
 
-    private string? SaveHtml()
+    /// <summary>
+    /// Writes the HTML in the reports folder with the company logo. Both come from the settings; the first time,
+    /// the user is asked (and can have the choice remembered). Null when the user cancels.
+    /// </summary>
+    private async Task<string?> SaveHtmlAsync()
     {
         if (_report is null)
         {
             return null;
         }
 
-        Directory.CreateDirectory(MaintenanceSession.ReportsFolder);
-        var path = Path.Combine(MaintenanceSession.ReportsFolder, MaintenanceReportWriter.FileName(_report, "html"));
-        File.WriteAllText(path, MaintenanceReportWriter.ToHtml(_report, App.Text), new UTF8Encoding(false));
+        string? folder;
+        string? logo;
+        if (App.IsDemo)
+        {
+            (folder, logo) = (Services.OutputLocations.SuggestedReportsFolder, null);
+        }
+        else
+        {
+            folder = await Services.OutputLocations.ReportsFolderAsync(XamlRoot);
+            if (folder is null)
+            {
+                return null;
+            }
+
+            var (proceed, uri) = await Services.OutputLocations.LogoAsync(XamlRoot);
+            if (!proceed)
+            {
+                return null;
+            }
+
+            logo = uri;
+            ShowLogo();
+        }
+
+        var report = _report with { Company = _report.Company with { LogoDataUri = logo } };
+        Directory.CreateDirectory(folder);
+        var path = Path.Combine(folder, MaintenanceReportWriter.FileName(report, "html"));
+        File.WriteAllText(path, MaintenanceReportWriter.ToHtml(report, App.Text), new UTF8Encoding(false));
         return path;
     }
 
-    private void HtmlButton_Click(object sender, RoutedEventArgs e)
+    private async void HtmlButton_Click(object sender, RoutedEventArgs e)
     {
         try
         {
-            if (SaveHtml() is { } path)
+            if (await SaveHtmlAsync() is { } path)
             {
                 SavedText.Text = App.Text.Format("rep.saved", path);
                 Open(path);
@@ -303,7 +339,7 @@ public sealed partial class ReportPage : Page
         string? html = null;
         try
         {
-            html = SaveHtml();
+            html = await SaveHtmlAsync();
             if (html is null)
             {
                 return;
@@ -350,10 +386,12 @@ public sealed partial class ReportPage : Page
         }
     }
 
-    private void FolderButton_Click(object sender, RoutedEventArgs e)
+    private async void FolderButton_Click(object sender, RoutedEventArgs e)
     {
-        Directory.CreateDirectory(MaintenanceSession.ReportsFolder);
-        Process.Start(new ProcessStartInfo("explorer.exe", $"\"{MaintenanceSession.ReportsFolder}\"") { UseShellExecute = true })?.Dispose();
+        if (await Services.OutputLocations.ReportsFolderAsync(XamlRoot) is { } folder)
+        {
+            Process.Start(new ProcessStartInfo("explorer.exe", $"\"{folder}\"") { UseShellExecute = true })?.Dispose();
+        }
     }
 
     private static void Open(string path) =>
