@@ -132,7 +132,7 @@ public sealed class DashboardTests
     {
         Assert.Equal("Cpu,Gpu", SensorCategories.Format([SensorCategory.Gpu, SensorCategory.Cpu, SensorCategory.Gpu]));
         Assert.Null(SensorCategories.Format([]));
-        Assert.Equal(new HashSet<SensorCategory> { SensorCategory.Cpu, SensorCategory.Storage }, SensorCategories.Parse("Storage, Cpu,Nonsense"));
+        Assert.True(SensorCategories.Parse("Storage, Cpu,Nonsense").SetEquals([SensorCategory.Cpu, SensorCategory.Storage]));
         Assert.Empty(SensorCategories.Parse(null));
     }
 }
