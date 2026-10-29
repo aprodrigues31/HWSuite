@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using HWSuite.Core.Benchmark;
 using HWSuite.Core.Network;
+using HWSuite.Gui.Hud;
 using HWSuite.Providers.Windows;
 using Microsoft.UI;
 using Microsoft.UI.Text;
@@ -31,7 +32,7 @@ public sealed partial class NetworkPage : Page
     {
         InitializeComponent();
         var s = App.Text;
-        PageTitle.Text = s["net.title"];
+        PageTitle.Text = s["net.title"].ToUpper(s.Culture);
         Subtitle.Text = s["net.subtitle"];
         ServerBox.Header = s["net.server"];
         ServerBox.Items.Add(s["net.server.cloudflare"]);
@@ -44,6 +45,12 @@ public sealed partial class NetworkPage : Page
         DetailTab.Text = s["net.tab.detail"];
         TipsTab.Text = s["net.tab.tips"];
         Loaded += async (_, _) => await ShowConnectionAsync();
+        if (App.IsDemo)
+        {
+            _result = DemoResult();
+            ResultTabs.Visibility = Visibility.Visible;
+            Loaded += (_, _) => ShowResult();
+        }
     }
 
     private IpFamily Family => ProtocolBar.SelectedItem?.Tag as string == "IPv6" ? IpFamily.IPv6 : IpFamily.IPv4;
@@ -211,6 +218,7 @@ public sealed partial class NetworkPage : Page
     private void ShowSummary(NetworkTestResult r)
     {
         var s = App.Text;
+        ResultPanel.Children.Add(Hero(r));
         var metrics = new StackPanel { Spacing = 2 };
         metrics.Children.Add(MetricRow("", s["net.download"], null, Number(r.DownloadMbps), "Mbps"));
         metrics.Children.Add(MetricRow("", s["net.upload"], null, Number(r.UploadMbps), "Mbps"));
@@ -245,6 +253,69 @@ public sealed partial class NetworkPage : Page
 
         info.Children.Add(InfoRow(s["results.when"], r.At.LocalDateTime.ToString("g", s.Culture)));
         ResultPanel.Children.Add(Card(s["net.measurement"], info));
+    }
+
+    /// <summary>Speedometer (download, upload as the inner arc) with the upload and latency figures beside it.</summary>
+    private static HudPanel Hero(NetworkTestResult r)
+    {
+        var s = App.Text;
+        var c = s.Culture;
+        var scale = new[] { 100.0, 250, 500, 1000, 2500, 5000, 10000 }.FirstOrDefault(x => x >= r.DownloadMbps * 1.02, 10000);
+        var gauge = new ArcGauge { Diameter = 290 };
+        gauge.Set(r.DownloadMbps / scale, s["net.download"].ToUpper(c), Number(r.DownloadMbps), "MBPS",
+            "0", (scale / 2).ToString("N0", c), scale.ToString("N0", c), r.UploadMbps / scale);
+
+        var side = new StackPanel { Spacing = 18, VerticalAlignment = VerticalAlignment.Center };
+        var up = new StackPanel { Spacing = 2 };
+        up.Children.Add(new TextBlock { Text = ("▲ " + s["net.upload"]).ToUpper(c), Style = HudUi.Style("HudTagStyle"), Foreground = HudUi.Warn });
+        up.Children.Add(HudUi.ValueText(Number(r.UploadMbps), "Mbps", 40, HudUi.Warn));
+        side.Children.Add(up);
+
+        var grid = new Grid { ColumnSpacing = 28, RowSpacing = 12 };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        grid.RowDefinitions.Add(new RowDefinition());
+        grid.RowDefinitions.Add(new RowDefinition());
+        void Cell(int row, int col, string label, string value, string unit)
+        {
+            var cell = new StackPanel { Spacing = 2 };
+            cell.Children.Add(HudUi.TagText(label, c));
+            cell.Children.Add(HudUi.ValueText(value, unit, 22, HudUi.Accent));
+            Grid.SetRow(cell, row);
+            Grid.SetColumn(cell, col);
+            grid.Children.Add(cell);
+        }
+
+        Cell(0, 0, s["net.latency"], Number(r.Idle.Summary.Median), "ms");
+        Cell(0, 1, s["net.jitter"], Number(r.Idle.Jitter), "ms");
+        Cell(1, 0, s["net.loss"], r.LossPercent is { } loss ? loss.ToString("0.#", c) : "—", "%");
+        Cell(1, 1, s["net.withDownload"], Number(Math.Max(r.LoadedDownload.Summary.Median, r.LoadedUpload.Summary.Median)), "ms");
+        side.Children.Add(grid);
+
+        var row = new Grid { ColumnSpacing = 40, HorizontalAlignment = HorizontalAlignment.Center };
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        row.Children.Add(gauge);
+        Grid.SetColumn(side, 1);
+        row.Children.Add(side);
+        return new HudPanel { Content = row, Highlight = true, Padding = new Thickness(24, 18, 24, 18) };
+    }
+
+    /// <summary>A plausible result for the demo mode (screenshots): 1 Gbps fiber over a 2.5 GbE cable.</summary>
+    private static NetworkTestResult DemoResult()
+    {
+        var random = new Random(7);
+        List<NetSample> Ramp(double median, double spread) => [.. Enumerable.Range(0, 100).Select(i =>
+            new NetSample(i * 0.1, i < 6 ? median * (i + 1) / 7 : median + ((random.NextDouble() - 0.5) * spread)))];
+        List<NetSample> Rtt(double baseMs, int count, double spike) => [.. Enumerable.Range(0, count).Select(i =>
+            new NetSample(i * 0.1, baseMs + (random.NextDouble() * 1.4) + (i % 23 == 7 ? spike : 0)))];
+        return new NetworkTestResult(
+            NetworkTest.Version, NetServer.Cloudflare, IpFamily.IPv4,
+            new NetEndpoint("speed.cloudflare.com", "Cloudflare São Paulo, BR (GRU)", "Neolink Telecom", "203.0.113.25"),
+            Ramp(917, 70), Ramp(626, 90),
+            new LatencyPhase(Rtt(5, 100, 4)), new LatencyPhase(Rtt(6.2, 40, 6)), new LatencyPhase(Rtt(6, 40, 3)),
+            0, new NetConnection("Ethernet", "Realtek PCIe 2.5GbE Family Controller", false, true, 2500, null),
+            DateTimeOffset.Now.AddMinutes(-3));
     }
 
     private static Grid MetricRow(string glyph, string label, string? qualifier, string value, string unit)
@@ -344,7 +415,7 @@ public sealed partial class NetworkPage : Page
         ResultPanel.Children.Add(SeriesCard("", s["net.jitter"], jitter, "ms", s["net.chart.ms"], UploadBrush, s["net.latencyPhases"], r.Idle.Jitter));
     }
 
-    private static Border SeriesCard(string glyph, string title, IReadOnlyList<NetSample> series, string unit, string axis, Brush stroke, string? note = null, double? headline = null)
+    private static HudPanel SeriesCard(string glyph, string title, IReadOnlyList<NetSample> series, string unit, string axis, Brush stroke, string? note = null, double? headline = null)
     {
         var s = App.Text;
         var summary = MetricSummary.Of(series);
@@ -487,7 +558,7 @@ public sealed partial class NetworkPage : Page
 
     // ---- Connection card --------------------------------------------------------------------------------------
 
-    private static Border ConnectionCard(NetConnection? c)
+    private static HudPanel ConnectionCard(NetConnection? c)
     {
         var s = App.Text;
         var rows = new StackPanel { Spacing = 0 };
@@ -533,25 +604,7 @@ public sealed partial class NetworkPage : Page
 
     // ---- Shared ------------------------------------------------------------------------------------------------
 
-    private static Border Card(string? title, UIElement content)
-    {
-        var panel = new StackPanel { Spacing = 6 };
-        if (title is not null)
-        {
-            panel.Children.Add(new TextBlock { Text = title, Style = (Style)Application.Current.Resources["BodyStrongTextBlockStyle"] });
-        }
-
-        panel.Children.Add(content);
-        return new Border
-        {
-            Child = panel,
-            Padding = new Thickness(16, 12, 16, 12),
-            CornerRadius = new CornerRadius(8),
-            BorderThickness = new Thickness(1),
-            Background = Brush("CardBackgroundFillColorDefaultBrush"),
-            BorderBrush = Brush("CardStrokeColorDefaultBrush"),
-        };
-    }
+    private static HudPanel Card(string? title, UIElement content) => HudUi.Panel(title, content, App.Text.Culture);
 
     /// <summary>909, 7, 1.4: whole numbers from 10 up, one decimal below.</summary>
     private static string Number(double value) =>

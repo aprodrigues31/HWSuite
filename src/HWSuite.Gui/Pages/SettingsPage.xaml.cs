@@ -19,7 +19,7 @@ public sealed partial class SettingsPage : Page
     {
         InitializeComponent();
         var s = App.Text;
-        PageTitle.Text = s["app.nav.settings"];
+        PageTitle.Text = s["app.nav.settings"].ToUpper(s.Culture);
         GeneralTitle.Text = s["settings.general"];
         IntervalBox.Header = s["settings.interval"];
         IntervalBox.Minimum = AppSettings.MinInterval;

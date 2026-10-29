@@ -22,7 +22,7 @@ public sealed partial class BenchmarkResultsPage : Page
     {
         InitializeComponent();
         var s = App.Text;
-        PageTitle.Text = s["results.title"];
+        PageTitle.Text = s["results.title"].ToUpper(s.Culture);
         Subtitle.Text = s["results.subtitle"];
         CpuTab.Text = s["app.clear.cpu"];
         GpuTab.Text = s["app.clear.gpu"];

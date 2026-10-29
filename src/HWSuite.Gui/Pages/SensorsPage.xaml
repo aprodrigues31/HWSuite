@@ -3,115 +3,64 @@
     x:Class="HWSuite.Gui.Pages.SensorsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:vm="using:HWSuite.Gui.ViewModels">
-    <Page.Resources>
-        <CollectionViewSource x:Name="GroupedSensors" x:Key="GroupedSensors" IsSourceGrouped="True" />
-    </Page.Resources>
-
-    <Grid Padding="20,12,20,16" RowSpacing="12">
+    xmlns:hud="using:HWSuite.Gui.Hud"
+    NavigationCacheMode="Required">
+    <Grid Padding="28,6,28,16" RowSpacing="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="240" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Spacing="4">
-            <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
-            <TextBlock x:Name="StatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-            <InfoBar x:Name="HintBar" IsClosable="True" IsOpen="False" Severity="Warning" />
-            <InfoBar x:Name="AlertBar" IsClosable="True" IsOpen="False" Severity="Success" />
-        </StackPanel>
-
-        <Grid Grid.Row="1" RowSpacing="4">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <ListView
-                x:Name="SensorList"
-                Grid.Row="0"
-                Grid.RowSpan="2"
-                ItemsSource="{Binding Source={StaticResource GroupedSensors}}"
-                SelectionChanged="SensorList_SelectionChanged"
-                SelectionMode="Single">
-                <ListView.ItemContainerStyle>
-                    <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
-                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                        <Setter Property="Padding" Value="16,0,16,0" />
-                    </Style>
-                </ListView.ItemContainerStyle>
-                <ListView.GroupStyle>
-                    <GroupStyle>
-                        <GroupStyle.HeaderContainerStyle>
-                            <!-- Stretch so the column names line up with the rows below (same 16 px side padding as the items). -->
-                            <Style TargetType="ListViewHeaderItem">
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                                <Setter Property="Padding" Value="16,12,16,0" />
-                                <Setter Property="Margin" Value="0" />
-                            </Style>
-                        </GroupStyle.HeaderContainerStyle>
-                        <GroupStyle.HeaderTemplate>
-                            <DataTemplate x:DataType="vm:SensorGroup">
-                                <StackPanel Spacing="6">
-                                    <TextBlock Style="{StaticResource SubtitleTextBlockStyle}" Text="{x:Bind Title}" />
-                                    <Grid ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions>
-                                            <ColumnDefinition Width="3*" />
-                                            <ColumnDefinition Width="2*" />
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="120" />
-                                            <ColumnDefinition Width="120" />
-                                        </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind NameHeader}" />
-                                        <TextBlock Grid.Column="1" Style="{StaticResource CaptionTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind KindHeader}" />
-                                        <TextBlock Grid.Column="2" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind ValueHeader}" />
-                                        <TextBlock Grid.Column="3" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MinHeader}" />
-                                        <TextBlock Grid.Column="4" Style="{StaticResource CaptionTextBlockStyle}" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MaxHeader}" />
-                                    </Grid>
-                                </StackPanel>
-                            </DataTemplate>
-                        </GroupStyle.HeaderTemplate>
-                    </GroupStyle>
-                </ListView.GroupStyle>
-                <ListView.ItemTemplate>
-                    <DataTemplate x:DataType="vm:SensorItem">
-                        <Grid ColumnSpacing="12">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="3*" />
-                                <ColumnDefinition Width="2*" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="120" />
-                                <ColumnDefinition Width="120" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{x:Bind Name}" TextTrimming="CharacterEllipsis" />
-                            <TextBlock Grid.Column="1" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind KindLabel}" />
-                            <TextBlock Grid.Column="2" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="{x:Bind ValueBrush, Mode=OneWay}" Text="{x:Bind ValueText, Mode=OneWay}" />
-                            <TextBlock Grid.Column="3" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MinText, Mode=OneWay}" />
-                            <TextBlock Grid.Column="4" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="{x:Bind MaxText, Mode=OneWay}" />
-                        </Grid>
-                    </DataTemplate>
-                </ListView.ItemTemplate>
-            </ListView>
+        <!-- Header: title, channel count, search -->
+        <Grid ColumnSpacing="16" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="4">
+                <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                <TextBlock x:Name="StatusText" Style="{StaticResource HudMonoStyle}" FontSize="12" />
+                <InfoBar x:Name="HintBar" IsClosable="True" IsOpen="False" Severity="Warning" />
+                <InfoBar x:Name="AlertBar" IsClosable="True" IsOpen="False" Severity="Success" />
+            </StackPanel>
+            <TextBox x:Name="SearchBox" Grid.Column="1" Width="240" VerticalAlignment="Bottom" TextChanged="SearchBox_TextChanged" />
         </Grid>
 
-        <Border
-            Grid.Row="2"
-            Padding="16,12"
-            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-            BorderThickness="1"
-            CornerRadius="8">
+        <!-- Summary -->
+        <Grid x:Name="SummaryGrid" Grid.Row="1" ColumnSpacing="12" />
+
+        <!-- Filters by kind -->
+        <StackPanel x:Name="Filters" Grid.Row="2" Orientation="Horizontal" Spacing="8" />
+
+        <!-- Devices, in two columns -->
+        <ScrollViewer Grid.Row="3" Padding="0,0,8,0">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <StackPanel x:Name="ColumnA" Spacing="16" />
+                <StackPanel x:Name="ColumnB" Grid.Column="1" Spacing="16" />
+            </Grid>
+        </ScrollViewer>
+
+        <!-- History of the selected sensor -->
+        <hud:HudPanel Grid.Row="4" Padding="20,12,20,12">
             <Grid RowSpacing="8">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
-                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
                 <Grid ColumnSpacing="12">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock x:Name="ChartTitle" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    <TextBlock x:Name="ChartTitle" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
                     <Button x:Name="AlertButton" Grid.Column="1" Click="AlertButton_Click" IsEnabled="False">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontSize="14" Glyph="&#xEA8F;" />
@@ -119,8 +68,8 @@
                         </StackPanel>
                     </Button>
                 </Grid>
-                <Canvas x:Name="ChartCanvas" Grid.Row="1" SizeChanged="ChartCanvas_SizeChanged" />
+                <hud:LineChart x:Name="Chart" Grid.Row="1" Height="130" />
             </Grid>
-        </Border>
+        </hud:HudPanel>
     </Grid>
 </Page>

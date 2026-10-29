@@ -9,7 +9,7 @@ public sealed partial class AboutPage : Page
     public AboutPage()
     {
         InitializeComponent();
-        PageTitle.Text = App.Text["app.nav.about"];
+        PageTitle.Text = App.Text["app.nav.about"].ToUpper(App.Text.Culture);
         AboutText.Text = App.Text.Format("app.about", BuildInfo.Current.Display);
         CheckButton.Content = App.Text["app.update.check"];
     }

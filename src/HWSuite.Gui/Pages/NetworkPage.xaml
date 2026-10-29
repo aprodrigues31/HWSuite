@@ -7,7 +7,7 @@
     <ScrollViewer>
         <StackPanel Padding="20,12,20,24" Spacing="14">
             <StackPanel Spacing="4">
-                <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
                 <TextBlock x:Name="Subtitle" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
 
@@ -27,7 +27,7 @@
                     </SelectorBar>
                 </StackPanel>
                 <Button x:Name="StartButton" Grid.Column="3" MinWidth="120" VerticalAlignment="Bottom"
-                        Style="{StaticResource AccentButtonStyle}" Click="StartButton_Click" />
+                        Style="{StaticResource HudAccentButtonStyle}" Click="StartButton_Click" />
             </Grid>
 
             <StackPanel Spacing="6">

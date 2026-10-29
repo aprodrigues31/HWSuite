@@ -35,7 +35,7 @@ public sealed partial class BenchmarkPage : Page
         ErrorsLabel.Text = s["app.stress.errors"];
         TempLabel.Text = s["app.stress.temperature"];
         StressExplain.Text = s["app.stress.explain"];
-        PageTitle.Text = s["app.nav.bench"];
+        PageTitle.Text = s["app.nav.bench"].ToUpper(s.Culture);
         StartButton.Content = s["app.bench.start"];
         SingleLabel.Text = s["app.bench.single"];
         MultiLabel.Text = s.Format("app.bench.multi", Environment.ProcessorCount);

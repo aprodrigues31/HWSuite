@@ -15,7 +15,7 @@
 
     <ScrollViewer>
         <StackPanel Padding="20,12,20,24" Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
-            <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
 
             <TextBlock x:Name="GeneralTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
             <Border Style="{StaticResource Card}">

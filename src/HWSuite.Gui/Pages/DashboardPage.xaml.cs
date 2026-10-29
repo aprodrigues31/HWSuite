@@ -50,7 +50,7 @@ public sealed partial class DashboardPage : Page
         foreach (var value in new[] { GpuClock, MemUsed })
         {
             value.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
-            value.Text.FontSize = 30;
+            value.Text.FontSize = 26;
             value.Text.Foreground = HudUi.Text;
         }
 

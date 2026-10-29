@@ -17,7 +17,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <StackPanel Spacing="4">
-                <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+                <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
                 <TextBlock x:Name="Subtitle" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
             <Button x:Name="FolderButton" Grid.Column="1" VerticalAlignment="Top" Click="FolderButton_Click" />
@@ -38,7 +38,7 @@
             <TextBlock x:Name="CountText" Grid.Column="1" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
         </Grid>
 
-        <Border Grid.Row="2" CornerRadius="8" BorderThickness="1"
+        <Border Grid.Row="2" CornerRadius="2" BorderThickness="1"
                 Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
             <ScrollViewer HorizontalScrollBarVisibility="Auto" HorizontalScrollMode="Auto">
                 <StackPanel x:Name="Table" Padding="4" />

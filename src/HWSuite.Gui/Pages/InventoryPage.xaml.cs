@@ -4,7 +4,6 @@ using HWSuite.Core.Collection;
 using HWSuite.Core.Model;
 using HWSuite.Core.Reporting;
 using HWSuite.Hosting;
-using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -20,7 +19,7 @@ public sealed partial class InventoryPage : Page
     {
         InitializeComponent();
         var s = App.Text;
-        PageTitle.Text = s["app.nav.inventory"];
+        PageTitle.Text = s["app.nav.inventory"].ToUpper(s.Culture);
         SaveButton.Content = s["app.saveReport"];
         SaveVbiosButton.Content = s["app.saveVbios"];
         Loaded += async (_, _) => await LoadAsync();
@@ -49,13 +48,13 @@ public sealed partial class InventoryPage : Page
         foreach (var section in ReportModel.Build(inventory, s))
         {
             var card = new StackPanel { Spacing = 6 };
-            card.Children.Add(new TextBlock { Text = section.Title, Style = (Style)Application.Current.Resources["SubtitleTextBlockStyle"] });
+            card.Children.Add(new TextBlock { Text = ("// " + section.Title).ToUpper(s.Culture), Style = Hud.HudUi.Style("HudTagStyle"), Foreground = Hud.HudUi.Accent, Margin = new Thickness(0, 0, 0, 4) });
 
             foreach (var group in section.Groups)
             {
                 if (group.Title is not null)
                 {
-                    card.Children.Add(new TextBlock { Text = group.Title, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 6, 0, 0) });
+                    card.Children.Add(new TextBlock { Text = group.Title.ToUpper(s.Culture), Style = Hud.HudUi.Style("HudNameStyle"), FontSize = 15, Margin = new Thickness(0, 8, 0, 2) });
                 }
 
                 var rows = new Grid { ColumnSpacing = 16, RowSpacing = 4 };
@@ -65,7 +64,7 @@ public sealed partial class InventoryPage : Page
                 {
                     rows.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
                     var label = new TextBlock { Text = group.Rows[i].Label, Foreground = secondary, TextWrapping = TextWrapping.Wrap };
-                    var value = new TextBlock { Text = group.Rows[i].Value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
+                    var value = new TextBlock { Text = group.Rows[i].Value, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true, FontFamily = Hud.HudUi.Font("HudMonoFont"), FontSize = 13 };
                     Grid.SetRow(label, i);
                     Grid.SetRow(value, i);
                     Grid.SetColumn(value, 1);
@@ -76,15 +75,7 @@ public sealed partial class InventoryPage : Page
                 card.Children.Add(rows);
             }
 
-            Sections.Children.Add(new Border
-            {
-                Child = card,
-                Padding = new Thickness(16, 12, 16, 12),
-                CornerRadius = new CornerRadius(8),
-                BorderThickness = new Thickness(1),
-                Background = (Brush)Application.Current.Resources["CardBackgroundFillColorDefaultBrush"],
-                BorderBrush = (Brush)Application.Current.Resources["CardStrokeColorDefaultBrush"],
-            });
+            Sections.Children.Add(new Hud.HudPanel { Content = card });
         }
     }
 

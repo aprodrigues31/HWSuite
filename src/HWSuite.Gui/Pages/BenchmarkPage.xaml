@@ -5,7 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <ScrollViewer>
         <StackPanel Padding="20,12,20,16" Spacing="12" MaxWidth="820" HorizontalAlignment="Left">
-            <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}" />
+            <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
             <TextBlock x:Name="CpuHeader" Style="{StaticResource SubtitleTextBlockStyle}" />
             <TextBlock x:Name="ProcessorText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
 
@@ -25,14 +25,14 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Border Padding="16,12" CornerRadius="8" BorderThickness="1"
+                <Border Padding="16,12" CornerRadius="2" BorderThickness="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                     <StackPanel Spacing="4">
                         <TextBlock x:Name="SingleLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <TextBlock x:Name="SingleValue" Style="{StaticResource TitleLargeTextBlockStyle}" Text="—" />
                     </StackPanel>
                 </Border>
-                <Border Grid.Column="1" Padding="16,12" CornerRadius="8" BorderThickness="1"
+                <Border Grid.Column="1" Padding="16,12" CornerRadius="2" BorderThickness="1"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                     <StackPanel Spacing="4">
                         <TextBlock x:Name="MultiLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -42,7 +42,7 @@
                 </Border>
             </Grid>
 
-            <Border x:Name="StressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="8" BorderThickness="1"
+            <Border x:Name="StressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="2" BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="StressStatusText" TextWrapping="Wrap" />
@@ -98,7 +98,7 @@
                 <TextBlock x:Name="GpuStatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
 
-            <Border Padding="16,12" CornerRadius="8" BorderThickness="1"
+            <Border Padding="16,12" CornerRadius="2" BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                 <StackPanel Spacing="4">
                     <TextBlock x:Name="GpuResultLabel" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
@@ -106,7 +106,7 @@
                 </StackPanel>
             </Border>
 
-            <Border x:Name="GpuStressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="8" BorderThickness="1"
+            <Border x:Name="GpuStressPanel" Visibility="Collapsed" Padding="16,12" CornerRadius="2" BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                 <StackPanel Spacing="8">
                     <TextBlock x:Name="GpuStressStatusText" TextWrapping="Wrap" />
@@ -148,7 +148,7 @@
                 <TextBlock x:Name="DiskStatusText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
             </StackPanel>
 
-            <Border Padding="16,12" CornerRadius="8" BorderThickness="1"
+            <Border Padding="16,12" CornerRadius="2" BorderThickness="1"
                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
                 <Grid x:Name="DiskGrid" ColumnSpacing="24" RowSpacing="6" />
             </Border>
