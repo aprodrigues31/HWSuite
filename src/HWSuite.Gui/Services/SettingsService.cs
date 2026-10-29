@@ -6,7 +6,7 @@ namespace HWSuite.Gui.Services;
 /// <summary>The app's settings: loaded once at start, saved on every change, observed by the monitor and the window.</summary>
 public sealed class SettingsService
 {
-    private readonly SettingsStore _store = new(SettingsStore.DefaultPath);
+    private readonly SettingsStore _store = new(DataLocation.SettingsPath);
 
     public SettingsService()
     {
@@ -23,8 +23,7 @@ public sealed class SettingsService
     /// <summary>The user's rules plus the ones derived from settings (power supply rails, pump), which are not edited as rules.</summary>
     public IReadOnlyList<AlertRule> EffectiveRules => [.. Rules, .. Core.Sensors.PowerRails.DerivedRules(Current, App.Text)];
 
-    public static string DefaultLogFolder => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "logs");
+    public static string DefaultLogFolder => Path.Combine(DataLocation.Folder, "logs");
 
     public string LogFolder => Current.LogFolder ?? DefaultLogFolder;
 

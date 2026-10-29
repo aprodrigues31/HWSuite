@@ -15,6 +15,7 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
   - dados da empresa (nome, CNPJ, técnico, contato, endereço) guardados nas configurações e logo lido de `Documentos\HWSuite\logo.png` (ou .jpg/.svg);
   - ordem de serviço: cliente, contato, equipamento, número da OS, serviços realizados e observações;
   - relatório A4 em **PDF** ou HTML (um arquivo só, com o logo embutido), salvo em `Documentos\HWSuite\Reports`: cabeçalho da empresa, resumo do estado geral, ações recomendadas, diagnóstico por área, serviços, resumo do equipamento, assinaturas e o inventário completo como anexo (opcional).
+- **Modo portátil:** o HWSuite executado fora da instalação (pendrive, zip descompactado na máquina do cliente) grava tudo o que gera (relatórios, histórico de benchmarks e de Internet, configurações e logo) na pasta `HWSuite` ao lado do executável, sem usar as pastas do cliente. A versão instalada (instalador ou winget) continua usando `Documentos\HWSuite`. Se a pasta do executável não aceitar gravação, usa Documentos.
 
 ## [0.18.0] - 2026-10-29
 

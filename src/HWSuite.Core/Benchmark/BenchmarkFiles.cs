@@ -14,7 +14,8 @@ public enum BenchmarkKinds
 /// <summary>Where each kind of benchmark result is kept (Documents\HWSuite), and clearing them.</summary>
 public static class BenchmarkFiles
 {
-    public static string Folder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite");
+    /// <summary>Documents\HWSuite when installed, the "HWSuite" folder next to the executable when portable.</summary>
+    public static string Folder => Settings.DataLocation.Folder;
 
     public static string Cpu => Path.Combine(Folder, "benchmark.csv");
 

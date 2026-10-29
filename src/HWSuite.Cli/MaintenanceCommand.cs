@@ -18,6 +18,10 @@ namespace HWSuite.Cli;
 /// </summary>
 internal static class MaintenanceCommand
 {
+    /// <summary>A portable copy's own settings (company, pump) when it has them, else the installed app's.</summary>
+    private static AppSettings LoadSettings() =>
+        File.Exists(DataLocation.SettingsPath) ? new SettingsStore(DataLocation.SettingsPath).Load() : new SettingsStore(SettingsStore.DefaultPath).Load();
+
     public static int Run(CliOptions options, Strings s)
     {
         if (!OperatingSystem.IsWindows())
@@ -28,7 +32,7 @@ internal static class MaintenanceCommand
 
         var access = AccessStatus.Detect();
         SensorsCommand.WriteAccessNotes(access, s, Console.Out);
-        var settings = new SettingsStore(SettingsStore.DefaultPath).Load();
+        var settings = LoadSettings();
 
         Console.WriteLine(s["rep.step.inventory"]);
         var inventory = new InventoryCollector(ProviderCatalog.Default()).Collect();

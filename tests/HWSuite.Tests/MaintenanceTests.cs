@@ -251,4 +251,27 @@ public sealed class MaintenanceTests
         Assert.Null(HWSuite.Cli.CliOptions.Parse(["maintenance"]).LoadSeconds);
         Assert.Throws<HWSuite.Cli.CliUsageException>(() => HWSuite.Cli.CliOptions.Parse(["report", "--client", "x"]));
     }
+
+    [Fact]
+    public void Installed_copies_use_documents_and_others_are_portable()
+    {
+        var roots = new[] { Path.Combine(Path.GetTempPath(), "pf"), Path.Combine(Path.GetTempPath(), "lad", "Programs") };
+        Assert.True(HWSuite.Core.Settings.DataLocation.IsInstalled(Path.Combine(roots[1], "HWSuite"), roots));
+        Assert.False(HWSuite.Core.Settings.DataLocation.IsInstalled(Path.Combine(Path.GetTempPath(), "pendrive", "hwsuite"), roots));
+        Assert.False(HWSuite.Core.Settings.DataLocation.IsInstalled(Path.Combine(Path.GetTempPath(), "pfx"), roots)); // prefix of a name is not the folder
+
+        var usb = Path.Combine(Path.GetTempPath(), "hwsuite-portable-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            var (folder, portable) = HWSuite.Core.Settings.DataLocation.Resolve(usb);
+            Assert.True(portable);
+            Assert.Equal(Path.Combine(usb, "HWSuite"), folder);
+            Assert.True(Directory.Exists(folder));
+            Assert.Empty(Directory.GetFiles(folder)); // the write probe is removed
+        }
+        finally
+        {
+            Directory.Delete(usb, recursive: true);
+        }
+    }
 }

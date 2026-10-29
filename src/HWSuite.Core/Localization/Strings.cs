@@ -790,7 +790,7 @@ public sealed class Strings
                                             with your public IP, so it needs --accept-mlab-policy).
               hwsuite maintenance [options]
                                             Maintenance report for the client: diagnosis with advice,
-                                            saved as HTML in Documents\HWSuite\Reports.
+                                            saved as HTML in HWSuite\Reports next to hwsuite.exe.
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
@@ -806,7 +806,11 @@ public sealed class Strings
                   --no-inventory            Leave the full inventory out of the report.
               -o, --out <file.html>         Where to save the report.
             The company (name, CNPJ, technician) comes from the app's Report page; the logo is
-            logo.png in Documents\HWSuite.
+            HWSuite\logo.png next to hwsuite.exe.
+
+            Run from a pen drive or an unzipped folder, everything HWSuite writes (reports, benchmark
+            history, settings) goes into the HWSuite folder next to the executable; the installed
+            version uses Documents\HWSuite.
 
             Options for 'sensors':
               -w, --watch                   Keep refreshing the table until Ctrl+C.
@@ -1612,7 +1616,7 @@ public sealed class Strings
                                             com o seu IP público, por isso exige --accept-mlab-policy).
               hwsuite maintenance [opções]
                                             Relatório de manutenção para o cliente: diagnóstico com
-                                            orientações, salvo em HTML em Documentos\HWSuite\Reports.
+                                            orientações, salvo em HTML em HWSuite\Reports, ao lado do hwsuite.exe.
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).
@@ -1628,7 +1632,11 @@ public sealed class Strings
                   --no-inventory            Não inclui o inventário completo no relatório.
               -o, --out <arquivo.html>      Onde salvar o relatório.
             A empresa (nome, CNPJ, técnico) vem da página Relatório do app; o logo é
-            logo.png em Documentos\HWSuite.
+            HWSuite\logo.png, ao lado do hwsuite.exe.
+
+            Executado de um pendrive ou de uma pasta descompactada, tudo o que o HWSuite grava
+            (relatórios, histórico de benchmarks, configurações) fica na pasta HWSuite ao lado do
+            executável; a versão instalada usa Documentos\HWSuite.
 
             Opções de 'sensors':
               -w, --watch                   Atualiza a tabela continuamente até Ctrl+C.

@@ -90,7 +90,7 @@ public sealed partial class InventoryPage : Page
             return;
         }
 
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite");
+        var folder = HWSuite.Core.Benchmark.BenchmarkFiles.Folder;
         Directory.CreateDirectory(folder);
         var path = Path.Combine(folder, $"hwsuite-{s_cached.MachineName}-{DateTime.Now:yyyyMMdd-HHmmss}.html");
         using (var file = new StreamWriter(path, append: false, new UTF8Encoding(false)))
@@ -110,7 +110,7 @@ public sealed partial class InventoryPage : Page
             return;
         }
 
-        var folder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite");
+        var folder = HWSuite.Core.Benchmark.BenchmarkFiles.Folder;
         Directory.CreateDirectory(folder);
         string? last = null;
         foreach (var gpu in s_cached.Gpus.Where(g => g.VideoBios is not null))

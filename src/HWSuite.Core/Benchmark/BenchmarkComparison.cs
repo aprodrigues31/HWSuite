@@ -41,7 +41,7 @@ public sealed partial record BenchmarkComparison(IReadOnlyList<ComparisonRow> Ro
 {
     /// <summary>Folder for results of other PCs: any *.csv there in the benchmark.csv format is read.</summary>
     public static string LocalFolder =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "HWSuite", "referencias");
+        Path.Combine(BenchmarkFiles.Folder, "referencias");
 
     /// <summary>The runs shipped with HWSuite (the embedded cpu-reference.csv).</summary>
     public static IReadOnlyList<BenchmarkEntry> Builtin()
