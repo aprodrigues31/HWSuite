@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.20.0] - 2026-10-29
+
 ### Adicionado
 - **Gráficos** (novo item no menu): escolha até 8 sensores e veja cada um ao longo do tempo, um gráfico por unidade (°C, W, RPM, MHz, V, %):
   - ao vivo, com a última hora guardada pelo app, em janelas de 1, 5, 15 ou 60 minutos;
