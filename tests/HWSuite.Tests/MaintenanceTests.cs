@@ -192,4 +192,63 @@ public sealed class MaintenanceTests
         Assert.StartsWith("hwsuite-2026-10-29-1000-Cliente & Cia", MaintenanceReportWriter.FileName(report, "pdf"), StringComparison.Ordinal);
         Assert.EndsWith(".pdf", MaintenanceReportWriter.FileName(report, "pdf"), StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Load_test_keeps_the_peaks()
+    {
+        var start = DateTimeOffset.Now;
+        var reads = 0;
+        using var demo = new DemoSensorSource(() => start.AddSeconds(reads * 9));
+        var load = MaintenanceSession.RunLoad(TimeSpan.FromSeconds(2.5), () =>
+        {
+            reads++;
+            return demo.Read();
+        });
+        Assert.Equal(0, load.Errors);
+        Assert.NotNull(load.MaxCpuTemperature);
+        Assert.NotNull(load.MaxCpuPower);
+        Assert.InRange(load.Duration.TotalSeconds, 2, 8);
+        Assert.True(reads >= 2);
+    }
+
+    [Fact]
+    public void Logo_becomes_a_data_uri()
+    {
+        var dir = Directory.CreateTempSubdirectory("hwsuite-logo");
+        try
+        {
+            Assert.Null(MaintenanceSession.LogoDataUri(dir.FullName));
+            File.WriteAllBytes(Path.Combine(dir.FullName, "logo.png"), [0x89, 0x50, 0x4E, 0x47]);
+            Assert.Equal("data:image/png;base64,iVBORw==", MaintenanceSession.LogoDataUri(dir.FullName));
+            var company = MaintenanceSession.Company(new HWSuite.Core.Settings.AppSettings { CompanyName = "MML", TechnicianName = "Alex" }, dir.FullName);
+            Assert.Equal("MML", company.Name);
+            Assert.False(company.IsEmpty);
+            Assert.NotNull(company.LogoDataUri);
+        }
+        finally
+        {
+            dir.Delete(true);
+        }
+    }
+
+    [Fact]
+    public void Volumes_are_real_drives()
+    {
+        Assert.All(MaintenanceSession.Volumes(), v => Assert.True(v.TotalBytes > 0 && v.FreeBytes <= v.TotalBytes));
+    }
+
+    [Fact]
+    public void Cli_maintenance_options()
+    {
+        var o = HWSuite.Cli.CliOptions.Parse(["maintenance", "--client", "Ana", "--order", "42", "--services", "Limpeza\\nPasta", "--load", "30", "--bench", "--no-inventory", "-o", "r.html"]);
+        Assert.Equal(HWSuite.Cli.CliCommand.Maintenance, o.Command);
+        Assert.Equal("Ana", o.Client);
+        Assert.Equal("42", o.OrderNumber);
+        Assert.Equal("Limpeza\nPasta", o.Services);
+        Assert.Equal(30, o.LoadSeconds);
+        Assert.True(o.Bench && o.NoInventory);
+        Assert.Equal("r.html", o.OutputPath);
+        Assert.Null(HWSuite.Cli.CliOptions.Parse(["maintenance"]).LoadSeconds);
+        Assert.Throws<HWSuite.Cli.CliUsageException>(() => HWSuite.Cli.CliOptions.Parse(["report", "--client", "x"]));
+    }
 }

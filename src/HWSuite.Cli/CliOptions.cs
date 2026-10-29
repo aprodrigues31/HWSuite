@@ -20,6 +20,7 @@ public enum CliCommand
     Vbios,
     Bench,
     Net,
+    Maintenance,
 }
 
 public enum DriverAction
@@ -89,6 +90,28 @@ public sealed record CliOptions
     /// <summary>Internal: the elevated child writes its output here for the parent to show.</summary>
     public string? ResultPath { get; init; }
 
+    /// <summary>maintenance: client, contact, equipment, order number, services done and notes for the report.</summary>
+    public string? Client { get; init; }
+
+    public string? ClientContact { get; init; }
+
+    public string? Equipment { get; init; }
+
+    public string? OrderNumber { get; init; }
+
+    public string? Services { get; init; }
+
+    public string? Notes { get; init; }
+
+    /// <summary>maintenance: run the processor load test for this many seconds.</summary>
+    public double? LoadSeconds { get; init; }
+
+    /// <summary>maintenance: leave the full inventory out of the report.</summary>
+    public bool NoInventory { get; init; }
+
+    /// <summary>bench / maintenance: run the processor benchmark.</summary>
+    public bool Bench { get; init; }
+
     public static CliOptions Parse(IReadOnlyList<string> args)
     {
         ArgumentNullException.ThrowIfNull(args);
@@ -113,6 +136,11 @@ public sealed record CliOptions
         else if (args.Count > 0 && args[0].Equals("net", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Net };
+            i = 1;
+        }
+        else if (args.Count > 0 && args[0].Equals("maintenance", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Maintenance };
             i = 1;
         }
         else if (args.Count > 0 && args[0].Equals("vbios", StringComparison.OrdinalIgnoreCase))
@@ -196,6 +224,15 @@ public sealed record CliOptions
                 "--mlab" when options.Command == CliCommand.Net => options with { Mlab = true },
                 "--accept-mlab-policy" when options.Command == CliCommand.Net => options with { AcceptMlabPolicy = true },
                 "--ipv6" when options.Command == CliCommand.Net => options with { Ipv6 = true },
+                "--client" when options.Command == CliCommand.Maintenance => options with { Client = Value(arg) },
+                "--contact" when options.Command == CliCommand.Maintenance => options with { ClientContact = Value(arg) },
+                "--equipment" when options.Command == CliCommand.Maintenance => options with { Equipment = Value(arg) },
+                "--order" when options.Command == CliCommand.Maintenance => options with { OrderNumber = Value(arg) },
+                "--services" when options.Command == CliCommand.Maintenance => options with { Services = Value(arg).Replace("\\n", "\n", StringComparison.Ordinal) },
+                "--notes" when options.Command == CliCommand.Maintenance => options with { Notes = Value(arg).Replace("\\n", "\n", StringComparison.Ordinal) },
+                "--load" when options.Command == CliCommand.Maintenance => options with { LoadSeconds = Math.Min(Seconds(arg), 3600) },
+                "--bench" when options.Command == CliCommand.Maintenance => options with { Bench = true },
+                "--no-inventory" when options.Command == CliCommand.Maintenance => options with { NoInventory = true },
                 "--disk" when options.Command == CliCommand.Bench => options with { Disk = DriveLetter(Value(arg)) },
                 "--size" when options.Command == CliCommand.Bench => options with { DiskSizeGb = SizeGb(arg) },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },

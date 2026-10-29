@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.ReportPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud"
+    NavigationCacheMode="Required">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel Padding="28,6,28,24" Spacing="16">
+                <StackPanel Spacing="4" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+                    <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                    <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                    <TextBlock x:Name="Subtitle" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <Grid x:Name="Layout" ColumnSpacing="16" RowSpacing="16" SizeChanged="Layout_SizeChanged">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="320" />
+                        <ColumnDefinition x:Name="RightColumn" Width="1.35*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Service order and company -->
+                    <StackPanel x:Name="FormColumn" Spacing="16">
+                        <hud:HudPanel>
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Name="OrderTag" Style="{StaticResource HudTagStyle}" />
+                                <TextBox x:Name="ClientBox" />
+                                <TextBox x:Name="ClientContactBox" />
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="2*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="EquipmentBox" />
+                                    <TextBox x:Name="OrderBox" Grid.Column="1" />
+                                </Grid>
+                                <TextBox x:Name="ServicesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="96" />
+                                <TextBox x:Name="NotesBox" AcceptsReturn="True" TextWrapping="Wrap" Height="72" />
+                            </StackPanel>
+                        </hud:HudPanel>
+                        <hud:HudPanel>
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Name="CompanyTag" Style="{StaticResource HudTagStyle}" />
+                                <TextBox x:Name="CompanyBox" LostFocus="Company_LostFocus" />
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="DocumentBox" LostFocus="Company_LostFocus" />
+                                    <TextBox x:Name="TechnicianBox" Grid.Column="1" LostFocus="Company_LostFocus" />
+                                </Grid>
+                                <TextBox x:Name="ContactBox" LostFocus="Company_LostFocus" />
+                                <TextBox x:Name="AddressBox" LostFocus="Company_LostFocus" />
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock x:Name="LogoText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    <Button x:Name="LogoButton" Grid.Column="1" Click="LogoButton_Click" />
+                                </Grid>
+                            </StackPanel>
+                        </hud:HudPanel>
+                    </StackPanel>
+
+                    <!-- Diagnosis -->
+                    <StackPanel x:Name="ResultColumn" Grid.Column="1" Spacing="16">
+                        <hud:HudPanel Highlight="True">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Name="RunTag" Style="{StaticResource HudTagStyle}" />
+                                <CheckBox x:Name="LoadCheck" IsChecked="True" />
+                                <CheckBox x:Name="BenchCheck" />
+                                <CheckBox x:Name="InventoryCheck" IsChecked="True" />
+                                <Grid ColumnSpacing="12">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Button x:Name="RunButton" Style="{StaticResource HudAccentButtonStyle}" Click="RunButton_Click" />
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+                                        <ProgressBar x:Name="Progress" Maximum="1" Visibility="Collapsed" />
+                                        <TextBlock x:Name="StatusText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </StackPanel>
+                        </hud:HudPanel>
+
+                        <StackPanel x:Name="ResultPanel" Spacing="12" Visibility="Collapsed">
+                            <Border x:Name="VerdictBanner" Padding="18,14" CornerRadius="2">
+                                <Grid ColumnSpacing="16">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Spacing="2">
+                                        <TextBlock x:Name="VerdictTitle" FontFamily="{StaticResource HudDisplayFont}" FontSize="19" Foreground="#FF031016" TextWrapping="Wrap" />
+                                        <TextBlock x:Name="VerdictText" Foreground="#FF031016" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock x:Name="VerdictCounts" Grid.Column="1" FontFamily="{StaticResource HudMonoStrongFont}" Foreground="#FF031016" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <Button x:Name="PdfButton" Style="{StaticResource HudAccentButtonStyle}" Click="PdfButton_Click" />
+                                <Button x:Name="HtmlButton" Click="HtmlButton_Click" MinHeight="44" />
+                                <Button x:Name="FolderButton" Click="FolderButton_Click" MinHeight="44" />
+                            </StackPanel>
+                            <TextBlock x:Name="SavedText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                            <StackPanel x:Name="CheckList" Spacing="8" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Renders the HTML report to PDF (kept tiny and transparent; it must be in the tree to work). -->
+        <WebView2 x:Name="PdfView" Width="2" Height="2" Opacity="0" HorizontalAlignment="Left" VerticalAlignment="Top" IsHitTestVisible="False" />
+    </Grid>
+</Page>

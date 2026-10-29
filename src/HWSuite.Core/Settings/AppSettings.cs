@@ -57,6 +57,20 @@ public sealed record AppSettings
     /// <summary>Accent color of the interface ("cyan", "violet", "green", "magenta", "amber"); null is cyan.</summary>
     public string? Accent { get; init; }
 
+    /// <summary>Maintenance report header: the company that did the service.</summary>
+    public string? CompanyName { get; init; }
+
+    /// <summary>CNPJ / tax id, printed under the company name.</summary>
+    public string? CompanyDocument { get; init; }
+
+    /// <summary>Phone, e-mail, site.</summary>
+    public string? CompanyContact { get; init; }
+
+    public string? CompanyAddress { get; init; }
+
+    /// <summary>Technician who signs the report.</summary>
+    public string? TechnicianName { get; init; }
+
     /// <summary>Components shown on the Sensors page ("Cpu,Gpu"); null shows all of them.</summary>
     public string? SensorCategories { get; init; }
 

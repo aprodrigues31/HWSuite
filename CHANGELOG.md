@@ -8,6 +8,14 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Relatório de manutenção** (novo item **Relatório** no menu e o comando `hwsuite maintenance`), para entregar ao cliente:
+  - diagnóstico automático com veredito por item (OK, Atenção, Problema, Info) e a orientação do que fazer: suporte do Windows (fim das atualizações por versão e edição), idade da BIOS, temperatura do processador em repouso e sob carga, memória (capacidade, canal único, módulos diferentes, XMP/EXPO desligado), discos (SMART, setores realocados, desgaste, temperatura) e espaço livre, placa de vídeo (autenticidade, driver antigo), bomba e ventoinhas, tensões da fonte, bateria, desempenho e o último teste de Internet;
+  - teste de carga opcional do processador (60 s no app, `--load` na linha de comando) que registra temperatura máxima, potência, clock mínimo e erros de cálculo, e benchmark opcional;
+  - dados da empresa (nome, CNPJ, técnico, contato, endereço) guardados nas configurações e logo lido de `Documentos\HWSuite\logo.png` (ou .jpg/.svg);
+  - ordem de serviço: cliente, contato, equipamento, número da OS, serviços realizados e observações;
+  - relatório A4 em **PDF** ou HTML (um arquivo só, com o logo embutido), salvo em `Documentos\HWSuite\Reports`: cabeçalho da empresa, resumo do estado geral, ações recomendadas, diagnóstico por área, serviços, resumo do equipamento, assinaturas e o inventário completo como anexo (opcional).
+
 ## [0.18.0] - 2026-10-29
 
 ### Alterado

@@ -208,7 +208,7 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        string[] pages = ["dashboard", "sensors", "inventory", "bench", "benchresults", "network", "settings", "about"];
+        string[] pages = ["dashboard", "sensors", "inventory", "bench", "benchresults", "network", "report", "settings", "about"];
         var saved = 0;
         try
         {
@@ -217,7 +217,7 @@ public partial class App : Application
             for (var i = 0; i < pages.Length; i++)
             {
                 MainWindow!.Navigate(pages[i]);
-                await Task.Delay(TimeSpan.FromSeconds(4)).ConfigureAwait(true);
+                await Task.Delay(TimeSpan.FromSeconds(pages[i] == "report" ? 20 : 4)).ConfigureAwait(true); // the report reads the hardware first
                 await MainWindow.SaveScreenshotAsync(Path.Combine(folder, $"{i + 1:00}-{pages[i]}.png")).ConfigureAwait(true);
                 saved++;
             }

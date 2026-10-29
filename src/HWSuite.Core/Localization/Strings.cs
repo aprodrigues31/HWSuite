@@ -407,6 +407,42 @@ public sealed class Strings
         ["rail.sensors"] = "Sensors",
         ["rail.bench"] = "Bench",
         ["rail.network"] = "Network",
+        ["rail.report"] = "Report",
+        ["rep.tag"] = "Maintenance",
+        ["rep.subtitle"] = "Diagnosis of the equipment with advice, ready to hand over to the client as PDF.",
+        ["rep.order"] = "Service order",
+        ["rep.company"] = "Your company",
+        ["rep.run"] = "Diagnosis",
+        ["rep.clientContact"] = "Client contact",
+        ["rep.equipment"] = "Equipment",
+        ["rep.orderNumber"] = "Order no.",
+        ["rep.servicesHint"] = "One service per line (cleaning, thermal paste, Windows update...)",
+        ["rep.companyName"] = "Company name",
+        ["rep.document"] = "Tax id (CNPJ)",
+        ["rep.contact"] = "Phone / e-mail / site",
+        ["rep.address"] = "Address",
+        ["rep.logoFolder"] = "Logo folder",
+        ["rep.logoFound"] = "Logo: {0}",
+        ["rep.logoMissing"] = "No logo. Save logo.png (or .jpg/.svg) in {0}.",
+        ["rep.load"] = "Processor load test ({0:0} s)",
+        ["rep.bench"] = "Processor benchmark (about 1 min)",
+        ["rep.inventory"] = "Include the full inventory in the report",
+        ["rep.runButton"] = "Run diagnosis",
+        ["rep.pdf"] = "Save PDF",
+        ["rep.html"] = "Save HTML",
+        ["rep.saved"] = "Saved: {0}",
+        ["rep.pdfWorking"] = "Generating PDF...",
+        ["rep.pdfFailed"] = "Could not render the PDF.",
+        ["rep.pdfFallback"] = "PDF not generated ({0}). The HTML is at {1}; open it and print to PDF.",
+        ["rep.step.inventory"] = "Reading the hardware...",
+        ["rep.step.load"] = "Load test ({0:0} s): watching temperature, power and clock...",
+        ["rep.step.bench"] = "Running the benchmark...",
+        ["rep.done"] = "{0} items checked.",
+        ["rep.demo.client"] = "Example Client Ltd.",
+        ["rep.demo.equipment"] = "Desktop - office",
+        ["rep.demo.services"] = "Internal cleaning\nThermal paste replaced\nWindows updated",
+        ["rep.demo.company"] = "Example IT Services",
+        ["rep.demo.technician"] = "Technician",
         ["rail.settings"] = "Settings",
         ["rail.about"] = "About",
         ["dash.tag"] = "// HWSuite · system dashboard",
@@ -752,12 +788,25 @@ public sealed class Strings
                                             Internet test: speed, latency with and without load, jitter,
                                             loss and Wi-Fi state (Cloudflare; M-Lab publishes each test
                                             with your public IP, so it needs --accept-mlab-policy).
+              hwsuite maintenance [options]
+                                            Maintenance report for the client: diagnosis with advice,
+                                            saved as HTML in Documents\HWSuite\Reports.
 
             Options for 'report':
               -f, --format <txt|html|json>  Output format (default: txt).
               -o, --out <path>              Write to a file instead of the console.
                   --redact                  Remove serial numbers and UUIDs.
                   --lang <pt-BR|en>         Report language (default: system language).
+
+            Options for 'maintenance':
+                  --client <name>           Client; also --contact, --equipment, --order <number>.
+                  --services <text>         Services performed (\n separates lines); also --notes.
+                  --load <seconds>          Processor load test (temperature, power, clock, errors).
+                  --bench                   Also run the processor benchmark.
+                  --no-inventory            Leave the full inventory out of the report.
+              -o, --out <file.html>         Where to save the report.
+            The company (name, CNPJ, technician) comes from the app's Report page; the logo is
+            logo.png in Documents\HWSuite.
 
             Options for 'sensors':
               -w, --watch                   Keep refreshing the table until Ctrl+C.
@@ -1180,6 +1229,42 @@ public sealed class Strings
         ["rail.sensors"] = "Sensores",
         ["rail.bench"] = "Bench",
         ["rail.network"] = "Rede",
+        ["rail.report"] = "Relatório",
+        ["rep.tag"] = "Manutenção",
+        ["rep.subtitle"] = "Diagnóstico do equipamento com orientações, pronto para entregar ao cliente em PDF.",
+        ["rep.order"] = "Ordem de serviço",
+        ["rep.company"] = "Sua empresa",
+        ["rep.run"] = "Diagnóstico",
+        ["rep.clientContact"] = "Contato do cliente",
+        ["rep.equipment"] = "Equipamento",
+        ["rep.orderNumber"] = "Nº da OS",
+        ["rep.servicesHint"] = "Um serviço por linha (limpeza, pasta térmica, atualização do Windows...)",
+        ["rep.companyName"] = "Nome da empresa",
+        ["rep.document"] = "CNPJ",
+        ["rep.contact"] = "Telefone / e-mail / site",
+        ["rep.address"] = "Endereço",
+        ["rep.logoFolder"] = "Pasta do logo",
+        ["rep.logoFound"] = "Logo: {0}",
+        ["rep.logoMissing"] = "Sem logo. Salve logo.png (ou .jpg/.svg) em {0}.",
+        ["rep.load"] = "Teste de carga do processador ({0:0} s)",
+        ["rep.bench"] = "Benchmark do processador (cerca de 1 min)",
+        ["rep.inventory"] = "Incluir o inventário completo no relatório",
+        ["rep.runButton"] = "Executar diagnóstico",
+        ["rep.pdf"] = "Salvar PDF",
+        ["rep.html"] = "Salvar HTML",
+        ["rep.saved"] = "Salvo: {0}",
+        ["rep.pdfWorking"] = "Gerando PDF...",
+        ["rep.pdfFailed"] = "Não foi possível gerar o PDF.",
+        ["rep.pdfFallback"] = "PDF não gerado ({0}). O HTML está em {1}; abra e imprima em PDF.",
+        ["rep.step.inventory"] = "Lendo o hardware...",
+        ["rep.step.load"] = "Teste de carga ({0:0} s): observando temperatura, consumo e clock...",
+        ["rep.step.bench"] = "Executando o benchmark...",
+        ["rep.done"] = "{0} itens verificados.",
+        ["rep.demo.client"] = "Cliente Exemplo Ltda.",
+        ["rep.demo.equipment"] = "Desktop - escritório",
+        ["rep.demo.services"] = "Limpeza interna\nTroca da pasta térmica\nAtualização do Windows",
+        ["rep.demo.company"] = "Exemplo Informática",
+        ["rep.demo.technician"] = "Técnico",
         ["rail.settings"] = "Ajustes",
         ["rail.about"] = "Sobre",
         ["dash.tag"] = "// HWSuite · painel do sistema",
@@ -1525,12 +1610,25 @@ public sealed class Strings
                                             Teste de Internet: velocidade, latência com e sem carga, jitter,
                                             perda e estado do Wi-Fi (Cloudflare; o M-Lab publica cada teste
                                             com o seu IP público, por isso exige --accept-mlab-policy).
+              hwsuite maintenance [opções]
+                                            Relatório de manutenção para o cliente: diagnóstico com
+                                            orientações, salvo em HTML em Documentos\HWSuite\Reports.
 
             Opções de 'report':
               -f, --format <txt|html|json>  Formato de saída (padrão: txt).
               -o, --out <caminho>           Grava em arquivo em vez de mostrar no console.
                   --redact                  Remove números de série e UUIDs.
                   --lang <pt-BR|en>         Idioma do relatório (padrão: idioma do sistema).
+
+            Opções de 'maintenance':
+                  --client <nome>           Cliente; também --contact, --equipment, --order <número>.
+                  --services <texto>        Serviços realizados (\n separa linhas); também --notes.
+                  --load <segundos>         Teste de carga do processador (temperatura, consumo, clock, erros).
+                  --bench                   Executa também o benchmark do processador.
+                  --no-inventory            Não inclui o inventário completo no relatório.
+              -o, --out <arquivo.html>      Onde salvar o relatório.
+            A empresa (nome, CNPJ, técnico) vem da página Relatório do app; o logo é
+            logo.png em Documentos\HWSuite.
 
             Opções de 'sensors':
               -w, --watch                   Atualiza a tabela continuamente até Ctrl+C.

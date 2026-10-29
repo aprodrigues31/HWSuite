@@ -52,6 +52,7 @@ public sealed partial class MainWindow : Window
         RailTop.Children.Add(RailItem("sensors", "\uE9D9", s["rail.sensors"], s["app.nav.sensors"]));
         RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
         RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
+        RailTop.Children.Add(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
         RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
         RailBottom.Children.Add(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
         BenchRunTab.Text = s["app.nav.benchRun"];
@@ -61,7 +62,7 @@ public sealed partial class MainWindow : Window
         UpdateAccessBar(App.Monitor.Access);
     }
 
-    /// <summary>Opens a page by its tag ("dashboard", "sensors", "inventory", "bench", "benchresults", "network", "settings", "about").</summary>
+    /// <summary>Opens a page by its tag ("dashboard", "sensors", "inventory", "bench", "benchresults", "network", "report", "settings", "about").</summary>
     public void Navigate(string tag)
     {
         var railTag = tag == "benchresults" ? "bench" : tag;
@@ -127,6 +128,7 @@ public sealed partial class MainWindow : Window
             "bench" => typeof(BenchmarkPage),
             "benchresults" => typeof(BenchmarkResultsPage),
             "network" => typeof(NetworkPage),
+            "report" => typeof(ReportPage),
             "settings" => typeof(SettingsPage),
             "about" => typeof(AboutPage),
             _ => typeof(SensorsPage),
