@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.17.0] - 2026-10-29
+
 ### Adicionado
 - **Benchmark → Internet:** teste de velocidade da Internet e do Wi-Fi, com três abas: **Resultado** (download, upload, latência sem carga e com download/upload, jitter, perda de pacotes sem carga, servidor, provedor e IP público), **Detalhamento** (gráficos de vazão a cada 100 ms e de latência e jitter, com mediana, média, mínimo e máximo) e **Melhorias** (dicas a partir do que foi medido: sinal Wi-Fi fraco, Wi-Fi ou cabo como gargalo, faixa de 2,4 GHz, cabo a 100 Mbps, *bufferbloat*, perda, jitter e latência altos).
 - Dois servidores: **Cloudflare** (data center mais próximo, padrão) e **M-Lab** (protocolo aberto NDT7). Como o M-Lab publica cada teste com o IP público num banco de dados aberto, o app pede consentimento antes (com opção de não perguntar de novo). Escolha IPv4 ou IPv6; cada teste usa só o protocolo escolhido.
@@ -172,7 +174,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.16.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.17.0
 [0.16.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.16.0
 [0.15.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.15.0
 [0.14.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.14.0
