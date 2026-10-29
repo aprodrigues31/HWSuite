@@ -8,6 +8,12 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Benchmark → Internet:** teste de velocidade da Internet e do Wi-Fi, com três abas: **Resultado** (download, upload, latência sem carga e com download/upload, jitter, perda de pacotes, servidor, provedor e IP público), **Detalhamento** (gráficos de vazão a cada 100 ms e de latência e jitter, com mediana, média, mínimo e máximo) e **Melhorias** (dicas a partir do que foi medido: sinal Wi-Fi fraco, Wi-Fi ou cabo como gargalo, faixa de 2,4 GHz, cabo a 100 Mbps, *bufferbloat*, perda, jitter e latência altos).
+- Dois servidores: **Cloudflare** (data center mais próximo, padrão) e **M-Lab** (protocolo aberto NDT7). Como o M-Lab publica cada teste com o IP público num banco de dados aberto, o app pede consentimento antes (com opção de não perguntar de novo). Escolha IPv4 ou IPv6; cada teste usa só o protocolo escolhido.
+- Cartão **Conexão**: adaptador em uso, tipo (Wi-Fi ou cabo), velocidade do link e, no Wi-Fi, rede, sinal (% e dBm), padrão (Wi-Fi 4/5/6/7), faixa e canal e taxa do link.
+- Resultados em `Documentos\HWSuite\net-benchmark.csv` (sem o IP público), na nova aba **Internet** de Benchmark → Resultados e na limpeza seletiva; linha de comando `hwsuite net [--ipv6] [--mlab --accept-mlab-policy]`.
+
 ## [0.16.0] - 2026-10-28
 
 ### Adicionado
