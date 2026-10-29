@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.22.0] - 2026-10-29
+
 ### Adicionado
 - **Skins**: em Configurações › Geral dá para escolher a aparência do HWSuite: **HUD escuro** (o original), **Claro suave** e **Metal futurista** (prata escovado, nem claro nem escuro). Cada skin tem as próprias cores de destaque e de gráfico, legíveis no seu fundo. O skin é aplicado ao reiniciar o HWSuite, e o programa oferece reiniciar na hora.
 
@@ -277,7 +279,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.18.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.22.0
+[0.21.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.21.0
+[0.20.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.20.0
+[0.19.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.19.0
 [0.18.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.18.0
 [0.17.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.17.0
 [0.16.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.16.0
