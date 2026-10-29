@@ -139,6 +139,17 @@ public static class Tuneup
             || output.Contains("Nenhum pacote instalado", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>winget saying an installer needs a restart to finish ("Restart your PC to finish installation").</summary>
+    public static bool WingetNeedsRestart(string output)
+    {
+        ArgumentNullException.ThrowIfNull(output);
+        return output.Contains("Restart your PC", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("restart is required", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("Reinicie o computador", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("Reinicie o PC", StringComparison.OrdinalIgnoreCase)
+            || output.Contains("reinicialização é necessária", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>Windows Update result codes (OperationResultCode).</summary>
     public static string ResultName(int code) => code switch
     {

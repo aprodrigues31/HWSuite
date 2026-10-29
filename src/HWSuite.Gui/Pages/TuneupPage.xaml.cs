@@ -198,6 +198,9 @@ public sealed partial class TuneupPage : Page
         var options = new CleanupOptions(_recycle?.IsChecked == true, _previous?.IsChecked == true, cleanupDrives);
         void Log(string text) => DispatcherQueue.TryEnqueue(() => StatusText.Text = text);
         var reboot = false;
+
+        // Nothing restarts this computer until the technician says so at the end.
+        using var blocker = new Services.ShutdownBlocker(s["tune.blockReason"]);
         try
         {
             foreach (var task in chosen)
@@ -220,7 +223,12 @@ public sealed partial class TuneupPage : Page
                 Results.Children.Add(ResultBlock(outcome));
             }
 
-            StatusText.Text = s["tune.done"] + (reboot ? " " + s["tune.rebootNow"] : "");
+            StatusText.Text = s["tune.done"];
+            Progress.Visibility = Visibility.Collapsed;
+            if (reboot || blocker.RestartWasAsked || await Task.Run(WindowsTuneup.RestartPending))
+            {
+                await AskRestartAsync(blocker);
+            }
         }
         finally
         {
@@ -229,6 +237,32 @@ public sealed partial class TuneupPage : Page
             StopButton.IsEnabled = false;
             _cancel.Dispose();
             _cancel = null;
+        }
+    }
+
+    /// <summary>Restart now or later: the technician decides (the blocker holds Windows until then).</summary>
+    private async Task AskRestartAsync(Services.ShutdownBlocker blocker)
+    {
+        var s = App.Text;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = s["tune.restart.title"],
+            Content = new TextBlock { Text = s["tune.restart.body"], TextWrapping = TextWrapping.Wrap },
+            PrimaryButtonText = s["tune.restart.now"],
+            CloseButtonText = s["tune.restart.later"],
+            DefaultButton = ContentDialogButton.Close,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary)
+        {
+            blocker.Dispose();
+            StatusText.Text = WindowsTuneup.Restart(TimeSpan.FromSeconds(15), s["tune.restart.comment"])
+                ? s["tune.restart.starting"]
+                : s["tune.restart.failed"];
+        }
+        else
+        {
+            StatusText.Text = s["tune.done"] + " " + s["tune.restart.pending"];
         }
     }
 

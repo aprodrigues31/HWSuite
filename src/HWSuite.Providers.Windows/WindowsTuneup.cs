@@ -416,7 +416,7 @@ public static partial class WindowsTuneup
         var winget = Winget(s, "--source msstore", log, cancel);
         details.AddRange(winget.Details);
         var summary = winget.Installed is { } n ? s.Format("tune.store.summary", n) : s["tune.store.requested"];
-        return new TuneupOutcome(TuneupTasks.StoreApps, scan == 0 || winget.Installed is not null, summary, details);
+        return new TuneupOutcome(TuneupTasks.StoreApps, scan == 0 || winget.Installed is not null, summary, details) { RebootRequired = winget.Restart };
     }
 
     /// <summary>Installed programs with a newer version in winget's catalog.</summary>
@@ -425,20 +425,21 @@ public static partial class WindowsTuneup
         ArgumentNullException.ThrowIfNull(s);
         var winget = Winget(s, "--source winget", log, cancel);
         var summary = winget.Installed is { } n ? s.Format("tune.apps.summary", n) : s["tune.apps.noWinget"];
-        return new TuneupOutcome(TuneupTasks.DesktopApps, winget.Installed is not null, summary, winget.Details);
+        return new TuneupOutcome(TuneupTasks.DesktopApps, winget.Installed is not null, summary, winget.Details) { RebootRequired = winget.Restart };
     }
 
-    private static (int? Installed, List<string> Details) Winget(Strings s, string source, Action<string>? log, CancellationToken cancel)
+    private static (int? Installed, List<string> Details, bool Restart) Winget(Strings s, string source, Action<string>? log, CancellationToken cancel)
     {
         var details = new List<string>();
         var exe = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Microsoft", "WindowsApps", "winget.exe");
         if (!File.Exists(exe))
         {
             details.Add(s["tune.apps.noWinget"]);
-            return (null, details);
+            return (null, details, false);
         }
 
         log?.Invoke(s["tune.apps.running"]);
+        // No --allow-reboot: restarting is the technician's call, asked when everything is done.
         var (code, output) = Run(exe, $"upgrade --all {source} --accept-source-agreements --accept-package-agreements --silent --disable-interactivity",
             TimeSpan.FromHours(1), Encoding.UTF8, line =>
             {
@@ -450,7 +451,35 @@ public static partial class WindowsTuneup
             }, cancel);
         var installed = Tuneup.WingetInstalled(output);
         details.Add(Tuneup.WingetNothingToDo(output) && installed == 0 ? s["tune.apps.upToDate"] : s.Format("tune.apps.done", installed, code));
-        return (installed, details);
+        return (installed, details, Tuneup.WingetNeedsRestart(output));
+    }
+
+    // ---- Restart ------------------------------------------------------------------------------------------------------
+
+    /// <summary>True when Windows has a restart pending to finish installing updates (Windows Update or servicing).</summary>
+    public static bool RestartPending()
+    {
+        try
+        {
+            using var wu = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired");
+            using var cbs = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending");
+            return wu is not null || cbs is not null;
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or System.Security.SecurityException or IOException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Restarts Windows after <paramref name="delay"/> (shutdown /r), showing <paramref name="comment"/>; false when it could not start.</summary>
+    public static bool Restart(TimeSpan delay, string comment)
+    {
+        ArgumentNullException.ThrowIfNull(comment);
+        var shutdown = Path.Combine(Environment.SystemDirectory, "shutdown.exe");
+        var seconds = (int)Math.Clamp(delay.TotalSeconds, 0, 600);
+        var text = comment.Replace("\"", "'", StringComparison.Ordinal);
+        var (code, _) = Run(shutdown, string.Create(CultureInfo.InvariantCulture, $"/r /t {seconds} /d p:4:1 /c \"{text}\""), TimeSpan.FromSeconds(30), null, null, CancellationToken.None);
+        return code == 0;
     }
 
     // ---- Processes ----------------------------------------------------------------------------------------------------

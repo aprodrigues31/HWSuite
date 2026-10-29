@@ -45,6 +45,9 @@ public sealed class TuneupTests
         Assert.Equal(2, Tuneup.WingetInstalled(Output));
         Assert.True(Tuneup.WingetNothingToDo("No available upgrade found."));
         Assert.False(Tuneup.WingetNothingToDo(Output));
+        Assert.False(Tuneup.WingetNeedsRestart(Output));
+        Assert.True(Tuneup.WingetNeedsRestart("Successfully installed. Restart your PC to finish installation."));
+        Assert.True(Tuneup.WingetNeedsRestart("Instalado com êxito. Reinicie o computador para concluir a instalação."));
     }
 
     [Fact]

@@ -58,9 +58,23 @@ internal static class TuneupCommand
             reboot |= outcome.RebootRequired;
         }
 
-        if (reboot)
+        if (reboot || WindowsTuneup.RestartPending())
         {
+            // Restarting is the technician's call: asked here, never done on its own.
             Console.WriteLine(s["tune.rebootNow"]);
+            if (!Console.IsInputRedirected)
+            {
+                Console.Write(s["tune.restart.ask"] + " ");
+                var answer = Console.ReadLine()?.Trim();
+                if (answer is { Length: > 0 } && (answer[0] is 's' or 'S' or 'y' or 'Y'))
+                {
+                    Console.WriteLine(WindowsTuneup.Restart(TimeSpan.FromSeconds(15), s["tune.restart.comment"]) ? s["tune.restart.starting"] : s["tune.restart.failed"]);
+                }
+                else
+                {
+                    Console.WriteLine(s["tune.restart.pending"]);
+                }
+            }
         }
 
         // 3 = some task did not complete, as for the other commands.
