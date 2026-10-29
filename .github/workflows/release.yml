@@ -125,7 +125,16 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md
+        shell: pwsh
+        run: |
+          # gh's own message becomes an annotation, so a failure is readable on the run page.
+          $out = gh release create "${{ steps.version.outputs.tag }}" "hwsuite-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip" "hwsuite-setup-${{ steps.version.outputs.version }}.exe" --target "${{ github.sha }}" --title "HWSuite ${{ steps.version.outputs.version }}" --notes-file notes.md 2>&1 | Out-String
+          $code = $LASTEXITCODE
+          Write-Host $out
+          if ($code -ne 0) {
+            Write-Output "::error title=gh release create failed ($code)::$(($out -split "`r?`n" | Where-Object { $_.Trim() }) -join ' | ')"
+            exit 1
+          }
 
       - name: Update winget
         # Opens a pull request in microsoft/winget-pkgs for this version (tools/winget-update.ps1: skipped with a
