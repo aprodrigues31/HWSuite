@@ -3,6 +3,7 @@ using HWSuite.Core.Sensors;
 using HWSuite.Gui.Hud;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
 using Windows.UI;
@@ -25,8 +26,21 @@ public sealed partial class ChartsPage : Page
         Color.FromArgb(255, 0xFF, 0x8A, 0x4C), Color.FromArgb(255, 0xD8, 0xDE, 0xE4),
     ];
 
+    /// <summary>Most sensor chips shown at once; the filters narrow the rest down.</summary>
+    private const int MaxChips = 120;
+
+    private static readonly SensorKind[] KindOrder =
+    [
+        SensorKind.Temperature, SensorKind.Voltage, SensorKind.Fan, SensorKind.Power, SensorKind.Clock, SensorKind.Load,
+        SensorKind.Current, SensorKind.Control, SensorKind.Level, SensorKind.Data, SensorKind.Throughput,
+        SensorKind.Frequency, SensorKind.Flow, SensorKind.Factor, SensorKind.Energy, SensorKind.TimeSpan, SensorKind.Timing,
+        SensorKind.Noise, SensorKind.Humidity, SensorKind.Conductivity, SensorKind.Other,
+    ];
+
     private readonly List<string> _selected = [];
-    private readonly Dictionary<string, CheckBox> _boxes = new(StringComparer.Ordinal);
+    private readonly HashSet<SensorCategory> _categories = [];
+    private SensorKind? _kind;
+    private string _chipsLayout = "";
     private readonly Dictionary<string, (TimeChart Chart, StackPanel Legend)> _charts = new(StringComparer.Ordinal);
     private IReadOnlyList<TimelineSensor> _sensors = [];
     private TimelineData? _file; // the log being viewed; null = live
@@ -41,8 +55,10 @@ public sealed partial class ChartsPage : Page
         var c = s.Culture;
         HeaderTag.Text = "// HWSUITE · " + s["charts.tag"].ToUpper(c);
         PageTitle.Text = s["charts.title"].ToUpper(c);
-        Subtitle.Text = s["charts.subtitle"];
         PickerTag.Text = ("// " + s["charts.sensors"]).ToUpper(c);
+        CategoryLabel.Text = s["sensors.components"].ToUpper(c);
+        KindLabel.Text = s["sensors.kinds"].ToUpper(c);
+        LogFolderButton.Content = s["charts.logFolder"];
         SearchBox.PlaceholderText = s["charts.search"];
         ClearButton.Content = s["charts.clear"];
         FolderButton.Content = s["results.openFolder"];
@@ -161,6 +177,17 @@ public sealed partial class ChartsPage : Page
         RecordText.Text = on && App.Monitor.LogPath is { } path ? s.Format("charts.recordingTo", path) : s.Format("charts.recordHint", LogFolder);
     }
 
+    /// <summary>Changes where logs are recorded (the same setting as in Settings › Sensor log).</summary>
+    private void LogFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (Services.ShellDialogs.PickFolder(App.Text["charts.logFolder"], LogFolder) is { } folder)
+        {
+            App.Settings.Update(x => x with { LogFolder = folder });
+            ShowRecording();
+            FillSources();
+        }
+    }
+
     private void FolderButton_Click(object sender, RoutedEventArgs e)
     {
         Directory.CreateDirectory(LogFolder);
@@ -180,7 +207,7 @@ public sealed partial class ChartsPage : Page
         {
             if (DateTime.UtcNow - _lastRefresh >= TimeSpan.FromMilliseconds(900))
             {
-                Refresh(rebuildList: App.Monitor.Timeline.Sensors().Count != _sensors.Count);
+                Refresh(rebuildList: _chipsLayout != string.Join('|', App.Monitor.Timeline.Sensors().Count, string.Join(',', _selected)));
             }
         });
     }
@@ -193,66 +220,116 @@ public sealed partial class ChartsPage : Page
         SelectionChanged();
     }
 
+    private static SensorKind ChipKind(SensorKind kind) => kind == SensorKind.SmallData ? SensorKind.Data : kind;
+
+    private bool Shown(TimelineSensor sensor) => _categories.Count == 0 || _categories.Contains(sensor.Category);
+
+    private static ToggleButton Chip(string label, bool on) => new()
+    {
+        Content = label,
+        IsChecked = on,
+        FontFamily = HudUi.Font("HudMonoFont"),
+        FontSize = 12,
+        CharacterSpacing = 60,
+        Padding = new Thickness(12, 6, 12, 6),
+    };
+
+    /// <summary>Component and reading-type chips (only those the sensors have), then the sensor chips that match.</summary>
     private void BuildList()
     {
         var s = App.Text;
-        SensorList.Children.Clear();
-        _boxes.Clear();
+        var c = s.Culture;
+
+        // Components present.
+        var categories = _sensors.Select(x => x.Category).Distinct().Order().ToList();
+        _categories.IntersectWith(categories);
+        CategoryFilters.Children.Clear();
+        var all = Chip(s["sensors.filter.all"].ToUpper(c), _categories.Count == 0);
+        all.Click += (_, _) =>
+        {
+            _categories.Clear();
+            BuildList();
+        };
+        CategoryFilters.Children.Add(all);
+        foreach (var category in categories)
+        {
+            var chip = Chip(s[$"category.{category}"].ToUpper(c), _categories.Contains(category));
+            chip.Click += (_, _) =>
+            {
+                if (!_categories.Remove(category))
+                {
+                    _categories.Add(category);
+                }
+
+                BuildList();
+            };
+            CategoryFilters.Children.Add(chip);
+        }
+
+        // Reading types of the chosen components.
+        var kinds = _sensors.Where(Shown).Select(x => ChipKind(x.Kind)).ToHashSet();
+        if (_kind is { } k && !kinds.Contains(k))
+        {
+            _kind = null;
+        }
+
+        KindFilters.Children.Clear();
+        var allKinds = Chip(s["sensors.filter.all"].ToUpper(c), _kind is null);
+        allKinds.Click += (_, _) =>
+        {
+            _kind = null;
+            BuildList();
+        };
+        KindFilters.Children.Add(allKinds);
+        foreach (var kind in KindOrder.Where(kinds.Contains))
+        {
+            var chip = Chip(s[$"sensorKind.{kind}"].ToUpper(c), _kind == kind);
+            chip.Click += (_, _) =>
+            {
+                _kind = kind;
+                BuildList();
+            };
+            KindFilters.Children.Add(chip);
+        }
+
+        // Sensor chips: the selected ones first, with their line color.
         var search = SearchBox.Text.Trim();
-        foreach (var device in _sensors
-            .Where(x => search.Length == 0 || x.Key.Contains(search, StringComparison.OrdinalIgnoreCase) || s[$"sensorKind.{x.Kind}"].Contains(search, StringComparison.OrdinalIgnoreCase))
-            .GroupBy(x => x.Hardware))
-        {
-            SensorList.Children.Add(new TextBlock
-            {
-                Text = device.Key.ToUpper(s.Culture),
-                Style = HudUi.Style("HudTagStyle"),
-                Margin = new Thickness(0, SensorList.Children.Count == 0 ? 0 : 10, 0, 2),
-                TextWrapping = TextWrapping.Wrap,
-            });
-            foreach (var sensor in device)
-            {
-                var unit = sensor.Unit;
-                var box = new CheckBox
-                {
-                    Content = unit.Length > 0 ? $"{sensor.Name}  ({unit})" : sensor.Name,
-                    IsChecked = _selected.Contains(sensor.Key),
-                    MinHeight = 28,
-                    Padding = new Thickness(6, 2, 0, 2),
-                };
-                ToolTipService.SetToolTip(box, sensor.Key);
-                box.Click += (_, _) =>
-                {
-                    if (box.IsChecked == true && !_selected.Contains(sensor.Key) && _selected.Count < MaxSensors)
-                    {
-                        _selected.Add(sensor.Key);
-                    }
-                    else if (box.IsChecked != true)
-                    {
-                        _selected.Remove(sensor.Key);
-                    }
-
-                    SelectionChanged();
-                };
-                _boxes[sensor.Key] = box;
-                SensorList.Children.Add(box);
-            }
-        }
-
-        UpdateBoxes();
-    }
-
-    private void UpdateBoxes()
-    {
+        var matching = _sensors
+            .Where(x => Shown(x) && (_kind is null || ChipKind(x.Kind) == _kind)
+                && (search.Length == 0 || x.Key.Contains(search, StringComparison.OrdinalIgnoreCase)))
+            .OrderBy(x => _selected.Contains(x.Key) ? _selected.IndexOf(x.Key) : int.MaxValue)
+            .ToList();
+        SensorChips.Children.Clear();
         var full = _selected.Count >= MaxSensors;
-        foreach (var (key, box) in _boxes)
+        foreach (var sensor in matching.Take(MaxChips))
         {
-            var on = _selected.Contains(key);
-            box.IsChecked = on;
-            box.IsEnabled = on || !full;
+            var on = _selected.Contains(sensor.Key);
+            var content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            if (on)
+            {
+                content.Children.Add(new Rectangle { Width = 10, Height = 10, RadiusX = 5, RadiusY = 5, Fill = new SolidColorBrush(ColorOf(sensor.Key)), VerticalAlignment = VerticalAlignment.Center });
+            }
+
+            content.Children.Add(new TextBlock { Text = sensor.Name, FontSize = 13 });
+            content.Children.Add(new TextBlock { Text = sensor.Unit, FontSize = 11, Foreground = HudUi.Tag, VerticalAlignment = VerticalAlignment.Center });
+            var chip = new ToggleButton { Content = content, IsChecked = on, IsEnabled = on || !full, Padding = new Thickness(10, 5, 10, 5) };
+            ToolTipService.SetToolTip(chip, sensor.Key);
+            chip.Click += (_, _) =>
+            {
+                if (!_selected.Remove(sensor.Key) && _selected.Count < MaxSensors)
+                {
+                    _selected.Add(sensor.Key);
+                }
+
+                SelectionChanged();
+            };
+            SensorChips.Children.Add(chip);
         }
 
-        SelectedText.Text = App.Text.Format("charts.selected", _selected.Count, MaxSensors);
+        MoreText.Text = s.Format("charts.more", matching.Count - MaxChips);
+        MoreText.Visibility = matching.Count > MaxChips ? Visibility.Visible : Visibility.Collapsed;
+        SelectedText.Text = s.Format("charts.selected", _selected.Count, MaxSensors);
+        _chipsLayout = string.Join('|', _sensors.Count, string.Join(',', _selected));
     }
 
     private void SelectionChanged()
@@ -262,7 +339,7 @@ public sealed partial class ChartsPage : Page
             App.Settings.Update(x => x with { ChartSensors = _selected.Count == 0 ? "" : string.Join('\n', _selected) });
         }
 
-        UpdateBoxes();
+        BuildList();
         Refresh(rebuildList: false);
     }
 
@@ -388,16 +465,5 @@ public sealed partial class ChartsPage : Page
     {
         var index = _selected.IndexOf(key);
         return Palette[(index < 0 ? 0 : index) % Palette.Length];
-    }
-
-    private void Layout_SizeChanged(object sender, SizeChangedEventArgs e)
-    {
-        // Picker beside the charts when wide, above them when narrow.
-        var wide = e.NewSize.Width >= 760;
-        PickerColumn.Width = wide ? new GridLength(290) : new GridLength(1, GridUnitType.Star);
-        Layout.ColumnDefinitions[1].Width = wide ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
-        Layout.ColumnSpacing = wide ? 16 : 0;
-        Grid.SetColumn(ChartsColumn, wide ? 1 : 0);
-        Grid.SetRow(ChartsColumn, wide ? 0 : 1);
     }
 }

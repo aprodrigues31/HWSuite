@@ -11,6 +11,25 @@ public sealed record TimelineSensor(string Key, string Hardware, string Name, Se
 {
     public string Unit => SensorFormat.Unit(Kind);
 
+    /// <summary>The component it belongs to (live readings know it; logs guess it from the device name).</summary>
+    public SensorCategory Category { get; init; } = SensorCategory.Other;
+
+    /// <summary>Best guess of the component from a device name, for CSV logs (which do not store the kind).</summary>
+    public static SensorCategory GuessCategory(string hardware)
+    {
+        ArgumentNullException.ThrowIfNull(hardware);
+        var h = hardware.ToUpperInvariant();
+        bool Any(params string[] words) => words.Any(w => h.Contains(w, StringComparison.Ordinal));
+        return Any("RADEON", "GEFORCE", "RTX", "GTX", "ARC ", "INTEL(R) ARC", "GPU", "QUADRO") ? SensorCategory.Gpu
+            : Any("RYZEN", "EPYC", "THREADRIPPER", "ATHLON", "CORE(TM)", "CORE I", "CORE ULTRA", "XEON", "PENTIUM", "CELERON", "CPU") ? SensorCategory.Cpu
+            : Any("NUVOTON", "NCT6", "ITE ", "IT86", "IT87", "FINTEK", "›", "MOTHERBOARD", "B550", "B650", "X570", "X670", "Z690", "Z790", "B760") ? SensorCategory.Motherboard
+            : Any("MEMORY", "DIMM", "DDR") ? SensorCategory.Memory
+            : Any("NVME", "SSD", "HDD", "WDC", "WD ", "SAMSUNG", "KINGSTON", "CRUCIAL", "SEAGATE", "TOSHIBA", "PATRIOT", "SANDISK", "DISK") ? SensorCategory.Storage
+            : Any("ETHERNET", "WI-FI", "WIFI", "WIRELESS", "NETWORK", "REALTEK", "LAN") ? SensorCategory.Network
+            : Any("BATTERY", "UPS") ? SensorCategory.Battery
+            : SensorCategory.Other;
+    }
+
     public static string KeyOf(string hardware, string name) => $"{hardware} / {name}";
 
     /// <summary>The device as logs name it: "Parent › Device" for a sub-device (a Super I/O chip on a board).</summary>
@@ -115,7 +134,7 @@ public sealed class SensorTimeline(int capacity = 3600)
                 var key = TimelineSensor.KeyOf(r);
                 if (!_series.TryGetValue(key, out var entry))
                 {
-                    entry = (new TimelineSensor(key, TimelineSensor.HardwareOf(r), r.Name, r.Kind), []);
+                    entry = (new TimelineSensor(key, TimelineSensor.HardwareOf(r), r.Name, r.Kind) { Category = SensorCategories.Of(r) }, []);
                     _series[key] = entry;
                 }
 
@@ -275,7 +294,7 @@ public static class SensorLogReader
 
         var split = text.LastIndexOf(" / ", StringComparison.Ordinal);
         return split > 0
-            ? new TimelineSensor(text, text[..split], text[(split + 3)..], kind)
+            ? new TimelineSensor(text, text[..split], text[(split + 3)..], kind) { Category = TimelineSensor.GuessCategory(text[..split]) }
             : new TimelineSensor(text, "", text, kind);
     }
 

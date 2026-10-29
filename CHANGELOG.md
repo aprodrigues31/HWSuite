@@ -13,7 +13,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
   - ao vivo, com a última hora guardada pelo app, em janelas de 1, 5, 15 ou 60 minutos;
   - ou de um **log gravado** (CSV do app ou do `hwsuite sensors --log`), escolhido numa lista;
   - passando o mouse aparecem o horário e o valor de cada sensor naquele instante; a legenda traz mínimo, média, máximo e valor atual;
-  - botão **Gravar log** para ligar e desligar a gravação em CSV ali mesmo; a escolha de sensores e da janela fica salva.
+  - visual igual ao dos Sensores: filtros por **componente** e por **tipo de leitura** (só os tipos que os componentes escolhidos têm) e os sensores como botões; um clique adiciona ou tira o sensor do gráfico, e os escolhidos mostram a cor da linha;
+  - botão **Gravar log** para ligar e desligar a gravação em CSV ali mesmo, e **Pasta do log** para escolher onde gravar (também em Configurações › Log de sensores, com "Pasta padrão"); a escolha de sensores e da janela fica salva.
 - **Relatório de manutenção:** o teste de carga agora vem com os gráficos de temperatura, consumo e clock do processador ao longo do teste.
 - **`hwsuite log <arquivo.csv>`:** resumo de um log de sensores (mínimo, média e máximo de cada sensor); com `-o grafico.html`, uma página com os gráficos por dispositivo e unidade; `--filter` escolhe os sensores.
 

@@ -101,6 +101,16 @@ public sealed class ChartsTests
         Assert.Throws<InvalidDataException>(() => SensorLogReader.Read(new StringReader("hello,world\n")));
     }
 
+    [Theory]
+    [InlineData("AMD Ryzen 7 5800XT", SensorCategory.Cpu)]
+    [InlineData("AMD Radeon RX 7800 XT", SensorCategory.Gpu)]
+    [InlineData("ASUS TUF GAMING B550M-PLUS › Nuvoton NCT6798D", SensorCategory.Motherboard)]
+    [InlineData("WD Blue SN350 1TB", SensorCategory.Storage)]
+    [InlineData("Generic Memory", SensorCategory.Memory)]
+    [InlineData("Something else", SensorCategory.Other)]
+    public void Log_devices_get_a_component(string hardware, SensorCategory expected) =>
+        Assert.Equal(expected, TimelineSensor.GuessCategory(hardware));
+
     [Fact]
     public void Stats_ignore_missing_values()
     {

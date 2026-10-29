@@ -6,67 +6,61 @@
     xmlns:hud="using:HWSuite.Gui.Hud"
     NavigationCacheMode="Required">
     <ScrollViewer>
-        <StackPanel Padding="28,6,28,24" Spacing="16">
+        <StackPanel Padding="20,12,20,24" Spacing="14">
+            <!-- Header: title and what is being recorded -->
             <StackPanel Spacing="4" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
                 <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
                 <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
-                <TextBlock x:Name="Subtitle" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
+                <TextBlock x:Name="RecordText" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
             </StackPanel>
 
-            <!-- Source, window, recording -->
-            <hud:HudPanel>
-                <Grid ColumnSpacing="14" RowSpacing="10">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <ComboBox x:Name="SourceBox" MinWidth="300" SelectionChanged="SourceBox_SelectionChanged" />
-                    <ComboBox x:Name="WindowBox" Grid.Column="1" MinWidth="150" SelectionChanged="WindowBox_SelectionChanged" />
-                    <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="10" VerticalAlignment="Bottom">
-                        <ToggleButton x:Name="RecordButton" MinHeight="34" Click="RecordButton_Click" />
-                        <Button x:Name="FolderButton" MinHeight="34" Click="FolderButton_Click" />
-                    </StackPanel>
-                    <TextBlock x:Name="RecordText" Grid.Row="1" Grid.ColumnSpan="4" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
-                </Grid>
-            </hud:HudPanel>
+            <!-- Source (live or a recorded log), time window, recording -->
+            <hud:WrapPanel Spacing="8" LineSpacing="8">
+                <ComboBox x:Name="SourceBox" MinWidth="260" SelectionChanged="SourceBox_SelectionChanged" />
+                <ComboBox x:Name="WindowBox" MinWidth="110" SelectionChanged="WindowBox_SelectionChanged" />
+                <ToggleButton x:Name="RecordButton" MinHeight="32" Click="RecordButton_Click" />
+                <Button x:Name="LogFolderButton" MinHeight="32" Click="LogFolderButton_Click" />
+                <Button x:Name="FolderButton" MinHeight="32" Click="FolderButton_Click" />
+            </hud:WrapPanel>
 
-            <Grid x:Name="Layout" ColumnSpacing="16" RowSpacing="16" SizeChanged="Layout_SizeChanged">
+            <!-- Filters, as on Sensors: component, reading type, search -->
+            <Grid ColumnSpacing="14" RowSpacing="8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition x:Name="PickerColumn" Width="290" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-
-                <!-- Sensor picker -->
-                <hud:HudPanel x:Name="PickerPanel" VerticalAlignment="Top">
-                    <StackPanel Spacing="10">
-                        <TextBlock x:Name="PickerTag" Style="{StaticResource HudTagStyle}" />
-                        <TextBox x:Name="SearchBox" TextChanged="SearchBox_TextChanged" />
-                        <Grid>
-                            <TextBlock x:Name="SelectedText" Style="{StaticResource HudMonoStyle}" FontSize="12" VerticalAlignment="Center" />
-                            <HyperlinkButton x:Name="ClearButton" HorizontalAlignment="Right" Padding="4,2" Click="ClearButton_Click" />
-                        </Grid>
-                        <ScrollViewer MaxHeight="620" VerticalScrollBarVisibility="Auto">
-                            <StackPanel x:Name="SensorList" Spacing="2" />
-                        </ScrollViewer>
-                    </StackPanel>
-                </hud:HudPanel>
-
-                <!-- One chart per unit -->
-                <StackPanel x:Name="ChartsColumn" Grid.Column="1" Spacing="16">
-                    <TextBlock x:Name="EmptyText" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" Visibility="Collapsed" />
-                    <hud:MasonryPanel x:Name="ChartsHost" MinColumnWidth="560" Spacing="16" />
-                </StackPanel>
+                <TextBlock x:Name="CategoryLabel" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                <hud:WrapPanel x:Name="CategoryFilters" Grid.Column="1" />
+                <TextBox x:Name="SearchBox" Grid.Column="2" Width="220" VerticalAlignment="Center" TextChanged="SearchBox_TextChanged" />
+                <TextBlock x:Name="KindLabel" Grid.Row="1" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                <hud:WrapPanel x:Name="KindFilters" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" />
             </Grid>
+
+            <!-- Sensors as chips: click to add to / remove from the charts -->
+            <hud:HudPanel>
+                <StackPanel Spacing="10">
+                    <Grid>
+                        <TextBlock x:Name="PickerTag" Style="{StaticResource HudTagStyle}" VerticalAlignment="Center" />
+                        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                            <TextBlock x:Name="SelectedText" Style="{StaticResource HudMonoStyle}" FontSize="12" VerticalAlignment="Center" />
+                            <HyperlinkButton x:Name="ClearButton" Padding="4,2" Click="ClearButton_Click" />
+                        </StackPanel>
+                    </Grid>
+                    <ScrollViewer MaxHeight="220" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+                        <hud:WrapPanel x:Name="SensorChips" Spacing="6" LineSpacing="6" />
+                    </ScrollViewer>
+                    <TextBlock x:Name="MoreText" Style="{StaticResource HudMonoStyle}" FontSize="12" Visibility="Collapsed" />
+                </StackPanel>
+            </hud:HudPanel>
+
+            <TextBlock x:Name="EmptyText" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" Visibility="Collapsed" />
+            <!-- One chart per unit, as many columns as fit -->
+            <hud:MasonryPanel x:Name="ChartsHost" MinColumnWidth="560" Spacing="16" />
         </StackPanel>
     </ScrollViewer>
 </Page>

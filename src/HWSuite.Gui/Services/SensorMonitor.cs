@@ -20,6 +20,7 @@ public sealed class SensorMonitor : IDisposable
     private int _busy;
     private StreamWriter? _logWriter;
     private SensorCsvLogger? _logger;
+    private string? _logFolder;
     private AppSettings _settings = new();
     private IReadOnlyList<AlertRule> _rules = [];
 
@@ -62,9 +63,15 @@ public sealed class SensorMonitor : IDisposable
                 _timer?.Change(Interval, Interval);
             }
 
+            if (settings.LogEnabled && _logWriter is not null && !string.Equals(_logFolder, logFolder, StringComparison.OrdinalIgnoreCase))
+            {
+                CloseLog(); // the folder changed while recording: continue in a new file there
+            }
+
             if (settings.LogEnabled && _logWriter is null)
             {
                 OpenLog(logFolder);
+                _logFolder = logFolder;
             }
             else if (!settings.LogEnabled)
             {

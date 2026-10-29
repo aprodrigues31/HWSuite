@@ -55,6 +55,8 @@ public sealed partial class SettingsPage : Page
         LogTitle.Text = s["settings.logging"];
         LogSwitch.Header = s["settings.logEnabled"];
         OpenFolderButton.Content = s["settings.openFolder"];
+        ChangeLogFolderButton.Content = s["settings.logFolderChange"];
+        DefaultLogFolderButton.Content = s["settings.logFolderDefault"];
         PsuTitle.Text = s["app.psu.title"];
         PsuSwitch.Header = s["app.psu.alerts"];
         PsuHint.Text = s["app.psu.hint"];
@@ -399,5 +401,20 @@ public sealed partial class SettingsPage : Page
     {
         App.Settings.Update(x => x with { LogoFile = null });
         ShowFiles();
+    }
+
+    private void ChangeLogFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        if (Services.ShellDialogs.PickFolder(App.Text["charts.logFolder"], App.Settings.LogFolder) is { } folder)
+        {
+            App.Settings.Update(x => x with { LogFolder = folder });
+            LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
+        }
+    }
+
+    private void DefaultLogFolderButton_Click(object sender, RoutedEventArgs e)
+    {
+        App.Settings.Update(x => x with { LogFolder = null });
+        LogFolderText.Text = App.Text.Format("settings.logFolder", App.Settings.LogFolder);
     }
 }
