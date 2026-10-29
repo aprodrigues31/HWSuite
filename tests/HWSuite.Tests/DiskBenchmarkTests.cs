@@ -4,7 +4,7 @@ using Microsoft.Win32.SafeHandles;
 
 namespace HWSuite.Tests;
 
-[Collection(TimingCollection.Name)]
+[Collection(SerialTests.Name)]
 public class DiskBenchmarkTests
 {
     private static readonly DateTimeOffset At = new(2026, 10, 28, 22, 30, 0, TimeSpan.FromHours(-3));

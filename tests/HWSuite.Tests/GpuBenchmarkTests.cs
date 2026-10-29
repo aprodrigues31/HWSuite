@@ -4,7 +4,7 @@ using HWSuite.Providers.Windows;
 
 namespace HWSuite.Tests;
 
-[Collection(TimingCollection.Name)]
+[Collection(SerialTests.Name)]
 public class GpuBenchmarkTests
 {
     /// <summary>Each batch "takes" 10 ms for 1 GFLOP (100 GFLOPS); <see cref="WrongAt"/> returns a bad checksum once.</summary>
