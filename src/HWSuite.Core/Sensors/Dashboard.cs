@@ -131,10 +131,13 @@ public static partial class Dashboard
             hotSpot?.Value, load?.Value, clock?.Value, power?.Value, used?.Value, total?.Value);
     }
 
-    /// <summary>Physical memory Windows reports, in GB (null where unknown; tests set it).</summary>
-    public static double? PhysicalGb { get; set; } = ReadPhysicalGb();
+    /// <summary>
+    /// Physical memory Windows reports, in GB, used as the RAM total when set (the app sets it at start with
+    /// <see cref="ReadPhysicalGb"/>); null = total from the memory sensors.
+    /// </summary>
+    public static double? PhysicalGb { get; set; }
 
-    private static double? ReadPhysicalGb()
+    public static double? ReadPhysicalGb()
     {
         var bytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
         return OperatingSystem.IsWindows() && bytes > 0 ? bytes / 1073741824.0 : null;
