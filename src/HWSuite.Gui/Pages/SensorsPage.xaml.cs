@@ -35,7 +35,8 @@ public sealed partial class SensorsPage : Page
     private readonly HashSet<SensorCategory> _categories = [.. SensorCategories.Parse(App.Settings.Current.SensorCategories)];
     private readonly SortedDictionary<SensorCategory, ToggleButton> _categoryButtons = [];
     private ToggleButton? _allCategories;
-    private SensorKind? _filter;
+    /// <summary>Reading types chosen (several at once); empty = all.</summary>
+    private readonly HashSet<SensorKind> _filter = [];
     private string _search = "";
     private Row? _selected;
 
@@ -206,11 +207,20 @@ public sealed partial class SensorsPage : Page
             FontSize = 12,
             CharacterSpacing = 120,
             Padding = new Thickness(14, 7, 14, 7),
-            IsChecked = kind == _filter,
+            IsChecked = kind is null ? _filter.Count == 0 : _filter.Contains(kind.Value),
         };
         button.Click += (_, _) =>
         {
-            _filter = kind;
+            // "All" clears the choice; a type is switched on or off, so several can be shown together.
+            if (kind is not { } k)
+            {
+                _filter.Clear();
+            }
+            else if (!_filter.Remove(k))
+            {
+                _filter.Add(k);
+            }
+
             ApplyFilter();
         };
         return button;
@@ -218,15 +228,12 @@ public sealed partial class SensorsPage : Page
 
     /// <summary>
     /// Only the reading types the chosen components actually have (a motherboard has voltages and fans, a drive has
-    /// temperatures and data...). A type that disappears with the component choice is dropped back to "All".
+    /// temperatures and data...). Several types can be on at once; one that disappears with the component choice is dropped.
     /// </summary>
     private void RefreshKindChips()
     {
         var present = _rows.Values.Where(r => Shown(r.Category)).Select(r => ChipKind(r.Reading.Kind)).ToHashSet();
-        if (_filter is { } current && !present.Contains(current))
-        {
-            _filter = null;
-        }
+        _filter.IntersectWith(present); // types the component choice no longer has
 
         foreach (var kind in KindOrder.Where(present.Contains).Where(k => !_kindButtons.ContainsKey(k)))
         {
@@ -240,13 +247,13 @@ public sealed partial class SensorsPage : Page
 
         if (_allKinds is not null)
         {
-            _allKinds.IsChecked = _filter is null;
+            _allKinds.IsChecked = _filter.Count == 0;
         }
 
         foreach (var (kind, button) in _kindButtons)
         {
             button.Visibility = present.Contains(kind) ? Visibility.Visible : Visibility.Collapsed;
-            button.IsChecked = kind == _filter;
+            button.IsChecked = _filter.Contains(kind);
         }
     }
 
@@ -260,7 +267,7 @@ public sealed partial class SensorsPage : Page
 
     private bool Visible(Row row) =>
         Shown(row.Category)
-        && (_filter is null || ChipKind(row.Reading.Kind) == _filter)
+        && (_filter.Count == 0 || _filter.Contains(ChipKind(row.Reading.Kind)))
         && (_search.Length == 0
             || row.Reading.Name.Contains(_search, StringComparison.OrdinalIgnoreCase)
             || row.Reading.Hardware.Contains(_search, StringComparison.OrdinalIgnoreCase));
