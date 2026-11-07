@@ -8,10 +8,13 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.24.0] - 2026-11-07
+
 ### Adicionado
 - **8 temas** que mudam a interface inteira, em Configurações › Geral: **HUD Neon** (o original), **Windows 11**, **Técnico compacto**, **Metal futurista**, **Terminal retrô**, **Cockpit**, **Minimal** e **Holograma**. Cada tema define o menu (lateral estreito, lateral largo com nomes ou abas no topo), o formato dos painéis (chanfrado, arredondado, reto ou com cantoneiras), as fontes, o brilho e a grade de fundo.
 - **Modo Claro, Escuro ou Igual ao Windows** para todos os temas.
 - **14 cores de destaque**, com tons ajustados para fundo claro e escuro, e **cor personalizada** com seletor de cores. A cor muda na hora; tema e modo, ao reiniciar o HWSuite.
+- **Painel próprio de cada tema**: cartões grandes (Windows 11 e Minimal), tabelas com atual/mín./máx. (Técnico compacto), mostradores circulares (Metal), texto com barras de caracteres (Terminal), conta-giros e faixa de LEDs (Cockpit) e grade de mini-gráficos ao vivo com anéis e barras (Holograma).
 
 ## [0.23.1] - 2026-11-07
 
@@ -307,7 +310,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.23.1...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.0
 [0.23.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.1
 [0.23.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.0
 [0.22.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.22.0
