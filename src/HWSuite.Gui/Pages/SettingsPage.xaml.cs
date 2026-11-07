@@ -150,7 +150,7 @@ public sealed partial class SettingsPage : Page
         App.Settings.Update(s => s with { IntervalSeconds = (int)Math.Round(args.NewValue) });
     }
 
-    private string ChosenTheme => App.Settings.Current.Theme ?? App.Theme.Id;
+    private string ChosenTheme => App.Settings.Current.UiTheme ?? App.Theme.Id;
 
     /// <summary>One card per theme: a small drawing of its menu, panels and colors, its name and a line about it.</summary>
     private void BuildThemeCards()
@@ -224,7 +224,7 @@ public sealed partial class SettingsPage : Page
     private async Task ChooseThemeAsync(Hud.HudTheme theme)
     {
         // A new theme starts with its own accent (readable on its colors); the user can change it after.
-        App.Settings.Update(x => x with { Theme = theme.Id, Accent = theme.Id == ChosenTheme ? x.Accent : theme.DefaultAccent });
+        App.Settings.Update(x => x with { UiTheme = theme.Id, Accent = theme.Id == ChosenTheme ? x.Accent : theme.DefaultAccent });
         BuildThemeCards();
         await OfferRestartAsync(App.Text[$"theme.{theme.Id}"]);
     }
@@ -245,7 +245,7 @@ public sealed partial class SettingsPage : Page
     private async Task OfferRestartAsync(string what)
     {
         var settings = App.Settings.Current;
-        var theme = Hud.HudThemes.Of(settings.Theme);
+        var theme = Hud.HudThemes.Of(settings.UiTheme);
         var mode = Hud.HudThemes.ModeOf(settings.ThemeMode, theme);
         if (theme.Id == App.Theme.Id && mode == App.Mode)
         {

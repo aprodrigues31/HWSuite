@@ -52,7 +52,7 @@ public partial class App : Application
             "metal" => ("metal", "light"),
             _ => ((string?)null, (string?)null),
         };
-        Theme = Hud.HudThemes.Of(ArgumentAfter(ThemeArgument) ?? settings.Theme ?? legacyTheme);
+        Theme = Hud.HudThemes.Of(ArgumentAfter(ThemeArgument) ?? settings.UiTheme ?? legacyTheme);
         Mode = Hud.HudThemes.ModeOf(ArgumentAfter(ModeArgument) ?? settings.ThemeMode ?? legacyMode, Theme);
         Skin = Hud.HudThemes.Resolve(Theme, Mode);
         RequestedTheme = Skin.Dark ? ApplicationTheme.Dark : ApplicationTheme.Light;

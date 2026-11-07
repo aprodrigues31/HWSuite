@@ -67,7 +67,7 @@ public sealed record AppSettings
     public string? Skin { get; init; }
 
     /// <summary>Theme of the interface ("hud", "fluent", "compact", "metal", "terminal", "cockpit", "minimal", "hologram"); null = from <see cref="Skin"/>, else "hud".</summary>
-    public string? Theme { get; init; }
+    public string? UiTheme { get; init; }
 
     /// <summary>"dark", "light" or "system"; null = the theme's own default.</summary>
     public string? ThemeMode { get; init; }
