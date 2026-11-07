@@ -122,6 +122,7 @@ internal static class MaintenanceCommand
             PumpSensorId = settings.PumpSensorId,
             PumpMinRpm = settings.PumpMinRpm,
             Network = NetworkHistory.Read(BenchmarkFiles.Network) is [var lastNet, ..] ? lastNet : null,
+            Wifi = WifiSummary.Read(BenchmarkFiles.Wifi),
         };
 
         using var stop = new CancellationTokenSource();

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.WifiPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud"
+    NavigationCacheMode="Required">
+    <ScrollViewer>
+        <StackPanel Padding="28,6,28,24" Spacing="16">
+            <StackPanel Spacing="4" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+                <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                <TextBlock x:Name="Subtitle" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button x:Name="ScanButton" Click="ScanButton_Click" />
+                <TextBlock x:Name="ScanStatus" Grid.Column="1" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center" />
+            </Grid>
+            <InfoBar x:Name="BlockedBar" Severity="Warning" IsClosable="False" />
+
+            <hud:MasonryPanel x:Name="Panels" MinColumnWidth="460" Spacing="16">
+                <hud:HudPanel Highlight="True">
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Name="ConnectionTag" Style="{StaticResource HudTagStyle}" />
+                        <StackPanel x:Name="ConnectionRows" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <hud:HudPanel>
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Name="StabilityTag" Style="{StaticResource HudTagStyle}" />
+                        <TextBlock x:Name="StabilityHint" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <ComboBox x:Name="DurationBox" MinWidth="140" />
+                            <Button x:Name="StartButton" Style="{StaticResource HudAccentButtonStyle}" Click="StartButton_Click" />
+                        </StackPanel>
+                        <ProgressBar x:Name="Progress" Maximum="1" Visibility="Collapsed" />
+                        <TextBlock x:Name="StabilityStatus" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                        <TextBlock x:Name="ChartLabel" Style="{StaticResource HudMonoStyle}" FontSize="11" Foreground="{ThemeResource HudTagBrush}" Visibility="Collapsed" />
+                        <hud:LineChart x:Name="LatencyChart" Height="140" Unit="ms" Visibility="Collapsed" />
+                        <StackPanel x:Name="StabilityLines" Spacing="4" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <hud:HudPanel>
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Name="ChannelsTag" Style="{StaticResource HudTagStyle}" />
+                        <TextBlock x:Name="ChannelsHint" Style="{StaticResource HudMonoStyle}" FontSize="12" TextWrapping="Wrap" />
+                        <StackPanel x:Name="ChannelRows" Spacing="14" />
+                    </StackPanel>
+                </hud:HudPanel>
+
+                <hud:HudPanel>
+                    <StackPanel Spacing="6">
+                        <TextBlock x:Name="NetworksTag" Style="{StaticResource HudTagStyle}" />
+                        <StackPanel x:Name="NetworkRows" />
+                    </StackPanel>
+                </hud:HudPanel>
+            </hud:MasonryPanel>
+
+            <hud:HudPanel>
+                <StackPanel Spacing="8">
+                    <TextBlock x:Name="TipsTag" Style="{StaticResource HudTagStyle}" />
+                    <StackPanel x:Name="TipRows" Spacing="6" />
+                </StackPanel>
+            </hud:HudPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>

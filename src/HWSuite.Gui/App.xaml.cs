@@ -246,7 +246,7 @@ public partial class App : Application
         var other = Skin.Id != Hud.HudSkins.Hud.Id;
         string[] pages = other
             ? ["dashboard", "sensors", "charts", "inventory", "tuneup", "settings"]
-            : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "report", "tuneup", "history", "settings", "about"];
+            : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "wifi", "report", "tuneup", "history", "settings", "about"];
         var prefix = other ? Skin.Id + "-" : "";
         var saved = 0;
         try

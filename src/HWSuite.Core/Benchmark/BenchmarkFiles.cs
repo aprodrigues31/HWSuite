@@ -25,6 +25,9 @@ public static class BenchmarkFiles
 
     public static string Network => Path.Combine(Folder, "net-benchmark.csv");
 
+    /// <summary>The last Wi-Fi test (for the maintenance report).</summary>
+    public static string Wifi => Path.Combine(Folder, "wifi-test.json");
+
     /// <summary>Deletes the result files of the chosen kinds only; returns the kinds actually cleared.</summary>
     public static BenchmarkKinds Clear(BenchmarkKinds kinds, string? folder = null)
     {

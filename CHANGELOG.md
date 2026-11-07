@@ -8,6 +8,15 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **Teste de Wi-Fi** (Rede › Wi-Fi, e `hwsuite wifi`):
+  - **conexão**: rede, access point, sinal (dBm, % e avaliação), banda, canal, largura do canal, padrão (Wi-Fi 4 a 7), velocidade do link, segurança, roteador e driver do adaptador;
+  - **saúde dos canais**: as redes ao redor em 2,4, 5 e 6 GHz, quanto cada canal está ocupado (pela força das redes vizinhas e pela sobreposição) e o canal mais livre; os seus próprios access points não contam;
+  - **estabilidade** (30 s a 5 min): latência, jitter e perda até o roteador e até a Internet ao mesmo tempo, variação do sinal, trocas de access point e quedas, separando problema do Wi-Fi de problema da operadora;
+  - **diagnóstico e melhorias**: sinal fraco, rede em 2,4 GHz com 5 GHz disponível, canal congestionado (e qual usar), largura de 40 MHz em 2,4 GHz, canal DFS, padrão antigo, link lento, segurança fraca, driver antigo, perda/latência até o roteador e problemas da operadora;
+  - o último teste entra no relatório de manutenção.
+  - O Windows 11 só lista as redes ao redor com a Localização ligada; sem ela, o HWSuite avisa e mostra só a conexão.
+
 ### Alterado
 - Painel: o bloco **Memória** agora mostra separadamente a **RAM** do sistema (com tipo e velocidade, ex.: DDR4 · 3600 MT/s) e a **VRAM** da placa de vídeo, cada uma com uso, porcentagem, barra e espaço livre. A VRAM saiu da linha pequena do bloco da placa de vídeo.
 - Sensores: dá para marcar **vários tipos de leitura ao mesmo tempo** (ex.: Temperaturas + Tensões da placa-mãe); cada clique liga ou desliga um tipo, e **Todos** limpa a seleção.

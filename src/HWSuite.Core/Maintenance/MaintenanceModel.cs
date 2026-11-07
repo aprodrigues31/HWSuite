@@ -72,6 +72,9 @@ public sealed record MaintenanceInput(HardwareInventory Inventory, DateTimeOffse
     /// <summary>The latest saved Internet test, if recent.</summary>
     public NetHistoryEntry? Network { get; init; }
 
+    /// <summary>The latest Wi-Fi test, if recent.</summary>
+    public WifiSummary? Wifi { get; init; }
+
     public string? PumpSensorId { get; init; }
 
     public int PumpMinRpm { get; init; } = Settings.AppSettings.DefaultPumpMinRpm;

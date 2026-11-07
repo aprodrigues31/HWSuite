@@ -46,5 +46,6 @@ return options.Command switch
     CliCommand.MemTest => StabilityCommand.Run(options, s, memoryOnly: true),
     CliCommand.Batch => BatchCommand.Run(options, s),
     CliCommand.Tuneup => TuneupCommand.Run(options, s),
+    CliCommand.Wifi => WifiCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

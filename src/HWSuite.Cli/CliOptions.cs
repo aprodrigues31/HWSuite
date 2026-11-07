@@ -26,6 +26,7 @@ public enum CliCommand
     MemTest,
     Batch,
     Tuneup,
+    Wifi,
 }
 
 public enum DriverAction
@@ -192,6 +193,11 @@ public sealed record CliOptions
             options = options with { Command = CliCommand.Tuneup };
             i = 1;
         }
+        else if (args.Count > 0 && args[0].Equals("wifi", StringComparison.OrdinalIgnoreCase))
+        {
+            options = options with { Command = CliCommand.Wifi };
+            i = 1;
+        }
         else if (args.Count > 0 && args[0].Equals("batch", StringComparison.OrdinalIgnoreCase))
         {
             options = options with { Command = CliCommand.Batch };
@@ -328,7 +334,7 @@ public sealed record CliOptions
                 "--disk" when options.Command == CliCommand.Bench => options with { Disk = DriveLetter(Value(arg)) },
                 "--size" when options.Command == CliCommand.Bench => options with { DiskSizeGb = SizeGb(arg) },
                 "-i" or "--interval" when options.Command == CliCommand.Sensors => options with { IntervalSeconds = Seconds(arg) },
-                "--duration" when options.Command is CliCommand.Sensors or CliCommand.Bench => options with { DurationSeconds = Seconds(arg) },
+                "--duration" when options.Command is CliCommand.Sensors or CliCommand.Bench or CliCommand.Wifi => options with { DurationSeconds = Seconds(arg) },
                 "-y" or "--yes" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { AssumeYes = true },
                 "--result" when options.Command is CliCommand.Driver or CliCommand.Sensors => options with { ResultPath = Value(arg) },
                 _ => throw new CliUsageException("cli.unknownArgument", arg),

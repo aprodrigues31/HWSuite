@@ -81,6 +81,12 @@
                 <SelectorBarItem x:Name="BenchResultsTab" Tag="benchresults" />
             </SelectorBar>
 
+            <!-- Network: Internet test | Wi-Fi test -->
+            <SelectorBar x:Name="NetTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
+                <SelectorBarItem x:Name="NetInternetTab" Tag="network" />
+                <SelectorBarItem x:Name="WifiTab" Tag="wifi" />
+            </SelectorBar>
+
             <!-- Report: new report | service history -->
             <SelectorBar x:Name="ReportTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="ReportRunTab" Tag="report" />

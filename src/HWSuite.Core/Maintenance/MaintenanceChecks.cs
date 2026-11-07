@@ -52,6 +52,7 @@ public static class MaintenanceChecks
         Batteries(inv, s, list);
         Performance(input, s, list);
         Network(input, s, list);
+        Wifi(input, s, list);
         return [.. list.OrderBy(c => c.Area)];
     }
 
@@ -480,6 +481,19 @@ public static class MaintenanceChecks
             ComparisonVerdict.Below => new(CheckArea.Performance, s["mnt.bench"], finding, Verdict.Problem, s["mnt.bench.below"]),
             _ => new(CheckArea.Performance, s["mnt.bench"], finding + " · " + s["mnt.bench.noRef"], Verdict.Info),
         });
+    }
+
+    private static void Wifi(MaintenanceInput input, Strings s, List<CheckResult> list)
+    {
+        if (input.Wifi is not { } w || input.Now - w.At > TimeSpan.FromDays(30))
+        {
+            return;
+        }
+
+        var finding = w.Text(s.Culture) + " (" + w.At.LocalDateTime.ToString("d", s.Culture) + ")";
+        list.Add(w.Problems > 0
+            ? new(CheckArea.Network, s["mnt.wifi"], finding, Verdict.Attention, s.Format("mnt.wifi.problems", w.Problems))
+            : new(CheckArea.Network, s["mnt.wifi"], finding, Verdict.Ok));
     }
 
     private static void Network(MaintenanceInput input, Strings s, List<CheckResult> list)

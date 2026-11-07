@@ -63,6 +63,8 @@ public sealed partial class MainWindow : Window
         StabilityTab.Text = s["stab.tab"];
         ReportRunTab.Text = s["hist.tab.report"];
         HistoryTab.Text = s["hist.tab.history"];
+        NetInternetTab.Text = s["net.tab.internet"];
+        WifiTab.Text = s["wifi.tab"];
         BenchResultsTab.Text = s["app.nav.benchResults"];
         Navigate("dashboard");
 
@@ -76,6 +78,7 @@ public sealed partial class MainWindow : Window
         {
             "benchresults" or "stability" => "bench",
             "history" => "report",
+            "wifi" => "network",
             _ => tag,
         };
         if (_rail.TryGetValue(railTag, out var item) && item.IsChecked != true)
@@ -124,17 +127,21 @@ public sealed partial class MainWindow : Window
         // Pages grouped under one rail item get tabs: Bench (tests | stability | results), Report (new | history).
         var isBench = tag is "bench" or "stability" or "benchresults";
         var isReport = tag is "report" or "history";
+        var isNet = tag is "network" or "wifi";
         BenchTabs.Visibility = isBench ? Visibility.Visible : Visibility.Collapsed;
         ReportTabs.Visibility = isReport ? Visibility.Visible : Visibility.Collapsed;
-        if (isBench || isReport)
+        NetTabs.Visibility = isNet ? Visibility.Visible : Visibility.Collapsed;
+        if (isBench || isReport || isNet)
         {
-            var bar = isBench ? BenchTabs : ReportTabs;
+            var bar = isBench ? BenchTabs : isReport ? ReportTabs : NetTabs;
             var tab = tag switch
             {
                 "benchresults" => BenchResultsTab,
                 "stability" => StabilityTab,
                 "history" => HistoryTab,
                 "report" => ReportRunTab,
+                "network" => NetInternetTab,
+                "wifi" => WifiTab,
                 _ => BenchRunTab,
             };
             if (!ReferenceEquals(bar.SelectedItem, tab))
@@ -151,6 +158,7 @@ public sealed partial class MainWindow : Window
             "bench" => typeof(BenchmarkPage),
             "benchresults" => typeof(BenchmarkResultsPage),
             "network" => typeof(NetworkPage),
+            "wifi" => typeof(WifiPage),
             "report" => typeof(ReportPage),
             "history" => typeof(HistoryPage),
             "tuneup" => typeof(TuneupPage),

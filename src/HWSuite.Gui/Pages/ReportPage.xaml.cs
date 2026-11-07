@@ -175,6 +175,7 @@ public sealed partial class ReportPage : Page
                 PumpSensorId = settings.PumpSensorId,
                 PumpMinRpm = settings.PumpMinRpm,
                 Network = NetworkHistory.Read(BenchmarkFiles.Network) is [var lastNet, ..] ? lastNet : null,
+                Wifi = WifiSummary.Read(BenchmarkFiles.Wifi),
             };
 
             if (LoadCheck.IsChecked == true)

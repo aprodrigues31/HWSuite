@@ -91,6 +91,8 @@ public static class HudUi
 
     public static Brush Crit => Brush("HudCritBrush");
 
+    public static Brush Good => Brush("HudGoodBrush");
+
     public static Brush Text => Brush("HudTextBrush");
 
     public static Brush TextDim => Brush("HudTextDimBrush");
