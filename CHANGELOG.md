@@ -8,6 +8,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.23.0] - 2026-11-07
+
 ### Corrigido
 - Painel: o total de RAM podia aparecer maior que o instalado (ex.: 38 GB numa máquina de 32 GB), porque somava leituras da memória virtual (RAM + arquivo de paginação). Agora o total vem do que o Windows informa e o uso só da memória física.
 
@@ -295,7 +297,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.22.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.0
 [0.22.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.22.0
 [0.21.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.21.0
 [0.20.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.20.0
