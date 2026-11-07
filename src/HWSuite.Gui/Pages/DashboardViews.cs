@@ -477,8 +477,8 @@ internal sealed class DialsView : IDashboardView
             _dials[i].Sub.Text = sub;
         }
 
-        Dial(0, d.Cpu.Temperature / 100, $"{DashboardViews.N(d.Cpu.Temperature)}°", d.Cpu.Name ?? "", s.Format("dash.loadValue", DashboardViews.N(d.Cpu.Load)) + $" · {DashboardViews.N(d.Cpu.ClockMhz / 1000, "0.00")} GHz");
-        Dial(1, d.Gpu.Temperature / 100, $"{DashboardViews.N(d.Gpu.Temperature)}°", d.Gpu.Name ?? "", s.Format("dash.loadValue", DashboardViews.N(d.Gpu.Load)) + $" · {DashboardViews.N(d.Gpu.ClockMhz, "N0")} MHz");
+        Dial(0, d.Cpu.Temperature / 100, $"{DashboardViews.N(d.Cpu.Temperature)}°", MemoryReadout.ShortGpuName(d.Cpu.Name ?? "").Replace("Ryzen ", "", StringComparison.Ordinal), s.Format("dash.loadValue", DashboardViews.N(d.Cpu.Load)) + $" · {DashboardViews.N(d.Cpu.ClockMhz / 1000, "0.00")} GHz");
+        Dial(1, d.Gpu.Temperature / 100, $"{DashboardViews.N(d.Gpu.Temperature)}°", MemoryReadout.ShortGpuName(d.Gpu.Name ?? ""), s.Format("dash.loadValue", DashboardViews.N(d.Gpu.Load)) + $" · {DashboardViews.N(d.Gpu.ClockMhz, "N0")} MHz");
         Dial(2, d.Memory.Load / 100, $"{DashboardViews.N(d.Memory.Load)}%", $"{DashboardViews.N(d.Memory.UsedGb, "0.0")} / {DashboardViews.N(d.Memory.TotalGb, "0.0")} GB", "RAM");
         Dial(3, DashboardViews.VramPercent(d) / 100, $"{DashboardViews.N(DashboardViews.VramPercent(d))}%", $"{DashboardViews.N(d.Gpu.MemoryUsedMb / 1024, "0.0")} / {DashboardViews.N(d.Gpu.MemoryTotalMb / 1024, "0")} GB", "VRAM");
         DashboardViews.ShowTemps(_chart, d);
@@ -699,8 +699,8 @@ internal sealed class HologramView : IDashboardView
             var value = DashboardViews.Text(size: 26, bold: true, font: "HudDisplayFont");
             value.HorizontalAlignment = HorizontalAlignment.Center;
             value.VerticalAlignment = VerticalAlignment.Center;
-            value.Margin = new Thickness(0, 30, 0, 0);
-            var gauge = new ArcDial(160, 12, 180, value) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, -70) };
+            value.Margin = new Thickness(0, 40, 0, 0);
+            var gauge = new ArcDial(160, 12, 180, value) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, -50) };
             var label = DashboardViews.Text(arcLabels[i], 12, HudUi.Brush("HudTagBrush"), "HudMonoFont");
             label.HorizontalAlignment = HorizontalAlignment.Center;
             var stack = new StackPanel();
