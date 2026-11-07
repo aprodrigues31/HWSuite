@@ -45,6 +45,8 @@
                         </StackPanel>
                     </StackPanel>
                     <StackPanel Spacing="4">
+                        <ToggleSwitch x:Name="AdminSwitch" Toggled="AdminSwitch_Toggled" />
+                        <TextBlock x:Name="AdminHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
                         <ToggleSwitch x:Name="StartupSwitch" Toggled="StartupSwitch_Toggled" />
                         <TextBlock x:Name="StartupHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                     </StackPanel>

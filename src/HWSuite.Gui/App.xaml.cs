@@ -96,6 +96,17 @@ public partial class App : Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var commandLine = Environment.GetCommandLineArgs();
+        var relaunched = commandLine.Contains(RelaunchArgument, StringComparer.OrdinalIgnoreCase);
+
+        // "Always open as administrator": start again elevated (once: a relaunch never asks again, and a declined
+        // prompt simply leaves this copy running without administrator rights).
+        if (Settings.Current.AlwaysRunAsAdmin && !relaunched && !commandLine.Contains(DemoArgument, StringComparer.OrdinalIgnoreCase)
+            && !AccessStatus.Detect().IsElevated && Elevation.RelaunchElevated())
+        {
+            Exit();
+            return;
+        }
+
         if (!AcquireSingleInstance(commandLine.Contains(RelaunchArgument, StringComparer.OrdinalIgnoreCase)))
         {
             TrayIcon.SignalRunningInstance(); // bring the running copy to the front instead

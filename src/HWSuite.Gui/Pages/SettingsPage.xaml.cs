@@ -46,6 +46,8 @@ public sealed partial class SettingsPage : Page
         CloseToTraySwitch.Header = s["settings.closeToTray"];
         UpdatesSwitch.Header = s["settings.checkUpdates"];
         CheckUpdatesButton.Content = s["app.update.check"];
+        AdminSwitch.Header = s["settings.admin"];
+        AdminHint.Text = s["settings.admin.hint"];
         StartupSwitch.Header = s["settings.startWithWindows"];
         AlertsTitle.Text = s["settings.alerts"];
         AlertsSwitch.Header = s["settings.alertsEnabled"];
@@ -99,6 +101,7 @@ public sealed partial class SettingsPage : Page
         // The task is the source of truth (it may have been removed in Task Scheduler).
         var elevated = App.Monitor.Access.IsElevated;
         StartupSwitch.IsOn = StartupTask.IsRegistered();
+        AdminSwitch.IsOn = settings.AlwaysRunAsAdmin;
         // A portable copy (a pen drive at a client's) never registers itself to start with Windows.
         var portable = Core.Settings.DataLocation.IsPortable;
         StartupSwitch.IsEnabled = elevated && !portable;
@@ -109,6 +112,35 @@ public sealed partial class SettingsPage : Page
 
         BuildRules();
         _loading = false;
+    }
+
+    private async void AdminSwitch_Toggled(object sender, RoutedEventArgs e)
+    {
+        if (_loading)
+        {
+            return;
+        }
+
+        App.Settings.Update(x => x with { AlwaysRunAsAdmin = AdminSwitch.IsOn });
+        if (!AdminSwitch.IsOn || App.Monitor.Access.IsElevated)
+        {
+            return;
+        }
+
+        var t = App.Text;
+        var dialog = new ContentDialog
+        {
+            XamlRoot = XamlRoot,
+            Title = t["settings.admin.restartTitle"],
+            Content = new TextBlock { Text = t["settings.admin.restartBody"], TextWrapping = TextWrapping.Wrap },
+            PrimaryButtonText = t["settings.skin.restartNow"],
+            CloseButtonText = t["settings.skin.restartLater"],
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        if (await dialog.ShowAsync() == ContentDialogResult.Primary && Services.Elevation.RelaunchElevated())
+        {
+            App.Quit();
+        }
     }
 
     private void IntervalBox_ValueChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)

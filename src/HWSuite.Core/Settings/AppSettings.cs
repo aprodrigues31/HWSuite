@@ -33,6 +33,12 @@ public sealed record AppSettings
     /// <summary>Null until the user edits alerts; then the defaults are copied in and owned by the user.</summary>
     public IReadOnlyList<AlertRule>? Alerts { get; init; }
 
+    /// <summary>
+    /// Open elevated every time (asks Windows once per start). Saved with the settings, so a portable copy on a pen
+    /// drive keeps it whatever computer or drive letter it runs from.
+    /// </summary>
+    public bool AlwaysRunAsAdmin { get; init; }
+
     /// <summary>Network devices watched over SNMP (router, switches...); secrets stored protected.</summary>
     public IReadOnlyList<HWSuite.Core.Snmp.SnmpDeviceConfig>? SnmpDevices { get; init; }
 
