@@ -21,13 +21,16 @@
                     <RowDefinition Height="*" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
-                <Viewbox Width="36" Height="36" Margin="0,18,0,20">
+                <Viewbox Width="34" Height="34" Margin="0,14,0,12">
                     <Canvas Width="34" Height="34">
                         <Path Data="M17,2 L30,9.5 L30,24.5 L17,32 L4,24.5 L4,9.5 Z" Stroke="{ThemeResource HudAccentBrush}" StrokeThickness="1.6" />
                         <Path Data="M10,20 L14,15 L17,18 L23,11" Stroke="{ThemeResource HudAccentBrush}" StrokeThickness="1.8" StrokeEndLineCap="Round" StrokeStartLineCap="Round" StrokeLineJoin="Round" />
                     </Canvas>
                 </Viewbox>
-                <StackPanel x:Name="RailTop" Grid.Row="1" Spacing="2" />
+                <!-- Scrolls (bar hidden) when the window is too short for every item, instead of running under Settings. -->
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Hidden" HorizontalScrollBarVisibility="Disabled" VerticalScrollMode="Auto">
+                    <StackPanel x:Name="RailTop" Spacing="2" />
+                </ScrollViewer>
                 <StackPanel x:Name="RailBottom" Grid.Row="2" Spacing="2" Margin="0,0,0,14" />
             </Grid>
         </Border>
