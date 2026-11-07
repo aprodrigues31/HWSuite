@@ -47,5 +47,6 @@ return options.Command switch
     CliCommand.Batch => BatchCommand.Run(options, s),
     CliCommand.Tuneup => TuneupCommand.Run(options, s),
     CliCommand.Wifi => WifiCommand.Run(options, s),
+    CliCommand.Snmp => SnmpCommand.Run(options, s),
     _ => ReportCommand.Run(options, s),
 };

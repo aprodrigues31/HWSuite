@@ -78,6 +78,9 @@ public partial class App : Application
     /// <summary>Shared sensor polling, used by every page that shows live values.</summary>
     public static SensorMonitor Monitor { get; } = new();
 
+    /// <summary>Network devices watched over SNMP (Settings › Devices), polled while HWSuite runs.</summary>
+    internal static SnmpMonitor Snmp { get; } = new();
+
     public static MainWindow? MainWindow { get; private set; }
 
     public static TrayIcon? Tray { get; private set; }
@@ -142,6 +145,18 @@ public partial class App : Application
         }
 
         Monitor.Start();
+        if (!IsDemo)
+        {
+            Snmp.EventRaised += (_, e) =>
+            {
+                if (e.Problem || e.Kind == HWSuite.Core.Snmp.SnmpEventKind.DeviceUp)
+                {
+                    var name = Settings.Current.SnmpDevices?.FirstOrDefault(d => d.Id == e.DeviceId)?.Name ?? "";
+                    _ui?.TryEnqueue(() => Tray?.Notify(name, Pages.DevicesPage.EventText(e), e.Problem));
+                }
+            };
+            Snmp.Apply(Settings.Current.SnmpDevices);
+        }
 
         var capture = Array.FindIndex(commandLine, a => a.Equals(CaptureArgument, StringComparison.OrdinalIgnoreCase));
         if (capture >= 0 && capture + 1 < commandLine.Length)
@@ -252,7 +267,7 @@ public partial class App : Application
         var other = Skin.Id != Hud.HudSkins.Hud.Id;
         string[] pages = other
             ? ["dashboard", "sensors", "charts", "inventory", "tuneup", "settings"]
-            : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "wifi", "report", "tuneup", "history", "settings", "about"];
+            : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "wifi", "devices", "report", "tuneup", "history", "settings", "about"];
         var prefix = other ? Skin.Id + "-" : "";
         var saved = 0;
         try
@@ -293,6 +308,7 @@ public partial class App : Application
     private static void Shutdown()
     {
         Monitor.Dispose();
+        Snmp.Dispose();
         Tray?.Dispose();
         Tray = null;
 

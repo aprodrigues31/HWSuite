@@ -33,6 +33,9 @@ public sealed record AppSettings
     /// <summary>Null until the user edits alerts; then the defaults are copied in and owned by the user.</summary>
     public IReadOnlyList<AlertRule>? Alerts { get; init; }
 
+    /// <summary>Network devices watched over SNMP (router, switches...); secrets stored protected.</summary>
+    public IReadOnlyList<HWSuite.Core.Snmp.SnmpDeviceConfig>? SnmpDevices { get; init; }
+
     /// <summary>Write every reading to a CSV file while the app runs.</summary>
     public bool LogEnabled { get; init; }
 

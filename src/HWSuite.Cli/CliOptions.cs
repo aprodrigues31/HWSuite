@@ -27,6 +27,7 @@ public enum CliCommand
     Batch,
     Tuneup,
     Wifi,
+    Snmp,
 }
 
 public enum DriverAction
@@ -55,6 +56,9 @@ public sealed record CliOptions
     public bool Redact { get; init; }
 
     public string? Language { get; init; }
+
+    /// <summary>snmp: its own arguments (host, credentials, --walk), read by <see cref="SnmpCommand"/>.</summary>
+    public IReadOnlyList<string> SnmpArgs { get; init; } = [];
 
     public bool Watch { get; init; }
 
@@ -152,6 +156,21 @@ public sealed record CliOptions
         ArgumentNullException.ThrowIfNull(args);
         var options = new CliOptions();
         var i = 0;
+
+        // "snmp" has its own arguments (host, credentials); --lang is still honored.
+        if (args.Count > 0 && args[0].Equals("snmp", StringComparison.OrdinalIgnoreCase))
+        {
+            var rest = args.Skip(1).ToList();
+            var lang = rest.FindIndex(a => a.Equals("--lang", StringComparison.OrdinalIgnoreCase));
+            string? language = null;
+            if (lang >= 0 && lang + 1 < rest.Count)
+            {
+                language = rest[lang + 1];
+                rest.RemoveRange(lang, 2);
+            }
+
+            return options with { Command = CliCommand.Snmp, SnmpArgs = rest, Language = language };
+        }
 
         // The command is optional; plain "hwsuite" prints the text report to the console.
         if (args.Count > 0 && args[0].Equals("report", StringComparison.OrdinalIgnoreCase))

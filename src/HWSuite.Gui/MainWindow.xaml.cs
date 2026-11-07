@@ -55,6 +55,7 @@ public sealed partial class MainWindow : Window
         RailTop.Children.Add(RailItem("charts", "\uE9D2", s["rail.charts"], s["charts.title"]));
         RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
         RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
+        RailTop.Children.Add(RailItem("devices", "\uE968", s["rail.devices"], s["snmp.title"]));
         RailTop.Children.Add(RailItem("tuneup", "\uE90F", s["rail.maintenance"], s["tune.title"]));
         RailTop.Children.Add(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
         RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
@@ -159,6 +160,7 @@ public sealed partial class MainWindow : Window
             "benchresults" => typeof(BenchmarkResultsPage),
             "network" => typeof(NetworkPage),
             "wifi" => typeof(WifiPage),
+            "devices" => typeof(DevicesPage),
             "report" => typeof(ReportPage),
             "history" => typeof(HistoryPage),
             "tuneup" => typeof(TuneupPage),

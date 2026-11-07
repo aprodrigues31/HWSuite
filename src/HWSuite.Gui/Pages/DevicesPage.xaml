@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="HWSuite.Gui.Pages.DevicesPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud"
+    NavigationCacheMode="Required">
+    <ScrollViewer>
+        <StackPanel Padding="28,6,28,24" Spacing="16">
+            <StackPanel Spacing="4" Padding="0,0,0,12" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
+                <TextBlock x:Name="HeaderTag" Style="{StaticResource HudTagStyle}" />
+                <TextBlock x:Name="PageTitle" Style="{StaticResource HudPageTitleStyle}" />
+                <TextBlock x:Name="Subtitle" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
+            </StackPanel>
+
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button x:Name="AddButton" Style="{StaticResource HudAccentButtonStyle}" Click="AddButton_Click" />
+                <Button x:Name="EditButton" Click="EditButton_Click" />
+                <Button x:Name="RemoveButton" Click="RemoveButton_Click" />
+            </StackPanel>
+            <hud:WrapPanel x:Name="DeviceChips" Spacing="10" LineSpacing="10" />
+            <TextBlock x:Name="EmptyText" TextWrapping="Wrap" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <StackPanel x:Name="DetailPanel" Spacing="16">
+                <hud:MasonryPanel x:Name="TopPanels" MinColumnWidth="440" Spacing="16">
+                    <hud:HudPanel Highlight="True">
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Name="DeviceTag" Style="{StaticResource HudTagStyle}" />
+                            <StackPanel x:Name="DeviceRows" />
+                        </StackPanel>
+                    </hud:HudPanel>
+                    <hud:HudPanel x:Name="WanPanel">
+                        <StackPanel Spacing="10">
+                            <TextBlock x:Name="WanTag" Style="{StaticResource HudTagStyle}" />
+                            <StackPanel x:Name="WanRows" Spacing="12" />
+                        </StackPanel>
+                    </hud:HudPanel>
+                    <hud:HudPanel>
+                        <StackPanel Spacing="10">
+                            <Grid>
+                                <TextBlock x:Name="ChartTag" Style="{StaticResource HudTagStyle}" />
+                                <ComboBox x:Name="PortBox" HorizontalAlignment="Right" MinWidth="200" SelectionChanged="PortBox_SelectionChanged" />
+                            </Grid>
+                            <TextBlock x:Name="ChartLegend" Style="{StaticResource HudMonoStyle}" FontSize="12" />
+                            <hud:LineChart x:Name="TrafficChart" Height="170" Unit="Mbps" />
+                        </StackPanel>
+                    </hud:HudPanel>
+                    <hud:HudPanel>
+                        <StackPanel Spacing="6">
+                            <TextBlock x:Name="EventsTag" Style="{StaticResource HudTagStyle}" />
+                            <StackPanel x:Name="EventRows" />
+                        </StackPanel>
+                    </hud:HudPanel>
+                </hud:MasonryPanel>
+
+                <hud:HudPanel>
+                    <StackPanel Spacing="6">
+                        <Grid>
+                            <TextBlock x:Name="PortsTag" Style="{StaticResource HudTagStyle}" />
+                            <ToggleSwitch x:Name="OnlyUpSwitch" HorizontalAlignment="Right" Toggled="OnlyUpSwitch_Toggled" />
+                        </Grid>
+                        <StackPanel x:Name="PortRows" />
+                    </StackPanel>
+                </hud:HudPanel>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</Page>
