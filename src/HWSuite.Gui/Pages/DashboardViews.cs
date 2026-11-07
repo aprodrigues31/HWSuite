@@ -164,13 +164,13 @@ internal static class DashboardViews
 }
 
 /// <summary>An arc gauge: a track and a lit part over <see cref="Sweep"/> degrees, open at the bottom, with content in the middle.</summary>
-internal sealed partial class ArcGauge : Grid
+internal sealed partial class ArcDial : Grid
 {
     private readonly Path _track = new() { StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round };
     private readonly Path _lit = new() { StrokeStartLineCap = PenLineCap.Round, StrokeEndLineCap = PenLineCap.Round };
     private double _value;
 
-    public ArcGauge(double size, double thickness, double sweep, UIElement center)
+    public ArcDial(double size, double thickness, double sweep, UIElement center)
     {
         Width = size;
         Height = size;
@@ -421,7 +421,7 @@ internal sealed class TableView : IDashboardView
 
 internal sealed class DialsView : IDashboardView
 {
-    private readonly (ArcGauge Gauge, TextBlock Value, TextBlock Unit, TextBlock Sub)[] _dials = new (ArcGauge, TextBlock, TextBlock, TextBlock)[4];
+    private readonly (ArcDial Gauge, TextBlock Value, TextBlock Unit, TextBlock Sub)[] _dials = new (ArcDial, TextBlock, TextBlock, TextBlock)[4];
     private readonly LineChart _chart = DashboardViews.TempChart(200);
     private readonly StackPanel _cooling = new();
 
@@ -441,7 +441,7 @@ internal sealed class DialsView : IDashboardView
             var center = new StackPanel { VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center };
             center.Children.Add(value);
             center.Children.Add(unit);
-            var gauge = new ArcGauge(150, 14, 300, center) { HorizontalAlignment = HorizontalAlignment.Center };
+            var gauge = new ArcDial(150, 14, 300, center) { HorizontalAlignment = HorizontalAlignment.Center };
             var sub = DashboardViews.Text(size: 12.5, brush: HudUi.TextDim);
             sub.HorizontalAlignment = HorizontalAlignment.Center;
             var tag = DashboardViews.Text(titles[i], 12, HudUi.Brush("HudTagBrush"), "HudDisplayFont", bold: true);
@@ -574,7 +574,7 @@ internal sealed class TerminalView : IDashboardView
 
 internal sealed class CockpitView : IDashboardView
 {
-    private readonly (ArcGauge Gauge, TextBlock Value, TextBlock Sub)[] _gauges = new (ArcGauge, TextBlock, TextBlock)[3];
+    private readonly (ArcDial Gauge, TextBlock Value, TextBlock Sub)[] _gauges = new (ArcDial, TextBlock, TextBlock)[3];
     private readonly (TextBlock Value, StackPanel Leds)[] _strip = new (TextBlock, StackPanel)[6];
     private readonly TextBlock[] _stripLabels = new TextBlock[6];
     private readonly LineChart _chart = DashboardViews.TempChart(150);
@@ -598,7 +598,7 @@ internal sealed class CockpitView : IDashboardView
             center.Children.Add(label);
             center.Children.Add(value);
             center.Children.Add(sub);
-            var gauge = new ArcGauge(spec[i].Size, i == 1 ? 18 : 14, 270, center) { VerticalAlignment = VerticalAlignment.Center };
+            var gauge = new ArcDial(spec[i].Size, i == 1 ? 18 : 14, 270, center) { VerticalAlignment = VerticalAlignment.Center };
             gauges.Children.Add(gauge);
             _gauges[i] = (gauge, value, sub);
         }
@@ -678,10 +678,10 @@ internal sealed class CockpitView : IDashboardView
 
 internal sealed class HologramView : IDashboardView
 {
-    private readonly (ArcGauge Gauge, TextBlock Value)[] _arcs = new (ArcGauge, TextBlock)[2];
+    private readonly (ArcDial Gauge, TextBlock Value)[] _arcs = new (ArcDial, TextBlock)[2];
     private readonly Border[] _vbars = new Border[4];
     private readonly (TextBlock Label, TextBlock Value, LineChart Chart)[] _tiles = new (TextBlock, TextBlock, LineChart)[9];
-    private readonly (ArcGauge Gauge, TextBlock Value)[] _rings = new (ArcGauge, TextBlock)[4];
+    private readonly (ArcDial Gauge, TextBlock Value)[] _rings = new (ArcDial, TextBlock)[4];
     private readonly Border[] _tall = new Border[3];
 
     public HologramView()
@@ -700,7 +700,7 @@ internal sealed class HologramView : IDashboardView
             value.HorizontalAlignment = HorizontalAlignment.Center;
             value.VerticalAlignment = VerticalAlignment.Center;
             value.Margin = new Thickness(0, 30, 0, 0);
-            var gauge = new ArcGauge(160, 12, 180, value) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, -70) };
+            var gauge = new ArcDial(160, 12, 180, value) { HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0, 0, 0, -70) };
             var label = DashboardViews.Text(arcLabels[i], 12, HudUi.Brush("HudTagBrush"), "HudMonoFont");
             label.HorizontalAlignment = HorizontalAlignment.Center;
             var stack = new StackPanel();
@@ -776,7 +776,7 @@ internal sealed class HologramView : IDashboardView
             var value = DashboardViews.Text(size: 16, bold: true, font: "HudDisplayFont");
             value.HorizontalAlignment = HorizontalAlignment.Center;
             value.VerticalAlignment = VerticalAlignment.Center;
-            var gauge = new ArcGauge(74, 7, 360, value) { HorizontalAlignment = HorizontalAlignment.Center };
+            var gauge = new ArcDial(74, 7, 360, value) { HorizontalAlignment = HorizontalAlignment.Center };
             var label = DashboardViews.Text(ringLabels[i], 11, HudUi.Brush("HudTagBrush"), "HudMonoFont");
             label.HorizontalAlignment = HorizontalAlignment.Center;
             var stack = new StackPanel { Spacing = 2 };
