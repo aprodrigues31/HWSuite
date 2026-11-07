@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.23.1] - 2026-11-07
+
+### Corrigido
+- Menu lateral mais largo: nomes compridos (Dispositivos, Manutenção, Relatório) aparecem inteiros e com margem.
+
 ## [0.23.0] - 2026-11-07
 
 ### Corrigido
@@ -297,7 +302,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.23.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.23.1...HEAD
+[0.23.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.1
 [0.23.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.0
 [0.22.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.22.0
 [0.21.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.21.0
