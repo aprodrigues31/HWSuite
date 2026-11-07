@@ -18,6 +18,7 @@ namespace HWSuite.Gui.Pages;
 public sealed partial class DashboardPage : Page
 {
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly IDashboardView? _view = DashboardViews.For(HudThemes.Current.Id);
 
     public DashboardPage()
     {
@@ -40,6 +41,12 @@ public sealed partial class DashboardPage : Page
         MachineText.Text = $"{Environment.MachineName} · {RuntimeInformation.OSDescription}";
         BoardName.Text = Environment.MachineName.ToUpper(c);
         StatusText.Text = s["dash.waiting"].ToUpper(c);
+        if (_view is not null)
+        {
+            HudBody.Visibility = Visibility.Collapsed;
+            AltBody.Content = _view.Root;
+            AltBody.Visibility = Visibility.Visible;
+        }
 
         foreach (var value in new[] { ClockValue, PowerValue, VoltValue })
         {
@@ -156,6 +163,11 @@ public sealed partial class DashboardPage : Page
         StatusText.Foreground = stateBrush;
         StatusDot.Fill = stateBrush;
         StatusChip.BorderBrush = stateBrush;
+        if (_view is not null)
+        {
+            _view.Update(d, snapshot);
+            return;
+        }
 
         // Processor
         var cpu = d.Cpu;

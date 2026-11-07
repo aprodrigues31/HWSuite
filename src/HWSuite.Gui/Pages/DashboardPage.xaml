@@ -37,6 +37,9 @@
                 </StackPanel>
             </Grid>
 
+            <ContentControl x:Name="AltBody" HorizontalContentAlignment="Stretch" Visibility="Collapsed" />
+
+            <StackPanel x:Name="HudBody" Spacing="16">
             <!-- Processor (the "reactor") | graphics card + memory -->
             <Grid ColumnSpacing="16">
                 <Grid.ColumnDefinitions>
@@ -186,6 +189,7 @@
                     <Grid x:Name="DriveGrid" ColumnSpacing="28" RowSpacing="16" />
                 </StackPanel>
             </hud:HudPanel>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>
