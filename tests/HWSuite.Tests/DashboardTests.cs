@@ -152,4 +152,34 @@ public sealed class DashboardTests
         Assert.Equal("Arc A770", MemoryReadout.ShortGpuName("Intel(R) Arc(TM) A770 Graphics"));
         Assert.Equal("Radeon", MemoryReadout.ShortGpuName("Radeon"));
     }
+
+    [Fact]
+    public void Ram_total_ignores_the_virtual_memory_device()
+    {
+        var saved = Dashboard.PhysicalGb;
+        try
+        {
+            SensorReading R(string hw, string name, double v) => new($"/{hw}/{name}", hw, "Memory", name, SensorKind.Data, v, v, v);
+            List<SensorReading> readings =
+            [
+                R("Virtual Memory", "Memory Used", 20.1), R("Virtual Memory", "Memory Available", 25.0),
+                R("Total Memory", "Memory Used", 13.1), R("Total Memory", "Memory Available", 18.8),
+            ];
+            var snapshot = new SensorSnapshot(DateTimeOffset.Now, readings);
+
+            Dashboard.PhysicalGb = null;
+            var m = Dashboard.From(snapshot).Memory;
+            Assert.Equal(13.1, m.UsedGb!.Value, 3);
+            Assert.Equal(31.9, m.TotalGb!.Value, 3);
+
+            Dashboard.PhysicalGb = 31.9; // what Windows reports wins over the sensors' sum
+            m = Dashboard.From(new SensorSnapshot(DateTimeOffset.Now, [R("Virtual Memory", "Memory Used", 20.1), R("Total Memory", "Memory Available", 18.8)])).Memory;
+            Assert.Equal(31.9, m.TotalGb!.Value, 3);
+            Assert.Equal(13.1, m.UsedGb!.Value, 3); // used = total - available, not the virtual device's figure
+        }
+        finally
+        {
+            Dashboard.PhysicalGb = saved;
+        }
+    }
 }

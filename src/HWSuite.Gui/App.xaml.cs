@@ -104,6 +104,8 @@ public partial class App : Application
         IsDemo = commandLine.Contains(DemoArgument, StringComparer.OrdinalIgnoreCase);
         if (IsDemo)
         {
+            Dashboard.PhysicalGb = null; // demo sensors describe their own 32 GB machine
+
             // Five minutes of history from the start, so charts are full; the live source continues from there.
             SensorMonitor.SourceFactory = _ => new MinMaxTrackingSource(new DemoSensorSource(elapsedAtStart: TimeSpan.FromMinutes(5)));
         }

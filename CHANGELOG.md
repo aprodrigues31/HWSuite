@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Corrigido
+- Painel: o total de RAM podia aparecer maior que o instalado (ex.: 38 GB numa máquina de 32 GB), porque somava leituras da memória virtual (RAM + arquivo de paginação). Agora o total vem do que o Windows informa e o uso só da memória física.
+
 ### Adicionado
 - **Teste de Wi-Fi** (Rede › Wi-Fi, e `hwsuite wifi`):
   - **conexão**: rede, access point, sinal (dBm, % e avaliação), banda, canal, largura do canal, padrão (Wi-Fi 4 a 7), velocidade do link, segurança, roteador e driver do adaptador;

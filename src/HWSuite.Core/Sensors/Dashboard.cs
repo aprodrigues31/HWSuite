@@ -131,16 +131,39 @@ public static partial class Dashboard
             hotSpot?.Value, load?.Value, clock?.Value, power?.Value, used?.Value, total?.Value);
     }
 
+    /// <summary>Physical memory Windows reports, in GB (null where unknown; tests set it).</summary>
+    public static double? PhysicalGb { get; set; } = ReadPhysicalGb();
+
+    private static double? ReadPhysicalGb()
+    {
+        var bytes = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes;
+        return OperatingSystem.IsWindows() && bytes > 0 ? bytes / 1073741824.0 : null;
+    }
+
     private static MemoryReadout Memory(List<SensorReading> all)
     {
-        // "Memory" (physical) rather than "Virtual Memory".
-        var mem = all.Where(r => r.HardwareKind == "Memory" && !r.Name.StartsWith("Virtual", StringComparison.OrdinalIgnoreCase)).ToList();
-        var used = Preferred(mem, SensorKind.Data, "Memory Used", "Used Memory");
-        var available = Preferred(mem, SensorKind.Data, "Memory Available", "Available Memory");
-        var load = Preferred(mem, SensorKind.Load, "Memory");
-        double? total = used?.Value + available?.Value;
-        var loadValue = load?.Value ?? (total > 0 ? used!.Value * 100 / total : null);
-        return new MemoryReadout(used?.Value, total, loadValue);
+        // Physical memory only. LibreHardwareMonitor also has a "Virtual Memory" device (RAM + page file) whose
+        // sensors carry the same names ("Memory Used"): it is told apart by the device, not the sensor name.
+        var mem = all.Where(r => r.HardwareKind == "Memory"
+            && !r.Hardware.Contains("Virtual", StringComparison.OrdinalIgnoreCase)
+            && !r.Name.StartsWith("Virtual", StringComparison.OrdinalIgnoreCase)).ToList();
+        var used = Preferred(mem, SensorKind.Data, "Memory Used", "Used Memory")?.Value;
+        var available = Preferred(mem, SensorKind.Data, "Memory Available", "Available Memory")?.Value;
+
+        // The total is what Windows sees (same as Hardware shows, minus what the firmware reserves), not a sum of sensors.
+        var total = PhysicalGb is > 0 ? PhysicalGb : used + available;
+        if (used is null && available is { } free && total is { } all1)
+        {
+            used = Math.Max(0, all1 - free);
+        }
+
+        if (used > total)
+        {
+            used = total;
+        }
+
+        var load = total > 0 && used is { } u ? u * 100 / total : Preferred(mem, SensorKind.Load, "Memory")?.Value;
+        return new MemoryReadout(used, total, load);
     }
 
     private static List<DriveReadout> Drives(List<SensorReading> all) =>
