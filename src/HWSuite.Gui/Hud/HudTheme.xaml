@@ -251,6 +251,124 @@
         </Setter>
     </Style>
 
+    <!-- Wide side menu item (Windows 11, Minimal): icon and full name in a row, rounded highlight. -->
+    <Style x:Key="HudWideItemStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{ThemeResource HudTextDimBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="GroupName" Value="HudRail" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid x:Name="Root" MinHeight="40" Margin="8,1,8,1" Background="Transparent" CornerRadius="{ThemeResource ControlCornerRadius}">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Hover.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Hover.Opacity" Value="1" />
+                                        <Setter Target="Presenter.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Presenter.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Selected.Opacity" Value="1" />
+                                        <Setter Target="Indicator.Opacity" Value="1" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource HudAccentBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Indeterminate" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Rectangle x:Name="Selected" Fill="{ThemeResource HudSelectedBrush}" Opacity="0" />
+                        <Rectangle x:Name="Hover" Fill="{ThemeResource HudHoverBrush}" Opacity="0" />
+                        <Rectangle x:Name="Indicator" Width="3" Height="16" RadiusX="1.5" RadiusY="1.5" HorizontalAlignment="Left" VerticalAlignment="Center" Fill="{ThemeResource HudAccentBrush}" Opacity="0" />
+                        <ContentPresenter
+                            x:Name="Presenter"
+                            Padding="14,8,10,8"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding Content}"
+                            Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Top tab (Compact, Terminal, Cockpit, Hologram): icon and name in a row, accent line under the current page. -->
+    <Style x:Key="HudTopItemStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{ThemeResource HudTextDimBrush}" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="GroupName" Value="HudRail" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid x:Name="Root" MinHeight="40" Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Hover.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Hover.Opacity" Value="1" />
+                                        <Setter Target="Presenter.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Presenter.Opacity" Value="0.4" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                            <VisualStateGroup x:Name="CheckStates">
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Selected.Opacity" Value="1" />
+                                        <Setter Target="Indicator.Opacity" Value="1" />
+                                        <Setter Target="Presenter.Foreground" Value="{ThemeResource HudAccentBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Unchecked" />
+                                <VisualState x:Name="Indeterminate" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+                        <Rectangle x:Name="Selected" Fill="{ThemeResource HudSelectedBrush}" Opacity="0" />
+                        <Rectangle x:Name="Hover" Fill="{ThemeResource HudHoverBrush}" Opacity="0" />
+                        <Rectangle x:Name="Indicator" Height="2" VerticalAlignment="Bottom" Fill="{ThemeResource HudAccentBrush}" Opacity="0" />
+                        <ContentPresenter
+                            x:Name="Presenter"
+                            Padding="12,6,12,6"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center"
+                            Content="{TemplateBinding Content}"
+                            Foreground="{TemplateBinding Foreground}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Primary action ("START TEST"): accent fill, display font, wide tracking. -->
     <Style x:Key="HudAccentButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
         <Setter Property="FontFamily" Value="{StaticResource HudBoldFont}" />

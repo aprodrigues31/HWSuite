@@ -7,14 +7,14 @@
 
     <Grid x:Name="Root" Background="{ThemeResource HudBackgroundBrush}">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="104" />
+            <ColumnDefinition x:Name="RailColumn" Width="104" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <hud:GridBackdrop Grid.ColumnSpan="2" />
 
         <!-- Navigation rail -->
-        <Border Background="{ThemeResource HudRailBrush}" BorderBrush="{ThemeResource HudPanelStrokeBrush}" BorderThickness="0,0,1,0">
+        <Border x:Name="RailBorder" Background="{ThemeResource HudRailBrush}" BorderBrush="{ThemeResource HudPanelStrokeBrush}" BorderThickness="0,0,1,0">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
@@ -41,6 +41,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -53,9 +54,16 @@
                 </StackPanel>
             </Grid>
 
+            <!-- Top tabs (themes with NavMode.Top): the pages in a row, scrolling sideways when they do not fit. -->
+            <Border x:Name="TopNavBar" Grid.Row="1" Visibility="Collapsed" Background="{ThemeResource HudRailBrush}" BorderBrush="{ThemeResource HudPanelStrokeBrush}" BorderThickness="0,1,0,1">
+                <ScrollViewer HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled" HorizontalScrollMode="Auto" VerticalScrollMode="Disabled">
+                    <StackPanel x:Name="TopNav" Orientation="Horizontal" Spacing="2" Padding="12,0,12,0" />
+                </ScrollViewer>
+            </Border>
+
             <InfoBar
                 x:Name="AccessBar"
-                Grid.Row="1"
+                Grid.Row="2"
                 Margin="24,4,24,0"
                 IsClosable="True"
                 IsOpen="False"
@@ -67,7 +75,7 @@
 
             <InfoBar
                 x:Name="UpdateBar"
-                Grid.Row="2"
+                Grid.Row="3"
                 Margin="24,4,24,0"
                 IsClosable="True"
                 IsOpen="False"
@@ -78,25 +86,25 @@
             </InfoBar>
 
             <!-- Benchmark: tests | saved results -->
-            <SelectorBar x:Name="BenchTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
+            <SelectorBar x:Name="BenchTabs" Grid.Row="4" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="BenchRunTab" Tag="bench" />
                 <SelectorBarItem x:Name="StabilityTab" Tag="stability" />
                 <SelectorBarItem x:Name="BenchResultsTab" Tag="benchresults" />
             </SelectorBar>
 
             <!-- Network: Internet test | Wi-Fi test -->
-            <SelectorBar x:Name="NetTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
+            <SelectorBar x:Name="NetTabs" Grid.Row="4" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="NetInternetTab" Tag="network" />
                 <SelectorBarItem x:Name="WifiTab" Tag="wifi" />
             </SelectorBar>
 
             <!-- Report: new report | service history -->
-            <SelectorBar x:Name="ReportTabs" Grid.Row="3" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
+            <SelectorBar x:Name="ReportTabs" Grid.Row="4" Margin="20,0,20,0" Visibility="Collapsed" SelectionChanged="BenchTabs_SelectionChanged">
                 <SelectorBarItem x:Name="ReportRunTab" Tag="report" />
                 <SelectorBarItem x:Name="HistoryTab" Tag="history" />
             </SelectorBar>
 
-            <Frame x:Name="ContentFrame" Grid.Row="4" FontFamily="{StaticResource HudBodyFont}" />
+            <Frame x:Name="ContentFrame" Grid.Row="5" FontFamily="{StaticResource HudBodyFont}" />
         </Grid>
     </Grid>
 </Window>

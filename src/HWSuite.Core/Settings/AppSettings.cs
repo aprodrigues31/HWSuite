@@ -66,6 +66,15 @@ public sealed record AppSettings
     /// <summary>Look of the interface ("hud", "light", "metal"); null is "hud". Applied when the app starts.</summary>
     public string? Skin { get; init; }
 
+    /// <summary>Theme of the interface ("hud", "fluent", "compact", "metal", "terminal", "cockpit", "minimal", "hologram"); null = from <see cref="Skin"/>, else "hud".</summary>
+    public string? Theme { get; init; }
+
+    /// <summary>"dark", "light" or "system"; null = the theme's own default.</summary>
+    public string? ThemeMode { get; init; }
+
+    /// <summary>Custom accent "#RRGGBB" (used when <see cref="Accent"/> is "custom").</summary>
+    public string? AccentCustom { get; init; }
+
     /// <summary>Accent color of the interface ("cyan", "violet", "green", "magenta", "amber"); null is cyan.</summary>
     public string? Accent { get; init; }
 

@@ -35,20 +35,36 @@ public partial class App : Application
     private readonly List<DispatcherQueueTimer> _timers = [];
     private string? _lastError;
 
-    /// <summary>Opens with this skin without saving it (CI screenshots of every skin): --skin light.</summary>
-    public const string SkinArgument = "--skin";
+    /// <summary>Opens with this theme / mode without saving them (CI screenshots of every theme): --theme metal --mode light.</summary>
+    public const string ThemeArgument = "--theme";
+
+    public const string ModeArgument = "--mode";
 
     public App()
     {
         InitializeComponent();
 
         // The skin decides light or dark controls, which Windows only lets an app choose before its first window.
-        Skin = Hud.HudSkins.Of(ArgumentAfter(SkinArgument) ?? Settings.Current.Skin);
+        var settings = Settings.Current;
+        var (legacyTheme, legacyMode) = settings.Skin switch
+        {
+            "light" => ("hud", "light"),
+            "metal" => ("metal", "light"),
+            _ => ((string?)null, (string?)null),
+        };
+        Theme = Hud.HudThemes.Of(ArgumentAfter(ThemeArgument) ?? settings.Theme ?? legacyTheme);
+        Mode = Hud.HudThemes.ModeOf(ArgumentAfter(ModeArgument) ?? settings.ThemeMode ?? legacyMode, Theme);
+        Skin = Hud.HudThemes.Resolve(Theme, Mode);
         RequestedTheme = Skin.Dark ? ApplicationTheme.Dark : ApplicationTheme.Light;
     }
 
     /// <summary>The skin of this session (a change in Settings applies at the next start).</summary>
-    public static Hud.HudSkin Skin { get; private set; } = Hud.HudSkins.Hud;
+    public static Hud.HudSkin Skin { get; private set; } = Hud.HudThemes.Hud.Dark;
+
+    /// <summary>The theme of this session (layout, panels, fonts) and its mode.</summary>
+    public static Hud.HudTheme Theme { get; private set; } = Hud.HudThemes.Hud;
+
+    public static Hud.ThemeMode Mode { get; private set; }
 
     private static string? ArgumentAfter(string name)
     {
@@ -128,7 +144,9 @@ public partial class App : Application
             SensorMonitor.SourceFactory = _ => new MinMaxTrackingSource(new DemoSensorSource(elapsedAtStart: TimeSpan.FromMinutes(5)));
         }
 
+        Hud.HudThemes.Apply(Theme);
         Hud.HudSkins.Apply(Skin);
+        Hud.HudAccents.Custom = Settings.Current.AccentCustom;
         Hud.HudAccents.Apply(Settings.Current.Accent);
         Monitor.Configure(Settings.Current, Settings.EffectiveRules, Settings.LogFolder);
         Settings.Changed += (_, s) => Monitor.Configure(s, Settings.EffectiveRules, Settings.LogFolder);
@@ -274,10 +292,10 @@ public partial class App : Application
     /// </summary>
     private async Task CaptureAsync(string folder)
     {
-        // Another skin (--skin): a few pages are enough to review it, saved as <skin>-NN-<page>.png.
+        // Another theme or mode (--theme / --mode): a few pages are enough to review it, saved as <palette>-NN-<page>.png.
         var other = Skin.Id != Hud.HudSkins.Hud.Id;
         string[] pages = other
-            ? ["dashboard", "sensors", "charts", "inventory", "tuneup", "settings"]
+            ? ["dashboard", "sensors", "settings"]
             : ["dashboard", "sensors", "charts", "inventory", "bench", "stability", "benchresults", "network", "wifi", "devices", "report", "tuneup", "history", "settings", "about"];
         var prefix = other ? Skin.Id + "-" : "";
         var saved = 0;

@@ -6,6 +6,7 @@ using HWSuite.Gui.Services;
 using HWSuite.Providers.Windows;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace HWSuite.Gui.Pages;
 
@@ -29,19 +30,14 @@ public sealed partial class SettingsPage : Page
         LanguageBox.Items.Add("Português (Brasil)");
         LanguageBox.Items.Add("English");
         LanguageHint.Text = s["settings.language.restart"];
-        // The skin (whole look, applied at the next start) and its accent color (applied at once).
-        SkinChoice.Header = s["settings.skin"];
-        foreach (var skin in Hud.HudSkins.All)
-        {
-            SkinChoice.Items.Add(SkinItem(skin));
-        }
-
+        // Appearance: theme and mode (applied at the next start), accent color (applied at once).
+        ThemeHeader.Text = s["settings.skin"];
         SkinHint.Text = s["settings.skin.hint"];
-        ThemeChoice.Header = s["settings.accent"];
-        foreach (var (id, _) in Hud.HudAccents.All)
-        {
-            ThemeChoice.Items.Add(s[$"accent.{id}"]);
-        }
+        ModeChoice.Header = s["settings.mode"];
+        ModeChoice.Items.Add(s["mode.dark"]);
+        ModeChoice.Items.Add(s["mode.light"]);
+        ModeChoice.Items.Add(s["mode.system"]);
+        AccentHeader.Text = s["settings.accent"];
 
         CloseToTraySwitch.Header = s["settings.closeToTray"];
         UpdatesSwitch.Header = s["settings.checkUpdates"];
@@ -85,8 +81,9 @@ public sealed partial class SettingsPage : Page
         _loading = true;
         var settings = App.Settings.Current;
         IntervalBox.Value = settings.IntervalSeconds;
-        ThemeChoice.SelectedIndex = Math.Max(0, Hud.HudAccents.All.ToList().FindIndex(a => a.Id == settings.Accent));
-        SkinChoice.SelectedIndex = Math.Max(0, Hud.HudSkins.All.ToList().FindIndex(k => k.Id == (settings.Skin ?? Hud.HudSkins.Hud.Id)));
+        ModeChoice.SelectedIndex = App.Settings.Current.ThemeMode switch { "light" => 1, "system" => 2, "dark" => 0, _ => App.Mode switch { Hud.ThemeMode.Light => 1, Hud.ThemeMode.System => 2, _ => 0 } };
+        BuildThemeCards();
+        BuildAccentSwatches();
         LanguageBox.SelectedIndex = Math.Max(0, Array.IndexOf(Languages, settings.Language));
         CloseToTraySwitch.IsOn = settings.CloseToTray;
         UpdatesSwitch.IsOn = settings.CheckForUpdates;
@@ -153,37 +150,104 @@ public sealed partial class SettingsPage : Page
         App.Settings.Update(s => s with { IntervalSeconds = (int)Math.Round(args.NewValue) });
     }
 
-    /// <summary>The skin's name with three swatches: background, panel and accent.</summary>
-    private static StackPanel SkinItem(Hud.HudSkin skin)
-    {
-        var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4 };
-        foreach (var hex in new[] { skin.Colors["HudBackgroundBrush"], skin.Colors["HudPanelBrush"], skin.Accents[0].Color })
-        {
-            row.Children.Add(new Microsoft.UI.Xaml.Shapes.Rectangle
-            {
-                Width = 18,
-                Height = 18,
-                Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(Hud.HudSkins.Parse(hex)),
-                Stroke = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Gray),
-                StrokeThickness = 1,
-                VerticalAlignment = VerticalAlignment.Center,
-            });
-        }
+    private string ChosenTheme => App.Settings.Current.Theme ?? App.Theme.Id;
 
-        row.Children.Add(new TextBlock { Text = App.Text[$"skin.{skin.Id}"], Margin = new Thickness(8, 0, 0, 0), VerticalAlignment = VerticalAlignment.Center });
-        return row;
+    /// <summary>One card per theme: a small drawing of its menu, panels and colors, its name and a line about it.</summary>
+    private void BuildThemeCards()
+    {
+        ThemeCards.Children.Clear();
+        var s = App.Text;
+        var dark = App.Skin.Dark;
+        foreach (var theme in Hud.HudThemes.All)
+        {
+            var palette = dark ? theme.Dark : theme.Light;
+            Microsoft.UI.Xaml.Media.Brush B(string key) => new Microsoft.UI.Xaml.Media.SolidColorBrush(Hud.HudSkins.Parse(palette.Colors[key]));
+            var accentHex = Hud.HudAccents.Palette.First(a => a.Id == theme.DefaultAccent);
+            var accent = new Microsoft.UI.Xaml.Media.SolidColorBrush(Hud.HudSkins.Parse(dark ? accentHex.OnDark : accentHex.OnLight));
+            var radius = theme.Shape == Hud.PanelShape.Rounded ? Math.Min(6, theme.Radius / 2) : 0;
+
+            // Mini preview: menu (rail / wide / top), two panels and an accent bar.
+            var preview = new Grid { Width = 176, Height = 96, Background = B("HudBackgroundBrush"), CornerRadius = new CornerRadius(4) };
+            var body = new Grid { Margin = new Thickness(theme.Nav switch { Hud.NavMode.Rail => 22, Hud.NavMode.Wide => 48, _ => 6 }, theme.Nav == Hud.NavMode.Top ? 18 : 6, 6, 6), ColumnSpacing = 5, RowSpacing = 5 };
+            body.ColumnDefinitions.Add(new ColumnDefinition());
+            body.ColumnDefinitions.Add(new ColumnDefinition());
+            body.RowDefinitions.Add(new RowDefinition());
+            body.RowDefinitions.Add(new RowDefinition());
+            for (var i = 0; i < 3; i++)
+            {
+                var panel = new Border
+                {
+                    Background = B("HudPanelBrush"),
+                    BorderBrush = theme.Shape == Hud.PanelShape.Bracket || theme.Glow ? accent : B("HudTagBrush"),
+                    BorderThickness = new Thickness(theme.Shape == Hud.PanelShape.Rounded && !dark ? 0 : 1),
+                    CornerRadius = new CornerRadius(radius),
+                };
+                if (i == 0)
+                {
+                    panel.Child = new Border { Height = 4, Margin = new Thickness(5), VerticalAlignment = VerticalAlignment.Bottom, Background = accent, CornerRadius = new CornerRadius(radius > 0 ? 2 : 0) };
+                }
+
+                Grid.SetRow(panel, i == 0 ? 0 : 1);
+                Grid.SetColumn(panel, i == 2 ? 1 : 0);
+                if (i == 0)
+                {
+                    Grid.SetColumnSpan(panel, 2);
+                }
+
+                body.Children.Add(panel);
+            }
+
+            preview.Children.Add(theme.Nav == Hud.NavMode.Top
+                ? new Border { Height = 12, VerticalAlignment = VerticalAlignment.Top, Background = B("HudRailBrush"), Child = new Border { Width = 26, Height = 2, Margin = new Thickness(8, 0, 0, 0), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Bottom, Background = accent } }
+                : new Border { Width = theme.Nav == Hud.NavMode.Wide ? 42 : 16, HorizontalAlignment = HorizontalAlignment.Left, Background = B("HudRailBrush"), Child = new Border { Height = 3, Margin = new Thickness(3, 10, 3, 0), VerticalAlignment = VerticalAlignment.Top, Background = accent } });
+            preview.Children.Add(body);
+
+            var card = new StackPanel { Spacing = 6, Width = 176 };
+            card.Children.Add(preview);
+            card.Children.Add(new TextBlock { Text = s[$"theme.{theme.Id}"], FontWeight = Microsoft.UI.Text.FontWeights.SemiBold });
+            card.Children.Add(new TextBlock { Text = s[$"theme.{theme.Id}.d"], FontSize = 12, TextWrapping = TextWrapping.Wrap, Foreground = Hud.HudUi.TextDim, Height = 34 });
+            var selected = theme.Id == ChosenTheme;
+            var button = new Button
+            {
+                Content = card,
+                Padding = new Thickness(8),
+                BorderThickness = new Thickness(2),
+                BorderBrush = selected ? Hud.HudUi.Accent : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
+                Tag = theme.Id,
+            };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, s[$"theme.{theme.Id}"]);
+            button.Click += async (_, _) => await ChooseThemeAsync(theme);
+            ThemeCards.Children.Add(button);
+        }
     }
 
-    private async void SkinChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async Task ChooseThemeAsync(Hud.HudTheme theme)
     {
-        if (_loading || SkinChoice.SelectedIndex < 0)
+        // A new theme starts with its own accent (readable on its colors); the user can change it after.
+        App.Settings.Update(x => x with { Theme = theme.Id, Accent = theme.Id == ChosenTheme ? x.Accent : theme.DefaultAccent });
+        BuildThemeCards();
+        await OfferRestartAsync(App.Text[$"theme.{theme.Id}"]);
+    }
+
+    private async void ModeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_loading || ModeChoice.SelectedIndex < 0)
         {
             return;
         }
 
-        var skin = Hud.HudSkins.All[SkinChoice.SelectedIndex];
-        App.Settings.Update(s => s with { Skin = skin.Id });
-        if (skin.Id == App.Skin.Id)
+        var mode = ModeChoice.SelectedIndex switch { 1 => "light", 2 => "system", _ => "dark" };
+        App.Settings.Update(x => x with { ThemeMode = mode });
+        await OfferRestartAsync(App.Text[$"mode.{(mode == "light" ? "light" : mode == "system" ? "system" : "dark")}"]);
+    }
+
+    /// <summary>Theme and mode take effect at the next start: offer to restart now (nothing to do if unchanged).</summary>
+    private async Task OfferRestartAsync(string what)
+    {
+        var settings = App.Settings.Current;
+        var theme = Hud.HudThemes.Of(settings.Theme);
+        var mode = Hud.HudThemes.ModeOf(settings.ThemeMode, theme);
+        if (theme.Id == App.Theme.Id && mode == App.Mode)
         {
             return;
         }
@@ -193,7 +257,7 @@ public sealed partial class SettingsPage : Page
         {
             XamlRoot = XamlRoot,
             Title = t["settings.skin.restartTitle"],
-            Content = new TextBlock { Text = t.Format("settings.skin.restartBody", t[$"skin.{skin.Id}"]), TextWrapping = TextWrapping.Wrap },
+            Content = new TextBlock { Text = t.Format("settings.skin.restartBody", what), TextWrapping = TextWrapping.Wrap },
             PrimaryButtonText = t["settings.skin.restartNow"],
             CloseButtonText = t["settings.skin.restartLater"],
             DefaultButton = ContentDialogButton.Primary,
@@ -204,14 +268,71 @@ public sealed partial class SettingsPage : Page
         }
     }
 
-    private void ThemeChoice_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    /// <summary>Round swatches for the 14 accents (shades for this theme's background) and a custom color picker.</summary>
+    private void BuildAccentSwatches()
     {
-        if (!_loading && ThemeChoice.SelectedIndex >= 0)
+        AccentSwatches.Children.Clear();
+        var s = App.Text;
+        var current = App.Settings.Current.Accent ?? App.Theme.DefaultAccent;
+        foreach (var (id, color) in Hud.HudAccents.All)
         {
-            var accent = Hud.HudAccents.All[ThemeChoice.SelectedIndex].Id;
-            App.Settings.Update(s => s with { Accent = accent });
-            Hud.HudAccents.Apply(accent);
+            AccentSwatches.Children.Add(Swatch(id, s[$"accent.{id}"], color, current == id));
         }
+
+        // Custom: a swatch showing the chosen color (or a rainbow ring) that opens a color picker.
+        var custom = Hud.HudAccents.TryParse(App.Settings.Current.AccentCustom, out var c) ? c : Microsoft.UI.Colors.Gray;
+        var picker = new ColorPicker { Color = custom, IsAlphaEnabled = false, IsMoreButtonVisible = true, ColorSpectrumShape = ColorSpectrumShape.Ring };
+        var apply = new Button { Content = s["settings.accent.apply"], Style = Hud.HudUi.Style("AccentButtonStyle"), HorizontalAlignment = HorizontalAlignment.Right };
+        var flyoutContent = new StackPanel { Spacing = 10 };
+        flyoutContent.Children.Add(picker);
+        flyoutContent.Children.Add(apply);
+        var flyout = new Flyout { Content = flyoutContent };
+        var customButton = Swatch("custom", s["settings.accent.custom"], custom, current == "custom", plus: true);
+        FlyoutBase.SetAttachedFlyout(customButton, flyout);
+        customButton.Click += (_, _) => FlyoutBase.ShowAttachedFlyout(customButton);
+        apply.Click += (_, _) =>
+        {
+            var hex = $"#{picker.Color.R:X2}{picker.Color.G:X2}{picker.Color.B:X2}";
+            App.Settings.Update(x => x with { Accent = "custom", AccentCustom = hex });
+            Hud.HudAccents.Custom = hex;
+            Hud.HudAccents.Apply("custom");
+            flyout.Hide();
+            BuildAccentSwatches();
+        };
+        AccentSwatches.Children.Add(customButton);
+    }
+
+    private Button Swatch(string id, string name, Windows.UI.Color color, bool selected, bool plus = false)
+    {
+        var dot = new Grid { Width = 28, Height = 28 };
+        dot.Children.Add(new Microsoft.UI.Xaml.Shapes.Ellipse { Fill = new Microsoft.UI.Xaml.Media.SolidColorBrush(color) });
+        if (plus)
+        {
+            dot.Children.Add(new FontIcon { Glyph = "\uE710", FontSize = 12, Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White) });
+        }
+
+        var button = new Button
+        {
+            Content = dot,
+            Padding = new Thickness(3),
+            CornerRadius = new CornerRadius(20),
+            BorderThickness = new Thickness(2),
+            BorderBrush = selected ? Hud.HudUi.Text : new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
+            Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.Transparent),
+        };
+        ToolTipService.SetToolTip(button, name);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, name);
+        if (!plus)
+        {
+            button.Click += (_, _) =>
+            {
+                App.Settings.Update(x => x with { Accent = id });
+                Hud.HudAccents.Apply(id);
+                BuildAccentSwatches();
+            };
+        }
+
+        return button;
     }
 
     private void CloseToTraySwitch_Toggled(object sender, RoutedEventArgs e)

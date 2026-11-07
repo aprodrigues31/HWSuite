@@ -20,7 +20,7 @@ public static class Glow
 {
     public static void Attach(FrameworkElement host, UIElement target, Brush color, float blur = 12, float opacity = 0.85f)
     {
-        if (!HudSkins.Current.Dark)
+        if (!HudSkins.Current.Dark || !HudThemes.Current.Glow)
         {
             return; // a neon glow only reads on a dark background; on light skins it just blurs the text
         }

@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Adicionado
+- **8 temas** que mudam a interface inteira, em Configurações › Geral: **HUD Neon** (o original), **Windows 11**, **Técnico compacto**, **Metal futurista**, **Terminal retrô**, **Cockpit**, **Minimal** e **Holograma**. Cada tema define o menu (lateral estreito, lateral largo com nomes ou abas no topo), o formato dos painéis (chanfrado, arredondado, reto ou com cantoneiras), as fontes, o brilho e a grade de fundo.
+- **Modo Claro, Escuro ou Igual ao Windows** para todos os temas.
+- **14 cores de destaque**, com tons ajustados para fundo claro e escuro, e **cor personalizada** com seletor de cores. A cor muda na hora; tema e modo, ao reiniciar o HWSuite.
+
 ## [0.23.1] - 2026-11-07
 
 ### Corrigido

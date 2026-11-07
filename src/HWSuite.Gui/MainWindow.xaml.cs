@@ -49,17 +49,32 @@ public sealed partial class MainWindow : Window
         AppWindow.Closing += AppWindow_Closing;
         Activated += (_, _) => _isShown = AppWindow.IsVisible;
 
-        RailTop.Children.Add(RailItem("dashboard", "\uF246", s["rail.dashboard"], s["rail.dashboard.tip"]));
-        RailTop.Children.Add(RailItem("inventory", "\uE950", s["rail.hardware"], s["app.nav.inventory"]));
-        RailTop.Children.Add(RailItem("sensors", "\uE9D9", s["rail.sensors"], s["app.nav.sensors"]));
-        RailTop.Children.Add(RailItem("charts", "\uE9D2", s["rail.charts"], s["charts.title"]));
-        RailTop.Children.Add(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
-        RailTop.Children.Add(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
-        RailTop.Children.Add(RailItem("devices", "\uE968", s["rail.devices"], s["snmp.title"]));
-        RailTop.Children.Add(RailItem("tuneup", "\uE90F", s["rail.maintenance"], s["tune.title"]));
-        RailTop.Children.Add(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
-        RailBottom.Children.Add(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
-        RailBottom.Children.Add(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
+        // The theme decides where the pages are listed: narrow rail, wide side menu or tabs on top.
+        var nav = Hud.HudThemes.Current.Nav;
+        if (nav == Hud.NavMode.Wide)
+        {
+            RailColumn.Width = new GridLength(232);
+        }
+        else if (nav == Hud.NavMode.Top)
+        {
+            RailColumn.Width = new GridLength(0);
+            RailBorder.Visibility = Visibility.Collapsed;
+            TopNavBar.Visibility = Visibility.Visible;
+        }
+
+        void Top(RadioButton item) => (nav == Hud.NavMode.Top ? TopNav : RailTop).Children.Add(item);
+        void Bottom(RadioButton item) => (nav == Hud.NavMode.Top ? TopNav : RailBottom).Children.Add(item);
+        Top(RailItem("dashboard", "\uF246", s["rail.dashboard"], s["rail.dashboard.tip"]));
+        Top(RailItem("inventory", "\uE950", s["rail.hardware"], s["app.nav.inventory"]));
+        Top(RailItem("sensors", "\uE9D9", s["rail.sensors"], s["app.nav.sensors"]));
+        Top(RailItem("charts", "\uE9D2", s["rail.charts"], s["charts.title"]));
+        Top(RailItem("bench", "\uEC4A", s["rail.bench"], s["app.nav.bench"]));
+        Top(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
+        Top(RailItem("devices", "\uE968", s["rail.devices"], s["snmp.title"]));
+        Top(RailItem("tuneup", "\uE90F", s["rail.maintenance"], s["tune.title"]));
+        Top(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
+        Bottom(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
+        Bottom(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
         BenchRunTab.Text = s["app.nav.benchRun"];
         StabilityTab.Text = s["stab.tab"];
         ReportRunTab.Text = s["hist.tab.report"];
@@ -96,6 +111,34 @@ public sealed partial class MainWindow : Window
 
     private RadioButton RailItem(string tag, string glyph, string label, string tooltip)
     {
+        var nav = Hud.HudThemes.Current.Nav;
+        if (nav != Hud.NavMode.Rail)
+        {
+            // Wide menu and top tabs: icon and the name in a row.
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = nav == Hud.NavMode.Wide ? 14 : 8 };
+            row.Children.Add(new FontIcon { Glyph = glyph, FontSize = nav == Hud.NavMode.Wide ? 16 : 14, VerticalAlignment = VerticalAlignment.Center });
+            row.Children.Add(new TextBlock
+            {
+                Text = nav == Hud.NavMode.Wide ? label : label.ToUpper(App.Text.Culture),
+                FontSize = nav == Hud.NavMode.Wide ? 14 : 12.5,
+                CharacterSpacing = nav == Hud.NavMode.Wide ? 0 : 40,
+                VerticalAlignment = VerticalAlignment.Center,
+                TextTrimming = TextTrimming.CharacterEllipsis,
+            });
+            var wide = new RadioButton { Content = row, Tag = tag, Style = Hud.HudUi.Style(nav == Hud.NavMode.Wide ? "HudWideItemStyle" : "HudTopItemStyle") };
+            ToolTipService.SetToolTip(wide, tooltip);
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(wide, tooltip);
+            wide.Checked += (_, _) =>
+            {
+                if (_navigating is null)
+                {
+                    Show(tag);
+                }
+            };
+            _rail[tag] = wide;
+            return wide;
+        }
+
         var content = new StackPanel { Spacing = 6 };
         content.Children.Add(new FontIcon { Glyph = glyph, FontSize = 20, HorizontalAlignment = HorizontalAlignment.Center });
         content.Children.Add(new TextBlock

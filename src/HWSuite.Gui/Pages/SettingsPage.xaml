@@ -2,7 +2,8 @@
 <Page
     x:Class="HWSuite.Gui.Pages.SettingsPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:hud="using:HWSuite.Gui.Hud">
     <Page.Resources>
         <Style x:Key="Card" TargetType="Border">
             <Setter Property="Padding" Value="16,14" />
@@ -31,11 +32,15 @@
                         <ComboBox x:Name="LanguageBox" MinWidth="220" SelectionChanged="LanguageBox_SelectionChanged" />
                         <TextBlock x:Name="LanguageHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
                     </StackPanel>
-                    <StackPanel Spacing="4">
-                        <RadioButtons x:Name="SkinChoice" SelectionChanged="SkinChoice_SelectionChanged" />
+                    <!-- Appearance: theme (cards), mode, accent color -->
+                    <StackPanel Spacing="10">
+                        <TextBlock x:Name="ThemeHeader" />
+                        <hud:WrapPanel x:Name="ThemeCards" Spacing="12" LineSpacing="12" />
                         <TextBlock x:Name="SkinHint" Foreground="{ThemeResource TextFillColorSecondaryBrush}" TextWrapping="Wrap" />
+                        <RadioButtons x:Name="ModeChoice" MaxColumns="3" SelectionChanged="ModeChoice_SelectionChanged" />
+                        <TextBlock x:Name="AccentHeader" />
+                        <hud:WrapPanel x:Name="AccentSwatches" Spacing="8" LineSpacing="8" />
                     </StackPanel>
-                    <RadioButtons x:Name="ThemeChoice" SelectionChanged="ThemeChoice_SelectionChanged" />
                     <ToggleSwitch x:Name="CloseToTraySwitch" Toggled="CloseToTraySwitch_Toggled" />
                     <StackPanel Spacing="6">
                         <ToggleSwitch x:Name="UpdatesSwitch" Toggled="UpdatesSwitch_Toggled" />

@@ -12,10 +12,59 @@ namespace HWSuite.Gui.Hud;
 /// <summary>The accent colors offered in Settings (the HUD's one bright color), in the current skin's shades.</summary>
 public static class HudAccents
 {
-    public static IReadOnlyList<(string Id, Color Color)> All =>
-        [.. HudSkins.Current.Accents.Select(a => (a.Id, HudSkins.Parse(a.Color)))];
+    /// <summary>The accent colors offered in Settings, each with a shade for dark and one for light backgrounds.</summary>
+    public static IReadOnlyList<HudAccent> Palette { get; } =
+    [
+        new("cyan", "#FF4FE3FF", "#FF1288A8"),
+        new("blue", "#FF4C9BFF", "#FF2563C9"),
+        new("violet", "#FF9D7CFF", "#FF6A52C9"),
+        new("purple", "#FFC77DFF", "#FF8B3FC9"),
+        new("magenta", "#FFFF4FD8", "#FFB8388F"),
+        new("pink", "#FFFF7AA8", "#FFC2255C"),
+        new("red", "#FFFF5A5A", "#FFC92A2A"),
+        new("orange", "#FFFF8A3D", "#FFC75D0A"),
+        new("amber", "#FFFFB547", "#FFB86E00"),
+        new("yellow", "#FFFFE04F", "#FF8F7200"),
+        new("lime", "#FFB4F04F", "#FF5C8A00"),
+        new("green", "#FF39F5B0", "#FF16936A"),
+        new("teal", "#FF2EE6D6", "#FF0B7A75"),
+        new("silver", "#FFC8D2DC", "#FF5A6672"),
+    ];
 
-    public static Color Of(string? id) => All.FirstOrDefault(a => a.Id == id).Color is { A: > 0 } c ? c : All[0].Color;
+    /// <summary>Custom accent ("#RRGGBB") chosen with the color picker, used when the accent id is "custom".</summary>
+    public static string? Custom { get; set; }
+
+    /// <summary>The accents for the palette in use (shades for its background), as (id, color).</summary>
+    public static IReadOnlyList<(string Id, Color Color)> All =>
+        [.. Palette.Select(a => (a.Id, HudSkins.Parse(HudSkins.Current.Dark ? a.OnDark : a.OnLight)))];
+
+    /// <summary>The color of an accent id ("custom" = <see cref="Custom"/>; unknown = the theme's default).</summary>
+    public static Color Of(string? id)
+    {
+        if (id == "custom" && TryParse(Custom, out var custom))
+        {
+            return custom;
+        }
+
+        var all = All;
+        var match = all.FirstOrDefault(a => a.Id == (id ?? HudThemes.Current.DefaultAccent));
+        return match.Color is { A: > 0 } c ? c : all.First(a => a.Id == HudThemes.Current.DefaultAccent).Color;
+    }
+
+    public static bool TryParse(string? hex, out Color color)
+    {
+        color = default;
+        var h = hex?.Trim().TrimStart('#');
+        if (h is null || (h.Length != 6 && h.Length != 8) || !uint.TryParse(h, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.InvariantCulture, out var v))
+        {
+            return false;
+        }
+
+        color = h.Length == 6
+            ? Color.FromArgb(255, (byte)(v >> 16), (byte)(v >> 8), (byte)v)
+            : Color.FromArgb((byte)(v >> 24), (byte)(v >> 16), (byte)(v >> 8), (byte)v);
+        return true;
+    }
 
     /// <summary>
     /// Recolors the accent everywhere: the HUD brushes (changed in place, so what is on screen follows) and the
