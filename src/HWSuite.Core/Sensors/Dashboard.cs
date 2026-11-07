@@ -26,7 +26,37 @@ public sealed record GpuReadout(
     double? MemoryTotalMb);
 
 /// <summary>System memory in use.</summary>
-public sealed record MemoryReadout(double? UsedGb, double? TotalGb, double? Load);
+public sealed record MemoryReadout(double? UsedGb, double? TotalGb, double? Load)
+{
+    /// <summary>"DDR4 · 3600 MT/s" from the installed modules (SMBIOS), or null.</summary>
+    public static string? Label(HWSuite.Core.Model.MemoryInfo? memory)
+    {
+        var modules = memory?.Modules.Where(m => m.SizeBytes > 0).ToList() ?? [];
+        var type = modules.Select(m => m.Type).FirstOrDefault(t => !string.IsNullOrWhiteSpace(t) && !t.Equals("Unknown", StringComparison.OrdinalIgnoreCase));
+        var speed = modules.Select(m => m.ConfiguredSpeedMts ?? m.SpeedMts).Where(v => v > 0).DefaultIfEmpty().Max();
+        return (type, speed) switch
+        {
+            (null, null or 0) => null,
+            (null, var s) => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{s} MT/s"),
+            (var t, null or 0) => t,
+            (var t, var s) => string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{t} · {s} MT/s"),
+        };
+    }
+
+    /// <summary>"RX 7800 XT" out of "AMD Radeon RX 7800 XT" (maker and brand words dropped), for a short label.</summary>
+    public static string ShortGpuName(string name)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        var n = System.Text.RegularExpressions.Regex.Replace(name, @"\((R|TM)\)", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        foreach (var word in new[] { "NVIDIA", "AMD", "ATI", "Intel", "GeForce", "Radeon", "Graphics", "Laptop GPU" })
+        {
+            n = System.Text.RegularExpressions.Regex.Replace(n, $@"\b{word}\b", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        }
+
+        n = System.Text.RegularExpressions.Regex.Replace(n, @"\s+", " ").Trim();
+        return n.Length > 0 ? n : name.Trim();
+    }
+}
 
 /// <summary>One drive: temperature and how full it is.</summary>
 public sealed record DriveReadout(string Name, double? Temperature, double? UsedPercent);

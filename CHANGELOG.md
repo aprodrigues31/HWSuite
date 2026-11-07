@@ -8,6 +8,9 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+### Alterado
+- Painel: o bloco **Memória** agora mostra separadamente a **RAM** do sistema (com tipo e velocidade, ex.: DDR4 · 3600 MT/s) e a **VRAM** da placa de vídeo, cada uma com uso, porcentagem, barra e espaço livre. A VRAM saiu da linha pequena do bloco da placa de vídeo.
+
 ## [0.22.0] - 2026-10-29
 
 ### Adicionado

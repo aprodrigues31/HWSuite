@@ -47,12 +47,18 @@ public sealed partial class DashboardPage : Page
             value.Text.Foreground = HudUi.Accent;
         }
 
-        foreach (var value in new[] { GpuClock, MemUsed })
+        GpuClock.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
+        GpuClock.Text.FontSize = 26;
+        GpuClock.Text.Foreground = HudUi.Text;
+        foreach (var value in new[] { MemUsed, VramUsed })
         {
             value.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
-            value.Text.FontSize = 26;
+            value.Text.FontSize = 22;
             value.Text.Foreground = HudUi.Text;
         }
+
+        MemLabel.Text = "RAM";
+        VramLabel.Text = "VRAM";
 
         ClockUnit.Text = "GHz";
         PowerUnit.Text = s["dash.packageUnit"];
@@ -62,9 +68,42 @@ public sealed partial class DashboardPage : Page
         ShowClock();
     }
 
+    /// <summary>"DDR4 · 3600 MT/s", read once from SMBIOS (quick, no driver needed).</summary>
+    private static string? s_ramLabel;
+    private static bool s_ramLabelAsked;
+
+    private static void ReadRamLabel()
+    {
+        if (s_ramLabelAsked)
+        {
+            return;
+        }
+
+        s_ramLabelAsked = true;
+        if (App.IsDemo)
+        {
+            s_ramLabel = "DDR4 · 3600 MT/s";
+            return;
+        }
+
+        _ = Task.Run(() =>
+        {
+            try
+            {
+                var smbios = HWSuite.Hosting.ProviderCatalog.Default().Where(p => p.Name == "SMBIOS");
+                s_ramLabel = MemoryReadout.Label(new HWSuite.Core.Collection.InventoryCollector(smbios).Collect().Memory);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.ComponentModel.Win32Exception)
+            {
+                // no label
+            }
+        });
+    }
+
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
         base.OnNavigatedTo(e);
+        ReadRamLabel();
         App.Monitor.Updated += OnUpdated;
         _clock.Start();
         if (App.Monitor.Latest is { } latest)
@@ -143,17 +182,24 @@ public sealed partial class DashboardPage : Page
         GpuPower.Text = gpu.PowerW is { } gw ? $"{gw.ToString("0", c)} W" : "";
         GpuBar.Value = (gpu.Load ?? 0) / 100;
         GpuLoad.Text = s.Format("dash.loadValue", N(gpu.Load)).ToUpper(c);
-        GpuVram.Text = gpu.MemoryUsedMb is { } used && gpu.MemoryTotalMb is { } total
-            ? $"VRAM {(used / 1024).ToString("0.0", c)} / {(total / 1024).ToString("0", c)} GB"
-            : "";
-
-        // Memory
+        // Memory: system RAM, then the graphics card's VRAM (never added together: they are separate memories).
         var mem = d.Memory;
-        MemUsed.Text.Text = mem.UsedGb is { } u && mem.TotalGb is { } tot ? $"{u.ToString("0.0", c)} / {tot.ToString("0.0", c)} GB" : "—";
-        MemPercent.Text = mem.Load is { } ml ? $"{ml:0}%" : "";
-        MemBar.Value = (mem.Load ?? 0) / 100;
-        MemBar.Fill = mem.Load >= 90 ? HudUi.Warn : null;
-        MemFree.Text = mem.TotalGb is { } all && mem.UsedGb is { } inUse ? s.Format("dash.free", (all - inUse).ToString("0.0", c)).ToUpper(c) : "";
+        ShowMemory(MemUsed, MemPercent, MemBar, MemFree, mem.UsedGb, mem.TotalGb, mem.Load);
+        MemNote.Text = (s_ramLabel ?? "").ToUpper(c);
+        var vramUsed = gpu.MemoryUsedMb / 1024;
+        var vramTotal = gpu.MemoryTotalMb / 1024;
+        ShowMemory(VramUsed, VramPercent, VramBar, VramFree, vramUsed, vramTotal,
+            vramUsed is { } vu && vramTotal is > 0 and var vt ? vu / vt * 100 : null);
+        VramNote.Text = (gpu.Name is { } gn ? MemoryReadout.ShortGpuName(gn) : "").ToUpper(c);
+
+        void ShowMemory(GlowText value, TextBlock percent, SegmentBar bar, TextBlock free, double? usedGb, double? totalGb, double? load)
+        {
+            value.Text.Text = usedGb is { } u && totalGb is { } tot ? $"{u.ToString("0.0", c)} / {tot.ToString("0.0", c)} GB" : "—";
+            percent.Text = load is { } p ? $"{p:0}%" : "";
+            bar.Value = Math.Clamp((load ?? 0) / 100, 0, 1);
+            bar.Fill = load >= 90 ? HudUi.Warn : null;
+            free.Text = totalGb is { } all && usedGb is { } inUse ? s.Format("dash.free", Math.Max(0, all - inUse).ToString("0.0", c)).ToUpper(c) : "";
+        }
 
         // Temperature history
         var series = new List<ChartSeries>();

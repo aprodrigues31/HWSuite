@@ -135,4 +135,21 @@ public sealed class DashboardTests
         Assert.True(SensorCategories.Parse("Storage, Cpu,Nonsense").SetEquals([SensorCategory.Cpu, SensorCategory.Storage]));
         Assert.Empty(SensorCategories.Parse(null));
     }
+
+    [Fact]
+    public void Memory_labels_name_the_ram_and_the_card_shortly()
+    {
+        var memory = new HWSuite.Core.Model.MemoryInfo();
+        memory.Modules.Add(new HWSuite.Core.Model.MemoryModule { SizeBytes = 16L << 30, Type = "DDR4", SpeedMts = 3200, ConfiguredSpeedMts = 3600 });
+        memory.Modules.Add(new HWSuite.Core.Model.MemoryModule { SizeBytes = 16L << 30, Type = "DDR4", SpeedMts = 3200 });
+        memory.Modules.Add(new HWSuite.Core.Model.MemoryModule { SizeBytes = 0, Type = "Unknown" }); // empty slot
+        Assert.Equal("DDR4 · 3600 MT/s", MemoryReadout.Label(memory));
+        Assert.Null(MemoryReadout.Label(null));
+        Assert.Null(MemoryReadout.Label(new HWSuite.Core.Model.MemoryInfo()));
+
+        Assert.Equal("RX 7800 XT", MemoryReadout.ShortGpuName("AMD Radeon RX 7800 XT"));
+        Assert.Equal("RTX 4070 SUPER", MemoryReadout.ShortGpuName("NVIDIA GeForce RTX 4070 SUPER"));
+        Assert.Equal("Arc A770", MemoryReadout.ShortGpuName("Intel(R) Arc(TM) A770 Graphics"));
+        Assert.Equal("Radeon", MemoryReadout.ShortGpuName("Radeon"));
+    }
 }
