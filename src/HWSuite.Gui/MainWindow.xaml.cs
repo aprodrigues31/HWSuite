@@ -102,11 +102,12 @@ public sealed partial class MainWindow : Window
         {
             Text = label.ToUpper(App.Text.Culture),
             FontFamily = Hud.HudUi.Font("HudMonoFont"),
-            FontSize = label.Length > 9 ? 9.5 : 10.5, // "MANUTENÇÃO" / "MAINTENANCE" fit the rail
-            CharacterSpacing = label.Length > 9 ? 0 : 20,
+            // Long names ("DISPOSITIVOS", "MANUTENÇÃO") a bit smaller so every label fits with room on both sides.
+            FontSize = label.Length > 10 ? 9.5 : label.Length > 8 ? 10 : 10.5,
+            CharacterSpacing = label.Length > 8 ? 10 : 20,
             HorizontalAlignment = HorizontalAlignment.Center,
             TextAlignment = TextAlignment.Center,
-            MaxWidth = 82,
+            MaxWidth = 94,
             TextTrimming = TextTrimming.CharacterEllipsis,
         });
         var item = new RadioButton { Content = content, Tag = tag, Style = Hud.HudUi.Style("HudRailItemStyle") };
