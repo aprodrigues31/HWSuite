@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.26.1] - 2026-11-08
+
+### Corrigido
+- Painel: no Full HD o novo layout não cabia na tela. Os mostradores agora seguem também a altura da janela e diminuem depois dos gráficos quando falta espaço; as tensões da fonte ficam numa linha só.
+
 ## [0.26.0] - 2026-11-08
 
 ### Alterado
@@ -344,7 +349,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.26.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.26.1...HEAD
+[0.26.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.1
 [0.26.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.0
 [0.25.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.1
 [0.25.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.0
