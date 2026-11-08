@@ -34,7 +34,13 @@ public sealed partial class DashboardPage : Page
         CpuTag.Text = ("// " + s["dash.cpu"]).ToUpper(c);
         GpuTag.Text = ("// " + s["dash.gpu"]).ToUpper(c);
         MemTag.Text = ("// " + s["dash.memory"]).ToUpper(c);
-        ClockLabel.Text = s["dash.clock"].ToUpper(c);
+        ClockLabel.Text = s["dash.maxTemp"].ToUpper(c);
+        GpuPowerLabel.Text = s["dash.power"].ToUpper(c);
+        GpuFanLabel.Text = s["dash.fan"].ToUpper(c);
+        GpuMemLabel.Text = s["dash.memory"].ToUpper(c);
+        GpuPowerUnit.Text = s["dash.boardUnit"];
+        GpuFanUnit.Text = "RPM";
+        GpuMemUnit.Text = "MHz";
         PowerLabel.Text = s["dash.power"].ToUpper(c);
         VoltLabel.Text = "VCORE";
         ThreadsLabel.Text = s["dash.threads"].ToUpper(c);
@@ -42,7 +48,16 @@ public sealed partial class DashboardPage : Page
         CoolingTag.Text = ("// " + s["dash.cooling"]).ToUpper(c);
         StorageTag.Text = ("// " + s["dash.storage"]).ToUpper(c);
         MachineText.Text = $"{Environment.MachineName} · {(App.IsDemo ? "Windows 11 Pro 25H2 · build 26200.7171 · x64" : HWSuite.Providers.Windows.WindowsOsProvider.Describe() ?? RuntimeInformation.OSDescription)}";
-        NetBody.Content = _network.Root;
+        if (_view is null)
+        {
+            NetSlot.Content = _network.Root;
+            NetBody.Visibility = Visibility.Collapsed;
+        }
+        else
+        {
+            NetBody.Content = _network.Root;
+        }
+
         SizeChanged += (_, e) => Fit(e.NewSize);
         LayoutUpdated += (_, _) =>
         {
@@ -52,7 +67,6 @@ public sealed partial class DashboardPage : Page
                 Fit(new Windows.Foundation.Size(ActualWidth, ActualHeight));
             }
 
-            Arrange();
             FitHeight();
         };
         BoardName.Text = Environment.MachineName.ToUpper(c);
@@ -64,15 +78,12 @@ public sealed partial class DashboardPage : Page
             AltBody.Visibility = Visibility.Visible;
         }
 
-        foreach (var value in new[] { ClockValue, PowerValue, VoltValue })
+        foreach (var value in new[] { ClockValue, PowerValue, VoltValue, GpuPowerValue, GpuFanValue, GpuMemValue })
         {
             value.Text.Style = HudUi.Style("HudValueStyle");
             value.Text.Foreground = HudUi.Accent;
         }
 
-        GpuClock.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
-        GpuClock.Text.FontSize = 26;
-        GpuClock.Text.Foreground = HudUi.Text;
         foreach (var value in new[] { MemUsed, VramUsed })
         {
             value.Text.FontFamily = HudUi.Font("HudMonoStrongFont");
@@ -83,12 +94,15 @@ public sealed partial class DashboardPage : Page
         MemLabel.Text = "RAM";
         VramLabel.Text = "VRAM";
 
-        ClockUnit.Text = "GHz";
+        ClockUnit.Text = s["dash.session"];
         PowerUnit.Text = s["dash.packageUnit"];
         VoltUnit.Text = "V";
         CpuRing.Set(0, "TEMP", "—", "");
         CpuLoadRing.Set(0, s["dash.load"].ToUpper(c), "—", "");
         CpuClockRing.Set(0, "CLOCK", "—", "");
+        GpuTempRing.Set(0, "TEMP", "—", "");
+        GpuLoadRing.Set(0, s["dash.load"].ToUpper(c), "—", "");
+        GpuClockRing.Set(0, "CLOCK", "—", "");
         _clock.Tick += (_, _) => ShowClock();
         ShowClock();
     }
@@ -187,6 +201,7 @@ public sealed partial class DashboardPage : Page
         var h = vh / _scale;
         SizeDials(w);
         TempChart.Height = Math.Clamp(h * 0.2, 100, 300);
+        _network.PingHeight = TempChart.Height;
         _fitPasses = 0;
     }
 
@@ -199,57 +214,16 @@ public sealed partial class DashboardPage : Page
     /// </summary>
     private void SizeDials(double bodyWidth)
     {
-        // Processor panel ≈ 2/3 of the body when side by side, the whole body when stacked.
-        var panel = (ChartRow.ColumnDefinitions.Count == 2 ? (bodyWidth - 56) * 2 / 3 : bodyWidth - 56) - 46;
-        var d = Math.Round(Math.Clamp(((panel * 0.48) - 28) / 3, 112, 210) / 2) * 2;
+        // Each block is half the body when side by side, the whole body when stacked; three dials share its width.
+        var panel = (TopRow.ColumnDefinitions.Count == 2 ? (bodyWidth - 56 - 14) / 2 : bodyWidth - 56) - 46;
+        var d = Math.Round(Math.Clamp(((panel - 16) / 3) * 0.8, 110, 220) / 2) * 2;
         CpuLoadRing.Diameter = CpuRing.Diameter = CpuClockRing.Diameter = d;
+        GpuLoadRing.Diameter = GpuTempRing.Diameter = GpuClockRing.Diameter = d;
     }
-    private bool _compact;
+
     private IReadOnlyList<DriveReadout> _drives = [];
-
-    /// <summary>
-    /// Wide window, HUD theme: the network panel goes under the temperature chart and the drives under cooling,
-    /// so two short columns replace two full-width rows and everything fits a Full HD screen. Narrow: back to rows.
-    /// </summary>
-    private void Arrange()
-    {
-        var compact = _view is null && ChartRow.ColumnDefinitions.Count == 2;
-        if (compact == _compact)
-        {
-            return;
-        }
-
-        _compact = compact;
-        Detach(NetBody);
-        Detach(StoragePanel);
-        if (compact)
-        {
-            LeftCol.Children.Add(NetBody);
-            RightCol.Children.Add(StoragePanel);
-        }
-        else
-        {
-            HudBody.Children.Add(StoragePanel);
-            Body.Children.Add(NetBody);
-        }
-
-        _driveNames = "";
-        ShowDrives(_drives);
-        if (Body.Width > 0)
-        {
-            SizeDials(Body.Width);
-        }
-
-        _fitPasses = 0;
-    }
-
-    private static void Detach(FrameworkElement e)
-    {
-        if (e.Parent is Panel p)
-        {
-            p.Children.Remove(e);
-        }
-    }
+    private double _maxCpuTemp;
+    private double _maxGpuClock = 1000;
 
     /// <summary>
     /// Makes the dashboard fit the window height (no scrolling on Full HD and up): the temperature chart, then the
@@ -284,6 +258,7 @@ public sealed partial class DashboardPage : Page
             if (chart < TempChart.Height - 1)
             {
                 TempChart.Height = chart;
+                _network.PingHeight = chart;
                 return;
             }
 
@@ -296,6 +271,7 @@ public sealed partial class DashboardPage : Page
         if (grown > TempChart.Height + 1)
         {
             TempChart.Height = grown;
+            _network.PingHeight = grown;
             return;
         }
 
@@ -356,7 +332,8 @@ public sealed partial class DashboardPage : Page
         CpuLoadRing.Set((cpu.Load ?? 0) / 100, s["dash.load"].ToUpper(c), cpu.Load is { } l ? $"{l:0}%" : "—", "CPU", null, cpu.Load >= 95);
         _maxClock = Math.Max(_maxClock, cpu.ClockMhz ?? 0);
         CpuClockRing.Set((cpu.ClockMhz ?? 0) / _maxClock, "CLOCK", N(cpu.ClockMhz / 1000, "0.00"), "GHz");
-        ClockValue.Text.Text = N(cpu.ClockMhz / 1000, "0.00");
+        _maxCpuTemp = Math.Max(_maxCpuTemp, cpu.Temperature ?? 0);
+        ClockValue.Text.Text = _maxCpuTemp > 0 ? $"{_maxCpuTemp:0}°" : "—";
         PowerValue.Text.Text = N(cpu.PowerW, "0.0");
         VoltValue.Text.Text = N(cpu.CoreVolts, "0.000");
         ThreadBars.Set(cpu.ThreadLoads);
@@ -366,10 +343,19 @@ public sealed partial class DashboardPage : Page
         var gpu = d.Gpu;
         GpuName.Text = (gpu.Name ?? "—").ToUpper(c);
         GpuTemps.Text = gpu.HotSpot is { } hs ? $"{N(gpu.Temperature)}° · HS {hs:0}°" : gpu.Temperature is { } gt ? $"{gt:0}°" : "";
-        GpuClock.Text.Text = gpu.ClockMhz is { } mhz ? $"{mhz.ToString("N0", c)} MHz" : "—";
-        GpuPower.Text = gpu.PowerW is { } gw ? $"{gw.ToString("0", c)} W" : "";
-        GpuBar.Value = (gpu.Load ?? 0) / 100;
-        GpuLoad.Text = s.Format("dash.loadValue", N(gpu.Load)).ToUpper(c);
+        GpuLoadRing.Set((gpu.Load ?? 0) / 100, s["dash.load"].ToUpper(c), gpu.Load is { } gl ? $"{gl:0}%" : "—", "GPU", null, gpu.Load >= 95);
+        GpuTempRing.Set((gpu.Temperature ?? 0) / 100, "TEMP", gpu.Temperature is { } gtt ? $"{gtt:0}°" : "—", gpu.HotSpot is { } hot ? $"HS {hot:0}°" : "GPU", null, gpu.HotSpot >= 95 || gpu.Temperature >= 85);
+        _maxGpuClock = Math.Max(_maxGpuClock, gpu.ClockMhz ?? 0);
+        GpuClockRing.Set((gpu.ClockMhz ?? 0) / _maxGpuClock, "CLOCK", gpu.ClockMhz is { } mhz ? mhz.ToString("N0", c) : "—", "MHz");
+        GpuPowerValue.Text.Text = N(gpu.PowerW, "0");
+        var gpuFan = d.Fans.FirstOrDefault(f => f.Name.Contains("GPU", StringComparison.OrdinalIgnoreCase));
+        GpuFanValue.Text.Text = gpuFan is null ? "—" : gpuFan.Rpm.ToString("N0", c);
+        var memClock = DashboardViews.Find(snapshot, "GPU", SensorKind.Clock, "Memory");
+        var memClockValue = memClock is null ? null : snapshot.Readings.FirstOrDefault(r => r.Id == memClock)?.Value;
+        GpuMemValue.Text.Text = memClockValue is { } mc && memClock != DashboardViews.Find(snapshot, "GPU", SensorKind.Clock, "GPU Core", "Core") ? mc.ToString("N0", c) : "—";
+        var vramPct = gpu.MemoryUsedMb is { } vmu && gpu.MemoryTotalMb is > 0 and var vmt ? vmu / vmt * 100 : (double?)null;
+        GpuBar.Value = Math.Clamp((vramPct ?? 0) / 100, 0, 1);
+        GpuVramText.Text = gpu.MemoryUsedMb is { } vu2 && gpu.MemoryTotalMb is { } vt2 ? $"{(vu2 / 1024).ToString("0.0", c)} / {(vt2 / 1024).ToString("0.0", c)} GB · {vramPct ?? 0:0}%" : "";
         // Memory: system RAM, then the graphics card's VRAM (never added together: they are separate memories).
         var mem = d.Memory;
         ShowMemory(MemUsed, MemPercent, MemBar, MemFree, mem.UsedGb, mem.TotalGb, mem.Load);
@@ -454,7 +440,7 @@ public sealed partial class DashboardPage : Page
         _driveNames = names;
         _driveCells.Clear();
         var c = App.Text.Culture;
-        var columns = _compact ? 1 : 3;
+        var columns = _view is null ? 1 : 3;
         DriveGrid.Children.Clear();
         DriveGrid.ColumnDefinitions.Clear();
         DriveGrid.RowDefinitions.Clear();

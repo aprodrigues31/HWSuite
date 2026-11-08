@@ -29,7 +29,7 @@ internal sealed class DashboardNetwork
     {
         var s = App.Text;
         var grid = new Grid { ColumnSpacing = 22, RowSpacing = 12 };
-        Responsive.SetMinColumn(grid, 230);
+        Responsive.SetMinColumn(grid, 190);
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -78,6 +78,12 @@ internal sealed class DashboardNetwork
     }
 
     public FrameworkElement Root { get; }
+
+    /// <summary>Height the dashboard gives the latency chart (it follows the temperature chart beside it).</summary>
+    public double PingHeight
+    {
+        set => _pingChart.Height = Math.Max(56, value - 150);
+    }
 
     private static (TextBlock, TextBlock, TextBlock, TextBlock, TextBlock) Block(string title)
     {

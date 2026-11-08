@@ -41,128 +41,114 @@
 
             <ContentControl x:Name="AltBody" HorizontalContentAlignment="Stretch" Visibility="Collapsed" />
 
-            <StackPanel x:Name="HudBody" Spacing="16">
-            <!-- Processor (the "reactor") | graphics card + memory -->
-            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="440">
+            <StackPanel x:Name="HudBody" Spacing="14">
+            <!-- Processor | graphics card: same layout, three dials each -->
+            <Grid x:Name="TopRow" ColumnSpacing="14" hud:Responsive.MinColumn="520">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="*" MinWidth="300" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-
-                <hud:HudPanel Highlight="True" Padding="22,20,24,20">
-                    <Grid ColumnSpacing="26">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <!-- Three dials: load, temperature, clock (sized to the panel width in code) -->
-                        <StackPanel x:Name="CpuDials" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
-                            <hud:RingGauge x:Name="CpuLoadRing" Diameter="150" />
-                            <hud:RingGauge x:Name="CpuRing" Diameter="150" />
-                            <hud:RingGauge x:Name="CpuClockRing" Diameter="150" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="1" Spacing="14" VerticalAlignment="Center">
-                            <TextBlock x:Name="CpuTag" Style="{StaticResource HudTagStyle}" />
-                            <TextBlock x:Name="CpuName" Style="{StaticResource HudNameStyle}" FontSize="24" />
-                            <Grid ColumnSpacing="12">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="3" Visibility="Collapsed">
-                                    <TextBlock x:Name="ClockLabel" Style="{StaticResource HudTagStyle}" />
-                                    <hud:GlowText x:Name="ClockValue" />
-                                    <TextBlock x:Name="ClockUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
-                                </StackPanel>
-                                <StackPanel Spacing="3">
-                                    <TextBlock x:Name="PowerLabel" Style="{StaticResource HudTagStyle}" />
-                                    <hud:GlowText x:Name="PowerValue" />
-                                    <TextBlock x:Name="PowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="3">
-                                    <TextBlock x:Name="VoltLabel" Style="{StaticResource HudTagStyle}" />
-                                    <hud:GlowText x:Name="VoltValue" />
-                                    <TextBlock x:Name="VoltUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
-                                </StackPanel>
-                            </Grid>
-                            <StackPanel Spacing="6">
-                                <Grid>
-                                    <TextBlock x:Name="ThreadsLabel" Style="{StaticResource HudTagStyle}" />
-                                    <TextBlock x:Name="ThreadsCount" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
-                                </Grid>
-                                <hud:ColumnBars x:Name="ThreadBars" Height="38" />
+                <hud:HudPanel Highlight="True">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Name="CpuTag" Style="{StaticResource HudTagStyle}" />
+                        <TextBlock x:Name="CpuName" Style="{StaticResource HudNameStyle}" FontSize="24" TextTrimming="CharacterEllipsis" />
+                        <Grid x:Name="CpuDials" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <hud:RingGauge x:Name="CpuLoadRing" Diameter="150" HorizontalAlignment="Center" />
+                            <hud:RingGauge x:Name="CpuRing" Diameter="150" HorizontalAlignment="Center" Grid.Column="1" />
+                            <hud:RingGauge x:Name="CpuClockRing" Diameter="150" HorizontalAlignment="Center" Grid.Column="2" />
+                        </Grid>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="3">
+                                <TextBlock x:Name="PowerLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="PowerValue" />
+                                <TextBlock x:Name="PowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                             </StackPanel>
+                            <StackPanel Spacing="3" Grid.Column="1">
+                                <TextBlock x:Name="VoltLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="VoltValue" />
+                                <TextBlock x:Name="VoltUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="3" Grid.Column="2">
+                                <TextBlock x:Name="ClockLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="ClockValue" />
+                                <TextBlock x:Name="ClockUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Spacing="6">
+                            <Grid>
+                                <TextBlock x:Name="ThreadsLabel" Style="{StaticResource HudTagStyle}" />
+                                <TextBlock x:Name="ThreadsCount" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                            </Grid>
+                            <hud:ColumnBars x:Name="ThreadBars" Height="38" />
                         </StackPanel>
-                    </Grid>
+                    </StackPanel>
                 </hud:HudPanel>
-
-                <StackPanel Grid.Column="1" Spacing="16">
-                    <hud:HudPanel>
-                        <StackPanel Spacing="10">
+                <hud:HudPanel Grid.Column="1">
+                    <StackPanel Spacing="12">
+                        <Grid>
+                            <TextBlock x:Name="GpuTag" Style="{StaticResource HudTagStyle}" />
+                            <TextBlock x:Name="GpuTemps" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                        </Grid>
+                        <TextBlock x:Name="GpuName" Style="{StaticResource HudNameStyle}" FontSize="24" TextTrimming="CharacterEllipsis" />
+                        <Grid x:Name="GpuDials" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <hud:RingGauge x:Name="GpuLoadRing" Diameter="150" HorizontalAlignment="Center" />
+                            <hud:RingGauge x:Name="GpuTempRing" Diameter="150" HorizontalAlignment="Center" Grid.Column="1" />
+                            <hud:RingGauge x:Name="GpuClockRing" Diameter="150" HorizontalAlignment="Center" Grid.Column="2" />
+                        </Grid>
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Spacing="3">
+                                <TextBlock x:Name="GpuPowerLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="GpuPowerValue" />
+                                <TextBlock x:Name="GpuPowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="3" Grid.Column="1">
+                                <TextBlock x:Name="GpuFanLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="GpuFanValue" />
+                                <TextBlock x:Name="GpuFanUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            </StackPanel>
+                            <StackPanel Spacing="3" Grid.Column="2">
+                                <TextBlock x:Name="GpuMemLabel" Style="{StaticResource HudTagStyle}" />
+                                <hud:GlowText x:Name="GpuMemValue" />
+                                <TextBlock x:Name="GpuMemUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            </StackPanel>
+                        </Grid>
+                        <StackPanel Spacing="6">
                             <Grid>
-                                <TextBlock x:Name="GpuTag" Style="{StaticResource HudTagStyle}" />
-                                <TextBlock x:Name="GpuTemps" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
+                                <TextBlock x:Name="GpuVramLabel" Text="VRAM" Style="{StaticResource HudTagStyle}" />
+                                <TextBlock x:Name="GpuVramText" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" />
                             </Grid>
-                            <TextBlock x:Name="GpuName" Style="{StaticResource HudNameStyle}" />
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <hud:GlowText x:Name="GpuClock" />
-                                <TextBlock x:Name="GpuPower" Grid.Column="1" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-                            </Grid>
-                            <hud:SegmentBar x:Name="GpuBar" Height="10" />
-                            <TextBlock x:Name="GpuLoad" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            <hud:SegmentBar x:Name="GpuBar" Height="10" Margin="0,14,0,14" />
                         </StackPanel>
-                    </hud:HudPanel>
-                    <hud:HudPanel>
-                        <!-- System memory (RAM) and the graphics card's own memory (VRAM), each with its own bar -->
-                        <StackPanel Spacing="8">
-                            <TextBlock x:Name="MemTag" Style="{StaticResource HudTagStyle}" />
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="MemLabel" Style="{StaticResource HudMonoStyle}" FontSize="13" Foreground="{ThemeResource HudAccentBrush}" VerticalAlignment="Bottom" Margin="0,0,0,3" />
-                                <hud:GlowText x:Name="MemUsed" Grid.Column="1" />
-                                <TextBlock x:Name="MemPercent" Grid.Column="2" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-                            </Grid>
-                            <hud:SegmentBar x:Name="MemBar" Height="10" />
-                            <Grid>
-                                <TextBlock x:Name="MemFree" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
-                                <TextBlock x:Name="MemNote" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" MaxWidth="220" />
-                            </Grid>
-                            <Rectangle Height="1" Fill="{ThemeResource HudPanelStrokeBrush}" Opacity="0.5" Margin="0,4" />
-                            <Grid ColumnSpacing="10">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock x:Name="VramLabel" Style="{StaticResource HudMonoStyle}" FontSize="13" Foreground="{ThemeResource HudAccentBrush}" VerticalAlignment="Bottom" Margin="0,0,0,3" />
-                                <hud:GlowText x:Name="VramUsed" Grid.Column="1" />
-                                <TextBlock x:Name="VramPercent" Grid.Column="2" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
-                            </Grid>
-                            <hud:SegmentBar x:Name="VramBar" Height="10" />
-                            <Grid>
-                                <TextBlock x:Name="VramFree" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
-                                <TextBlock x:Name="VramNote" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" MaxWidth="220" />
-                            </Grid>
-                        </StackPanel>
-                    </hud:HudPanel>
-                </StackPanel>
+                    </StackPanel>
+                </hud:HudPanel>
             </Grid>
 
-            <!-- Temperature history | cooling and power supply -->
-            <Grid x:Name="ChartRow" ColumnSpacing="16" hud:Responsive.MinColumn="440">
+            <!-- Temperature history | network (these two stretch to fill the window) -->
+            <Grid x:Name="MidRow" ColumnSpacing="14" hud:Responsive.MinColumn="520">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*" />
-                    <ColumnDefinition Width="*" MinWidth="300" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <StackPanel x:Name="LeftCol" Spacing="14">
                 <hud:HudPanel>
                     <StackPanel Spacing="10">
                         <Grid>
@@ -181,24 +167,65 @@
                         <hud:LineChart x:Name="TempChart" Height="186" Unit="°" />
                     </StackPanel>
                 </hud:HudPanel>
-                </StackPanel>
-                <StackPanel x:Name="RightCol" Grid.Column="1" Spacing="14">
+                <ContentControl x:Name="NetSlot" Grid.Column="1" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch" />
+            </Grid>
+
+            <!-- Memory | drives | cooling and power supply, three equal columns -->
+            <Grid x:Name="BottomRow" ColumnSpacing="14" hud:Responsive.MinColumn="320">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
                 <hud:HudPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="MemTag" Style="{StaticResource HudTagStyle}" />
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="MemLabel" Style="{StaticResource HudMonoStyle}" FontSize="13" Foreground="{ThemeResource HudAccentBrush}" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                            <hud:GlowText x:Name="MemUsed" Grid.Column="1" />
+                            <TextBlock x:Name="MemPercent" Grid.Column="2" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                        </Grid>
+                        <hud:SegmentBar x:Name="MemBar" Height="10" />
+                        <Grid>
+                            <TextBlock x:Name="MemFree" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            <TextBlock x:Name="MemNote" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" MaxWidth="220" />
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource HudPanelStrokeBrush}" Opacity="0.5" Margin="0,4" />
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock x:Name="VramLabel" Style="{StaticResource HudMonoStyle}" FontSize="13" Foreground="{ThemeResource HudAccentBrush}" VerticalAlignment="Bottom" Margin="0,0,0,3" />
+                            <hud:GlowText x:Name="VramUsed" Grid.Column="1" />
+                            <TextBlock x:Name="VramPercent" Grid.Column="2" Style="{StaticResource HudMonoStyle}" HorizontalAlignment="Right" VerticalAlignment="Bottom" />
+                        </Grid>
+                        <hud:SegmentBar x:Name="VramBar" Height="10" />
+                        <Grid>
+                            <TextBlock x:Name="VramFree" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+                            <TextBlock x:Name="VramNote" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" HorizontalAlignment="Right" TextTrimming="CharacterEllipsis" MaxWidth="220" />
+                        </Grid>
+                    </StackPanel>
+                </hud:HudPanel>
+                <hud:HudPanel x:Name="StoragePanel" Grid.Column="1">
+                    <StackPanel Spacing="12">
+                        <TextBlock x:Name="StorageTag" Style="{StaticResource HudTagStyle}" />
+                        <Grid x:Name="DriveGrid" ColumnSpacing="28" RowSpacing="16" />
+                    </StackPanel>
+                </hud:HudPanel>
+                <hud:HudPanel Grid.Column="2">
                     <StackPanel Spacing="4">
                         <TextBlock x:Name="CoolingTag" Style="{StaticResource HudTagStyle}" Margin="0,0,0,6" />
                         <StackPanel x:Name="CoolingList" />
                     </StackPanel>
                 </hud:HudPanel>
-                </StackPanel>
             </Grid>
-
-            <!-- Drives -->
-            <hud:HudPanel x:Name="StoragePanel">
-                <StackPanel Spacing="12">
-                    <TextBlock x:Name="StorageTag" Style="{StaticResource HudTagStyle}" />
-                    <Grid x:Name="DriveGrid" ColumnSpacing="28" RowSpacing="16" />
-                </StackPanel>
-            </hud:HudPanel>
             </StackPanel>
 
             <ContentControl x:Name="NetBody" HorizontalContentAlignment="Stretch" />
