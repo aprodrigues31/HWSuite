@@ -178,8 +178,11 @@
             <Setter.Value>
                 <ControlTemplate TargetType="hud:HudPanel">
                     <Grid>
-                        <Path x:Name="PART_Shape" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" />
-                        <Path x:Name="PART_Corner" Stroke="{ThemeResource HudAccentBrush}" StrokeThickness="2" Opacity="0" />
+                        <!-- In a Canvas: the outline is drawn to the panel's size but never asks for size itself, so a panel can shrink again. -->
+                        <Canvas>
+                            <Path x:Name="PART_Shape" Fill="{TemplateBinding Background}" Stroke="{TemplateBinding BorderBrush}" StrokeThickness="1" />
+                            <Path x:Name="PART_Corner" Stroke="{ThemeResource HudAccentBrush}" StrokeThickness="2" Opacity="0" />
+                        </Canvas>
                         <ContentPresenter
                             Margin="{TemplateBinding Padding}"
                             HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
