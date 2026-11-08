@@ -55,7 +55,12 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <hud:RingGauge x:Name="CpuRing" Diameter="232" VerticalAlignment="Center" />
+                        <!-- Three dials: load, temperature, clock (sized to the panel width in code) -->
+                        <StackPanel x:Name="CpuDials" Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+                            <hud:RingGauge x:Name="CpuLoadRing" Diameter="150" />
+                            <hud:RingGauge x:Name="CpuRing" Diameter="150" />
+                            <hud:RingGauge x:Name="CpuClockRing" Diameter="150" />
+                        </StackPanel>
                         <StackPanel Grid.Column="1" Spacing="14" VerticalAlignment="Center">
                             <TextBlock x:Name="CpuTag" Style="{StaticResource HudTagStyle}" />
                             <TextBlock x:Name="CpuName" Style="{StaticResource HudNameStyle}" FontSize="24" />
@@ -63,19 +68,18 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Spacing="3">
+                                <StackPanel Spacing="3" Visibility="Collapsed">
                                     <TextBlock x:Name="ClockLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="ClockValue" />
                                     <TextBlock x:Name="ClockUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" Spacing="3">
+                                <StackPanel Spacing="3">
                                     <TextBlock x:Name="PowerLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="PowerValue" />
                                     <TextBlock x:Name="PowerUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="2" Spacing="3">
+                                <StackPanel Grid.Column="1" Spacing="3">
                                     <TextBlock x:Name="VoltLabel" Style="{StaticResource HudTagStyle}" />
                                     <hud:GlowText x:Name="VoltValue" />
                                     <TextBlock x:Name="VoltUnit" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />

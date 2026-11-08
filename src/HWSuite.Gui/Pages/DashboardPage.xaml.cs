@@ -86,7 +86,9 @@ public sealed partial class DashboardPage : Page
         ClockUnit.Text = "GHz";
         PowerUnit.Text = s["dash.packageUnit"];
         VoltUnit.Text = "V";
-        CpuRing.Set(0, "CPU", "—", "");
+        CpuRing.Set(0, "TEMP", "—", "");
+        CpuLoadRing.Set(0, s["dash.load"].ToUpper(c), "—", "");
+        CpuClockRing.Set(0, "CLOCK", "—", "");
         _clock.Tick += (_, _) => ShowClock();
         ShowClock();
     }
@@ -183,12 +185,25 @@ public sealed partial class DashboardPage : Page
         Body.Width = Math.Floor(vw / _scale) - 1;
         var w = Body.Width;
         var h = vh / _scale;
-        CpuRing.Diameter = Math.Round(Math.Clamp(Math.Min(w * 0.15, h * 0.3), 170, 300) / 10) * 10;
+        SizeDials(w);
         TempChart.Height = Math.Clamp(h * 0.2, 100, 300);
         _fitPasses = 0;
     }
 
     private int _fitPasses;
+    private double _maxClock = 4000;
+
+    /// <summary>
+    /// The three CPU dials share about half of the processor panel's width (the rest is name, power, voltage and
+    /// threads), so they keep the same proportion on HD, Full HD, 2K and 4K.
+    /// </summary>
+    private void SizeDials(double bodyWidth)
+    {
+        // Processor panel ≈ 2/3 of the body when side by side, the whole body when stacked.
+        var panel = (ChartRow.ColumnDefinitions.Count == 2 ? (bodyWidth - 56) * 2 / 3 : bodyWidth - 56) - 46;
+        var d = Math.Round(Math.Clamp(((panel * 0.48) - 28) / 3, 112, 210) / 2) * 2;
+        CpuLoadRing.Diameter = CpuRing.Diameter = CpuClockRing.Diameter = d;
+    }
     private bool _compact;
     private IReadOnlyList<DriveReadout> _drives = [];
 
@@ -220,6 +235,11 @@ public sealed partial class DashboardPage : Page
 
         _driveNames = "";
         ShowDrives(_drives);
+        if (Body.Width > 0)
+        {
+            SizeDials(Body.Width);
+        }
+
         _fitPasses = 0;
     }
 
@@ -264,13 +284,6 @@ public sealed partial class DashboardPage : Page
             if (chart < TempChart.Height - 1)
             {
                 TempChart.Height = chart;
-                return;
-            }
-
-            var ring = Math.Max(140, Math.Round((CpuRing.Diameter - overflow) / 10) * 10);
-            if (ring < CpuRing.Diameter)
-            {
-                CpuRing.Diameter = ring;
                 return;
             }
 
@@ -339,13 +352,10 @@ public sealed partial class DashboardPage : Page
         var cpu = d.Cpu;
         CpuName.Text = (cpu.Name ?? "—").ToUpper(c);
         var cpuHot = cpu.Temperature >= 85;
-        CpuRing.Set(
-            (cpu.Temperature ?? cpu.Load ?? 0) / 100,
-            cpu.Temperature is null ? s["dash.load"].ToUpper(c) : "CPU · TEMP",
-            cpu.Temperature is { } t ? $"{t:0}°" : cpu.Load is { } l ? $"{l:0}%" : "—",
-            cpu.Load is { } load ? s.Format("dash.loadValue", N(load)).ToUpper(c) : "",
-            cpu.Temperature is null ? null : (cpu.Load ?? 0) / 100,
-            cpuHot);
+        CpuRing.Set((cpu.Temperature ?? 0) / 100, "TEMP", cpu.Temperature is { } t ? $"{t:0}°" : "—", "CPU", null, cpuHot);
+        CpuLoadRing.Set((cpu.Load ?? 0) / 100, s["dash.load"].ToUpper(c), cpu.Load is { } l ? $"{l:0}%" : "—", "CPU", null, cpu.Load >= 95);
+        _maxClock = Math.Max(_maxClock, cpu.ClockMhz ?? 0);
+        CpuClockRing.Set((cpu.ClockMhz ?? 0) / _maxClock, "CLOCK", N(cpu.ClockMhz / 1000, "0.00"), "GHz");
         ClockValue.Text.Text = N(cpu.ClockMhz / 1000, "0.00");
         PowerValue.Text.Text = N(cpu.PowerW, "0.0");
         VoltValue.Text.Text = N(cpu.CoreVolts, "0.000");
@@ -396,7 +406,7 @@ public sealed partial class DashboardPage : Page
 
         // Cooling and power supply
         CoolingList.Children.Clear();
-        foreach (var fan in d.Fans.Take(5))
+        foreach (var fan in DashboardViews.BoardFans(d))
         {
             CoolingList.Children.Add(HudUi.FactRow(fan.Name.ToUpper(c), HudUi.Mono($"{fan.Rpm.ToString("N0", c)} RPM", HudUi.Accent)));
         }

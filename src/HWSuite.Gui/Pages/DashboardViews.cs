@@ -130,7 +130,7 @@ internal static class DashboardViews
     /// <summary>Fans and rails as label/value rows.</summary>
     public static IEnumerable<(string Label, string Value)> Cooling(DashboardReadout d)
     {
-        foreach (var fan in d.Fans.Take(5))
+        foreach (var fan in BoardFans(d))
         {
             yield return (fan.Name, $"{fan.Rpm.ToString("N0", C)} RPM");
         }
@@ -140,6 +140,12 @@ internal static class DashboardViews
             yield return (rail.Name, $"{volts.ToString("0.00", C)} V");
         }
     }
+
+    /// <summary>Motherboard fans only (the graphics card's fan is left out), names without the header in parentheses.</summary>
+    public static IEnumerable<FanReadout> BoardFans(DashboardReadout d) => d.Fans
+        .Where(f => !f.Name.Contains("GPU", StringComparison.OrdinalIgnoreCase))
+        .Select(f => f with { Name = System.Text.RegularExpressions.Regex.Replace(f.Name, @"\s*\([^)]*\)", "").Trim() })
+        .Take(5);
 
     public static double? MemPercent(DashboardReadout d) => d.Memory.Load;
 
