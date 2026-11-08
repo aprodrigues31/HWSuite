@@ -52,6 +52,7 @@ public sealed partial class DashboardPage : Page
                 Fit(new Windows.Foundation.Size(ActualWidth, ActualHeight));
             }
 
+            Arrange();
             FitHeight();
         };
         BoardName.Text = Environment.MachineName.ToUpper(c);
@@ -172,6 +173,47 @@ public sealed partial class DashboardPage : Page
     }
 
     private int _fitPasses;
+    private bool _compact;
+    private IReadOnlyList<DriveReadout> _drives = [];
+
+    /// <summary>
+    /// Wide window, HUD theme: the network panel goes under the temperature chart and the drives under cooling,
+    /// so two short columns replace two full-width rows and everything fits a Full HD screen. Narrow: back to rows.
+    /// </summary>
+    private void Arrange()
+    {
+        var compact = _view is null && ChartRow.ColumnDefinitions.Count == 2;
+        if (compact == _compact)
+        {
+            return;
+        }
+
+        _compact = compact;
+        Detach(NetBody);
+        Detach(StoragePanel);
+        if (compact)
+        {
+            LeftCol.Children.Add(NetBody);
+            RightCol.Children.Add(StoragePanel);
+        }
+        else
+        {
+            HudBody.Children.Add(StoragePanel);
+            Body.Children.Add(NetBody);
+        }
+
+        _driveNames = null;
+        ShowDrives(_drives);
+        _fitPasses = 0;
+    }
+
+    private static void Detach(FrameworkElement e)
+    {
+        if (e.Parent is Panel p)
+        {
+            p.Children.Remove(e);
+        }
+    }
 
     /// <summary>
     /// Makes the dashboard fit the window height (no scrolling on Full HD and up): the temperature chart, then the
@@ -351,6 +393,7 @@ public sealed partial class DashboardPage : Page
 
     private void ShowDrives(IReadOnlyList<DriveReadout> drives)
     {
+        _drives = drives;
         var names = string.Join("|", drives.Select(x => x.Name));
         if (names == _driveNames && _driveCells.Count == drives.Count)
         {
@@ -370,18 +413,18 @@ public sealed partial class DashboardPage : Page
         _driveNames = names;
         _driveCells.Clear();
         var c = App.Text.Culture;
-        const int Columns = 3;
+        var columns = _compact ? 1 : 3;
         DriveGrid.Children.Clear();
         DriveGrid.ColumnDefinitions.Clear();
         DriveGrid.RowDefinitions.Clear();
-        for (var i = 0; i < Columns; i++)
+        for (var i = 0; i < columns; i++)
         {
             DriveGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         }
 
         for (var i = 0; i < drives.Count; i++)
         {
-            if (i % Columns == 0)
+            if (i % columns == 0)
             {
                 DriveGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
             }
@@ -397,8 +440,8 @@ public sealed partial class DashboardPage : Page
             var segments = new SegmentBar { Value = (drive.UsedPercent ?? 0) / 100, Fill = warn ? HudUi.Warn : null, Height = 10 };
             cell.Children.Add(segments);
             _driveCells.Add((factsText, segments));
-            Grid.SetRow(cell, i / Columns);
-            Grid.SetColumn(cell, i % Columns);
+            Grid.SetRow(cell, i / columns);
+            Grid.SetColumn(cell, i % columns);
             DriveGrid.Children.Add(cell);
         }
 

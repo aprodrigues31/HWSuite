@@ -151,11 +151,12 @@
             </Grid>
 
             <!-- Temperature history | cooling and power supply -->
-            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="440">
+            <Grid x:Name="ChartRow" ColumnSpacing="16" hud:Responsive.MinColumn="440">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="*" MinWidth="300" />
                 </Grid.ColumnDefinitions>
+                <StackPanel x:Name="LeftCol" Spacing="14">
                 <hud:HudPanel>
                     <StackPanel Spacing="10">
                         <Grid>
@@ -174,16 +175,19 @@
                         <hud:LineChart x:Name="TempChart" Height="186" Unit="°" />
                     </StackPanel>
                 </hud:HudPanel>
-                <hud:HudPanel Grid.Column="1">
+                </StackPanel>
+                <StackPanel x:Name="RightCol" Grid.Column="1" Spacing="14">
+                <hud:HudPanel>
                     <StackPanel Spacing="4">
                         <TextBlock x:Name="CoolingTag" Style="{StaticResource HudTagStyle}" Margin="0,0,0,6" />
                         <StackPanel x:Name="CoolingList" />
                     </StackPanel>
                 </hud:HudPanel>
+                </StackPanel>
             </Grid>
 
             <!-- Drives -->
-            <hud:HudPanel>
+            <hud:HudPanel x:Name="StoragePanel">
                 <StackPanel Spacing="12">
                     <TextBlock x:Name="StorageTag" Style="{StaticResource HudTagStyle}" />
                     <Grid x:Name="DriveGrid" ColumnSpacing="28" RowSpacing="16" />
