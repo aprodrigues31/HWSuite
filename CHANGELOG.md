@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.25.0] - 2026-11-08
+
+### Adicionado
+- **Painel se adapta a qualquer resolução (HD, Full HD, 2K, 4K)**: em telas grandes tudo cresce na mesma proporção (até 2×), e o gráfico de temperaturas estica ou encolhe para o Painel terminar na borda de baixo da janela, sem rolagem e sem espaço vazio. Recalcula ao redimensionar ou mudar de monitor.
+
 ## [0.24.2] - 2026-11-08
 
 ### Corrigido
@@ -328,7 +333,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.2...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.25.0...HEAD
+[0.25.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.0
 [0.24.2]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.2
 [0.24.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.1
 [0.24.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.0
