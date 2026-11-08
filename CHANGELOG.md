@@ -8,6 +8,16 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.24.2] - 2026-11-08
+
+### Corrigido
+- Painel: em Full HD o quadro de Rede ficava fora da tela. Em telas largas a Rede fica embaixo do gráfico de temperaturas e o Armazenamento embaixo de Refrigeração · Fonte, e o gráfico e o anel da CPU se ajustam à altura da janela.
+- Painel: os quadros cresciam mas não voltavam a diminuir ao redimensionar a janela.
+- Painel: o mostrador da CPU ficava distorcido (brilho no tamanho antigo) até trocar de tela.
+
+### Adicionado
+- Painel se ajusta à resolução: em janelas estreitas os quadros passam para mais linhas, em monitores grandes o anel e o gráfico crescem.
+
 ## [0.24.1] - 2026-11-08
 
 ### Adicionado
@@ -318,7 +328,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.1...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.2...HEAD
+[0.24.2]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.2
 [0.24.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.1
 [0.24.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.0
 [0.23.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.1
