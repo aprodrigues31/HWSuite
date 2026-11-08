@@ -6,6 +6,8 @@
     xmlns:hud="using:HWSuite.Gui.Hud"
     NavigationCacheMode="Required">
     <ScrollViewer x:Name="Scroller">
+        <!-- Zoom scales the whole dashboard up on large screens (2K, 4K); the code sets Body.Width. -->
+        <Viewbox x:Name="Zoom" Stretch="Uniform" VerticalAlignment="Top">
         <StackPanel x:Name="Body" Padding="28,6,28,20" Spacing="14">
 
             <!-- Header: what machine, how long it has been up, overall state -->
@@ -197,5 +199,6 @@
 
             <ContentControl x:Name="NetBody" HorizontalContentAlignment="Stretch" />
         </StackPanel>
+        </Viewbox>
     </ScrollViewer>
 </Page>

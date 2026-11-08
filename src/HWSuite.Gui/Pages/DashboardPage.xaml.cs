@@ -164,11 +164,27 @@ public sealed partial class DashboardPage : Page
     /// Fits the dashboard to the window: panel rows wrap when narrow, the processor ring and the temperature chart
     /// grow on large screens.
     /// </summary>
+    private double _scale = 1;
+
+    /// <summary>
+    /// Fits the dashboard to the window it is in, whatever the screen (HD to 4K): a zoom so it is not tiny on large
+    /// screens (1× up to a 1820 × 1000 window, growing with the smaller ratio, at most 2×), then FitHeight.
+    /// </summary>
     private void Fit(Windows.Foundation.Size size)
     {
-        // Start from the largest that makes sense, then FitHeight shrinks until the whole page is on screen.
-        CpuRing.Diameter = Math.Round(Math.Clamp(Math.Min(size.Width * 0.16, size.Height * 0.3), 170, 340) / 10) * 10;
-        TempChart.Height = Math.Clamp(size.Height * 0.24, 100, 320);
+        var vw = Scroller.ViewportWidth > 0 ? Scroller.ViewportWidth : size.Width;
+        var vh = Scroller.ViewportHeight > 0 ? Scroller.ViewportHeight : size.Height;
+        if (vw <= 0 || vh <= 0)
+        {
+            return;
+        }
+
+        _scale = Math.Clamp(Math.Min(vw / 1820, vh / 1000), 1, 2);
+        Body.Width = Math.Floor(vw / _scale) - 1;
+        var w = Body.Width;
+        var h = vh / _scale;
+        CpuRing.Diameter = Math.Round(Math.Clamp(Math.Min(w * 0.15, h * 0.3), 170, 300) / 10) * 10;
+        TempChart.Height = Math.Clamp(h * 0.2, 100, 300);
         _fitPasses = 0;
     }
 
@@ -222,40 +238,55 @@ public sealed partial class DashboardPage : Page
     /// </summary>
     private void FitHeight()
     {
-        if (_fitPasses >= 8 || Scroller.ViewportHeight <= 0 || Body.ActualHeight <= 0)
+        if (_fitPasses >= 10 || Scroller.ViewportHeight <= 0 || Body.ActualHeight <= 0)
         {
             return;
         }
 
         _fitPasses++;
-        var overflow = Body.ActualHeight - Scroller.ViewportHeight;
-        if (overflow <= 2)
-        {
-            _fitPasses = 8;
-            return;
-        }
-
         if (_view is not null)
         {
-            _fitPasses = 8;
+            _fitPasses = 10;
             return;
         }
 
-        var chart = Math.Max(100, TempChart.Height - overflow);
-        if (chart < TempChart.Height - 1)
+        // Positive: taller than the window (shrink); negative: room left (grow), in dashboard pixels.
+        var overflow = Body.ActualHeight - (Scroller.ViewportHeight / _scale) + 2;
+        if (Math.Abs(overflow) <= 3)
         {
-            TempChart.Height = chart;
+            _fitPasses = 10;
             return;
         }
 
-        var ring = Math.Max(150, Math.Round((CpuRing.Diameter - overflow) / 10) * 10);
-        if (ring < CpuRing.Diameter)
+        if (overflow > 0)
         {
-            CpuRing.Diameter = ring;
+            var chart = Math.Max(90, TempChart.Height - overflow);
+            if (chart < TempChart.Height - 1)
+            {
+                TempChart.Height = chart;
+                return;
+            }
+
+            var ring = Math.Max(140, Math.Round((CpuRing.Diameter - overflow) / 10) * 10);
+            if (ring < CpuRing.Diameter)
+            {
+                CpuRing.Diameter = ring;
+                return;
+            }
+
+            _fitPasses = 10; // as small as it goes: the page scrolls
             return;
         }
 
-        _fitPasses = 8;
+        // Room left: the chart takes it (up to a limit), so the page ends at the bottom of the window.
+        var grown = Math.Min(700, TempChart.Height - overflow);
+        if (grown > TempChart.Height + 1)
+        {
+            TempChart.Height = grown;
+            return;
+        }
+
+        _fitPasses = 10;
     }
 
     private void OnNetwork(object? sender, LiveNetworkReading reading) =>
