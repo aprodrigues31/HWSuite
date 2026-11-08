@@ -8,6 +8,11 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.26.0] - 2026-11-08
+
+### Alterado
+- **Novo Painel (tema HUD)**: blocos de Processador e Placa de Vídeo lado a lado, cada um com três mostradores (Carga, Temperatura, Clock) e informações abaixo (CPU: potência, Vcore, temp. máx. da sessão e carga por thread; GPU: potência, ventoinha, clock da memória e VRAM). Abaixo, Telemetria térmica | Rede e, por fim, Memória | Armazenamento | Refrigeração · Fonte, em grade alinhada que se ajusta a HD, Full HD, 2K e 4K.
+
 ## [0.25.1] - 2026-11-08
 
 ### Alterado
@@ -339,7 +344,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.25.1...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.0
 [0.25.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.1
 [0.25.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.0
 [0.24.2]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.2
