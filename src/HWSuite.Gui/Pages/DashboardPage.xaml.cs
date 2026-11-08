@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Runtime.InteropServices;
 using HWSuite.Core.Alerts;
+using HWSuite.Core.Network;
 using HWSuite.Core.Sensors;
 using HWSuite.Gui.Hud;
 using Microsoft.UI.Xaml;
@@ -18,6 +19,8 @@ namespace HWSuite.Gui.Pages;
 public sealed partial class DashboardPage : Page
 {
     private readonly DispatcherTimer _clock = new() { Interval = TimeSpan.FromSeconds(1) };
+    private static LiveNetworkMonitor? s_net;
+    private readonly DashboardNetwork _network = new();
     private readonly IDashboardView? _view = DashboardViews.For(HudThemes.Current.Id);
 
     public DashboardPage()
@@ -38,7 +41,8 @@ public sealed partial class DashboardPage : Page
         ChartTag.Text = ("// " + s.Format("dash.temps", s.Format("dash.minutes", App.Monitor.History.Capacity * App.Monitor.Interval.TotalMinutes))).ToUpper(c);
         CoolingTag.Text = ("// " + s["dash.cooling"]).ToUpper(c);
         StorageTag.Text = ("// " + s["dash.storage"]).ToUpper(c);
-        MachineText.Text = $"{Environment.MachineName} · {RuntimeInformation.OSDescription}";
+        MachineText.Text = $"{Environment.MachineName} · {(App.IsDemo ? "Windows 11 Pro 25H2 · build 26200.7171 · x64" : HWSuite.Providers.Windows.WindowsOsProvider.Describe() ?? RuntimeInformation.OSDescription)}";
+        NetBody.Content = _network.Root;
         BoardName.Text = Environment.MachineName.ToUpper(c);
         StatusText.Text = s["dash.waiting"].ToUpper(c);
         if (_view is not null)
@@ -113,6 +117,17 @@ public sealed partial class DashboardPage : Page
         ReadRamLabel();
         App.Monitor.Updated += OnUpdated;
         _clock.Start();
+        if (App.IsDemo)
+        {
+            _network.Update(DashboardNetwork.Demo());
+        }
+        else
+        {
+            s_net ??= new LiveNetworkMonitor(wifi: OperatingSystem.IsWindows() ? HWSuite.Providers.Windows.WlanReader.Query : null);
+            s_net.Updated += OnNetwork;
+            s_net.Start();
+            _network.Update(s_net.Snapshot());
+        }
         if (App.Monitor.Latest is { } latest)
         {
             Apply(latest);
@@ -123,8 +138,16 @@ public sealed partial class DashboardPage : Page
     {
         App.Monitor.Updated -= OnUpdated;
         _clock.Stop();
+        if (s_net is not null)
+        {
+            s_net.Updated -= OnNetwork;
+            s_net.Stop();
+        }
         base.OnNavigatedFrom(e);
     }
+
+    private void OnNetwork(object? sender, LiveNetworkReading reading) =>
+        DispatcherQueue.TryEnqueue(() => _network.Update(reading));
 
     private void OnUpdated(object? sender, SensorSnapshot snapshot)
     {

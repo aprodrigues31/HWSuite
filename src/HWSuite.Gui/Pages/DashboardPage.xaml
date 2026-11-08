@@ -190,6 +190,8 @@
                 </StackPanel>
             </hud:HudPanel>
             </StackPanel>
+
+            <ContentControl x:Name="NetBody" HorizontalContentAlignment="Stretch" />
         </StackPanel>
     </ScrollViewer>
 </Page>

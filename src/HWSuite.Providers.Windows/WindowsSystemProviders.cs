@@ -45,6 +45,29 @@ public sealed class WindowsOsProvider : IInventoryProvider
         inventory.OperatingSystem = Read();
     }
 
+    /// <summary>"Windows 11 Pro 25H2 · build 26200.7171 · X64", read now from the registry (null off Windows).</summary>
+    public static string? Describe()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return null;
+        }
+
+        var os = Read();
+        var parts = new List<string> { string.Join(' ', new[] { os.Name ?? "Windows", os.DisplayVersion }.Where(p => !string.IsNullOrWhiteSpace(p))) };
+        if (os.Build is { } build)
+        {
+            parts.Add("build " + build);
+        }
+
+        if (os.Architecture is { } arch)
+        {
+            parts.Add(arch.ToLowerInvariant());
+        }
+
+        return string.Join(" · ", parts);
+    }
+
     [SupportedOSPlatform("windows")]
     private static OperatingSystemInfo Read()
     {
