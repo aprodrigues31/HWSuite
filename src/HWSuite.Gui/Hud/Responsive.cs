@@ -34,6 +34,13 @@ public static class Responsive
         }
 
         var columns = Math.Clamp((int)Math.Floor((width + grid.ColumnSpacing) / (minColumn + grid.ColumnSpacing)), 1, designed);
+        // When wrapping, keep rows even (4 panels → 2 + 2, not 3 + 1).
+        var items = layout.Children.Count;
+        while (columns < designed && columns > 1 && items % columns != 0 && layout.Children.All(c => c.Span == 1))
+        {
+            columns--;
+        }
+
         if (grid.ColumnDefinitions.Count == columns && grid.Tag is int done && done == columns)
         {
             return;

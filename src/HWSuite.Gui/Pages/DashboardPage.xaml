@@ -41,7 +41,7 @@
 
             <StackPanel x:Name="HudBody" Spacing="16">
             <!-- Processor (the "reactor") | graphics card + memory -->
-            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="380">
+            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="440">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="*" MinWidth="300" />
@@ -151,7 +151,7 @@
             </Grid>
 
             <!-- Temperature history | cooling and power supply -->
-            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="380">
+            <Grid ColumnSpacing="16" hud:Responsive.MinColumn="440">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*" />
                     <ColumnDefinition Width="*" MinWidth="300" />
