@@ -29,6 +29,7 @@ internal sealed class DashboardNetwork
     {
         var s = App.Text;
         var grid = new Grid { ColumnSpacing = 22, RowSpacing = 12 };
+        Responsive.SetMinColumn(grid, 230);
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });

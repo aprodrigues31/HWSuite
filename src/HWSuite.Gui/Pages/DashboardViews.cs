@@ -247,6 +247,7 @@ internal sealed class CardsView : IDashboardView
         }
 
         var cards = new Grid { ColumnSpacing = 16 };
+        Responsive.SetMinColumn(cards, 230);
         for (var i = 0; i < 4; i++)
         {
             cards.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
@@ -271,6 +272,7 @@ internal sealed class CardsView : IDashboardView
 
         root.Children.Add(cards);
         var lower = DashboardViews.Columns(2, 1);
+        Responsive.SetMinColumn(lower, 340);
         _chart = DashboardViews.TempChart(220);
         lower.Children.Add(DashboardViews.Col(DashboardViews.Panel(s["dash.temps"].Replace("{0}", "5 min", StringComparison.Ordinal), _chart), 0));
         lower.Children.Add(DashboardViews.Col(DashboardViews.Panel(s["dash.cooling"], _cooling), 1));
@@ -430,6 +432,7 @@ internal sealed class DialsView : IDashboardView
         var s = App.Text;
         var root = new StackPanel { Spacing = 16 };
         var row = new Grid { ColumnSpacing = 16 };
+        Responsive.SetMinColumn(row, 220);
         string[] titles = ["CPU", "GPU", "RAM", "VRAM"];
         for (var i = 0; i < 4; i++)
         {
@@ -457,6 +460,7 @@ internal sealed class DialsView : IDashboardView
 
         root.Children.Add(row);
         var lower = DashboardViews.Columns(2, 1);
+        Responsive.SetMinColumn(lower, 340);
         lower.Children.Add(DashboardViews.Col(DashboardViews.Panel(s["dash.temps"].Replace("{0}", "5 min", StringComparison.Ordinal), _chart), 0));
         lower.Children.Add(DashboardViews.Col(DashboardViews.Panel(s["dash.cooling"], _cooling), 1));
         root.Children.Add(lower);
@@ -509,6 +513,7 @@ internal sealed class TerminalView : IDashboardView
     {
         var s = App.Text;
         var grid = new Grid { ColumnSpacing = 14, RowSpacing = 14 };
+        Responsive.SetMinColumn(grid, 470);
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
@@ -605,6 +610,7 @@ internal sealed class CockpitView : IDashboardView
 
         root.Children.Add(gauges);
         var strip = new Grid { ColumnSpacing = 12 };
+        Responsive.SetMinColumn(strip, 150);
         for (var i = 0; i < 6; i++)
         {
             strip.ColumnDefinitions.Add(new ColumnDefinition());
@@ -687,6 +693,7 @@ internal sealed class HologramView : IDashboardView
     public HologramView()
     {
         var root = new Grid { ColumnSpacing = 14 };
+        Responsive.SetMinColumn(root, 220);
         root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(210) });
         root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         root.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(200) });
@@ -735,6 +742,7 @@ internal sealed class HologramView : IDashboardView
 
         // Center: 3 × 3 live charts.
         var grid = new Grid { ColumnSpacing = 10, RowSpacing = 10 };
+        Responsive.SetMinColumn(grid, 170);
         for (var i = 0; i < 3; i++)
         {
             grid.ColumnDefinitions.Add(new ColumnDefinition());

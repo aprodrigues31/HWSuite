@@ -43,6 +43,15 @@ public sealed partial class DashboardPage : Page
         StorageTag.Text = ("// " + s["dash.storage"]).ToUpper(c);
         MachineText.Text = $"{Environment.MachineName} · {(App.IsDemo ? "Windows 11 Pro 25H2 · build 26200.7171 · x64" : HWSuite.Providers.Windows.WindowsOsProvider.Describe() ?? RuntimeInformation.OSDescription)}";
         NetBody.Content = _network.Root;
+        SizeChanged += (_, e) => Fit(e.NewSize);
+        LayoutUpdated += (_, _) =>
+        {
+            if (!_fitted && ActualWidth > 0)
+            {
+                _fitted = true;
+                Fit(new Windows.Foundation.Size(ActualWidth, ActualHeight));
+            }
+        };
         BoardName.Text = Environment.MachineName.ToUpper(c);
         StatusText.Text = s["dash.waiting"].ToUpper(c);
         if (_view is not null)
@@ -144,6 +153,22 @@ public sealed partial class DashboardPage : Page
             s_net.Stop();
         }
         base.OnNavigatedFrom(e);
+    }
+
+    private bool _fitted;
+
+    /// <summary>
+    /// Fits the dashboard to the window: panel rows wrap when narrow, the processor ring and the temperature chart
+    /// grow on large screens.
+    /// </summary>
+    private void Fit(Windows.Foundation.Size size)
+    {
+        CpuRing.Diameter = Math.Clamp(size.Width * 0.17, 200, 360);
+        TempChart.Height = Math.Clamp(size.Height * 0.24, 160, 340);
+        if (App.Monitor.Latest is { } latest && _view is null)
+        {
+            Apply(latest);
+        }
     }
 
     private void OnNetwork(object? sender, LiveNetworkReading reading) =>
