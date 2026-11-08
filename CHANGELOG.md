@@ -8,6 +8,14 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.24.1] - 2026-11-08
+
+### Adicionado
+- **Painel · Rede para jogos online** (em todos os temas): conexão (cabo ou Wi-Fi, adaptador, link, sinal, banda e canal), latência, jitter, perda de pacotes e mín./máx. até o roteador e até a Internet (1.1.1.1) no último minuto, com gráfico; download e upload em tempo real; avaliação para jogos e indicação de onde está o problema (rede local ou operadora).
+
+### Corrigido
+- Painel: a versão do Windows aparecia como "Windows 10.0.xxxxx" mesmo no Windows 11. Agora mostra a edição, a versão, o build completo e a arquitetura lidos do Windows (ex.: "Windows 11 Pro 25H2 · build 26200.7171 · x64").
+
 ## [0.24.0] - 2026-11-07
 
 ### Adicionado
@@ -310,7 +318,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.24.1...HEAD
+[0.24.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.1
 [0.24.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.24.0
 [0.23.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.1
 [0.23.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.23.0
