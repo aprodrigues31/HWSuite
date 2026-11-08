@@ -202,7 +202,7 @@ public sealed partial class DashboardPage : Page
             Body.Children.Add(NetBody);
         }
 
-        _driveNames = null;
+        _driveNames = "";
         ShowDrives(_drives);
         _fitPasses = 0;
     }
