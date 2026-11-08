@@ -199,7 +199,7 @@ public sealed partial class DashboardPage : Page
         Body.Width = Math.Floor(vw / _scale) - 1;
         var w = Body.Width;
         var h = vh / _scale;
-        SizeDials(w);
+        SizeDials(w, h);
         TempChart.Height = Math.Clamp(h * 0.2, 100, 300);
         _network.PingHeight = TempChart.Height;
         _fitPasses = 0;
@@ -212,11 +212,11 @@ public sealed partial class DashboardPage : Page
     /// The three CPU dials share about half of the processor panel's width (the rest is name, power, voltage and
     /// threads), so they keep the same proportion on HD, Full HD, 2K and 4K.
     /// </summary>
-    private void SizeDials(double bodyWidth)
+    private void SizeDials(double bodyWidth, double height)
     {
         // Each block is half the body when side by side, the whole body when stacked; three dials share its width.
         var panel = (TopRow.ColumnDefinitions.Count == 2 ? (bodyWidth - 56 - 14) / 2 : bodyWidth - 56) - 46;
-        var d = Math.Round(Math.Clamp(((panel - 16) / 3) * 0.8, 110, 220) / 2) * 2;
+        var d = Math.Round(Math.Clamp(Math.Min(((panel - 16) / 3) * 0.8, height * 0.19), 110, 220) / 2) * 2;
         CpuLoadRing.Diameter = CpuRing.Diameter = CpuClockRing.Diameter = d;
         GpuLoadRing.Diameter = GpuTempRing.Diameter = GpuClockRing.Diameter = d;
     }
@@ -232,7 +232,7 @@ public sealed partial class DashboardPage : Page
     /// </summary>
     private void FitHeight()
     {
-        if (_fitPasses >= 10 || Scroller.ViewportHeight <= 0 || Body.ActualHeight <= 0)
+        if (_fitPasses >= 20 || Scroller.ViewportHeight <= 0 || Body.ActualHeight <= 0)
         {
             return;
         }
@@ -240,7 +240,7 @@ public sealed partial class DashboardPage : Page
         _fitPasses++;
         if (_view is not null)
         {
-            _fitPasses = 10;
+            _fitPasses = 20;
             return;
         }
 
@@ -248,7 +248,7 @@ public sealed partial class DashboardPage : Page
         var overflow = Body.ActualHeight - (Scroller.ViewportHeight / _scale) + 2;
         if (Math.Abs(overflow) <= 3)
         {
-            _fitPasses = 10;
+            _fitPasses = 20;
             return;
         }
 
@@ -262,7 +262,16 @@ public sealed partial class DashboardPage : Page
                 return;
             }
 
-            _fitPasses = 10; // as small as it goes: the page scrolls
+            // Then the six dials give up height, down to a readable minimum.
+            var dial = Math.Max(110, Math.Floor((CpuRing.Diameter - overflow) / 2) * 2);
+            if (dial < CpuRing.Diameter)
+            {
+                CpuLoadRing.Diameter = CpuRing.Diameter = CpuClockRing.Diameter = dial;
+                GpuLoadRing.Diameter = GpuTempRing.Diameter = GpuClockRing.Diameter = dial;
+                return;
+            }
+
+            _fitPasses = 20; // as small as it goes: the page scrolls
             return;
         }
 
@@ -275,7 +284,7 @@ public sealed partial class DashboardPage : Page
             return;
         }
 
-        _fitPasses = 10;
+        _fitPasses = 20;
     }
 
     private void OnNetwork(object? sender, LiveNetworkReading reading) =>
@@ -397,9 +406,13 @@ public sealed partial class DashboardPage : Page
             CoolingList.Children.Add(HudUi.FactRow(fan.Name.ToUpper(c), HudUi.Mono($"{fan.Rpm.ToString("N0", c)} RPM", HudUi.Accent)));
         }
 
-        foreach (var (rail, volts) in d.Rails)
+        // The power supply rails on one line, to keep the panel short.
+        if (d.Rails.Count > 0)
         {
-            CoolingList.Children.Add(HudUi.FactRow(rail.Name, HudUi.Mono($"{volts.ToString("0.00", c)} V", rail.Within(volts) ? HudUi.Accent : HudUi.Crit)));
+            var ok = d.Rails.All(r => r.Rail.Within(r.Volts));
+            CoolingList.Children.Add(HudUi.FactRow(
+                string.Join(" · ", d.Rails.Select(r => r.Rail.Name)),
+                HudUi.Mono(string.Join(" · ", d.Rails.Select(r => r.Volts.ToString("0.00", c))) + " V", ok ? HudUi.Accent : HudUi.Crit)));
         }
 
         foreach (var row in CoolingList.Children.OfType<Grid>())
