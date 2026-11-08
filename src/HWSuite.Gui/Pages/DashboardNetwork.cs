@@ -20,10 +20,10 @@ internal sealed class DashboardNetwork
     private readonly Border _dot = new() { Width = 10, Height = 10, CornerRadius = new CornerRadius(5), VerticalAlignment = VerticalAlignment.Center };
     private readonly (TextBlock Title, TextBlock Latency, TextBlock Jitter, TextBlock Loss, TextBlock Range) _router;
     private readonly (TextBlock Title, TextBlock Latency, TextBlock Jitter, TextBlock Loss, TextBlock Range) _internet;
-    private readonly LineChart _pingChart = new() { Height = 110, Unit = " ms", GridLines = 2, Capacity = LiveNetworkMonitor.Window };
+    private readonly LineChart _pingChart = new() { Height = 64, Unit = " ms", GridLines = 2, Capacity = LiveNetworkMonitor.Window };
     private readonly TextBlock _down = DashboardViews.Text(size: 26, font: "HudDisplayFont", bold: true);
     private readonly TextBlock _up = DashboardViews.Text(size: 26, font: "HudDisplayFont", bold: true);
-    private readonly LineChart _rateChart = new() { Height = 70, Unit = "", GridLines = 1, Capacity = LiveNetworkMonitor.Window };
+    private readonly LineChart _rateChart = new() { Height = 48, Unit = "", GridLines = 1, Capacity = LiveNetworkMonitor.Window };
 
     public DashboardNetwork()
     {

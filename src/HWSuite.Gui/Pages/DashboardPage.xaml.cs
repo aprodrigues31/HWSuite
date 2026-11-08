@@ -51,6 +51,8 @@ public sealed partial class DashboardPage : Page
                 _fitted = true;
                 Fit(new Windows.Foundation.Size(ActualWidth, ActualHeight));
             }
+
+            FitHeight();
         };
         BoardName.Text = Environment.MachineName.ToUpper(c);
         StatusText.Text = s["dash.waiting"].ToUpper(c);
@@ -163,12 +165,55 @@ public sealed partial class DashboardPage : Page
     /// </summary>
     private void Fit(Windows.Foundation.Size size)
     {
-        CpuRing.Diameter = Math.Clamp(size.Width * 0.17, 200, 360);
-        TempChart.Height = Math.Clamp(size.Height * 0.24, 160, 340);
-        if (App.Monitor.Latest is { } latest && _view is null)
+        // Start from the largest that makes sense, then FitHeight shrinks until the whole page is on screen.
+        CpuRing.Diameter = Math.Round(Math.Clamp(Math.Min(size.Width * 0.16, size.Height * 0.3), 170, 340) / 10) * 10;
+        TempChart.Height = Math.Clamp(size.Height * 0.24, 100, 320);
+        _fitPasses = 0;
+    }
+
+    private int _fitPasses;
+
+    /// <summary>
+    /// Makes the dashboard fit the window height (no scrolling on Full HD and up): the temperature chart, then the
+    /// processor ring, give up height until nothing is left below the fold. Only where that is not enough (very
+    /// small windows) the page scrolls.
+    /// </summary>
+    private void FitHeight()
+    {
+        if (_fitPasses >= 8 || Scroller.ViewportHeight <= 0 || Body.ActualHeight <= 0)
         {
-            Apply(latest);
+            return;
         }
+
+        _fitPasses++;
+        var overflow = Body.ActualHeight - Scroller.ViewportHeight;
+        if (overflow <= 2)
+        {
+            _fitPasses = 8;
+            return;
+        }
+
+        if (_view is not null)
+        {
+            _fitPasses = 8;
+            return;
+        }
+
+        var chart = Math.Max(100, TempChart.Height - overflow);
+        if (chart < TempChart.Height - 1)
+        {
+            TempChart.Height = chart;
+            return;
+        }
+
+        var ring = Math.Max(150, Math.Round((CpuRing.Diameter - overflow) / 10) * 10);
+        if (ring < CpuRing.Diameter)
+        {
+            CpuRing.Diameter = ring;
+            return;
+        }
+
+        _fitPasses = 8;
     }
 
     private void OnNetwork(object? sender, LiveNetworkReading reading) =>
@@ -286,6 +331,11 @@ public sealed partial class DashboardPage : Page
         foreach (var (rail, volts) in d.Rails)
         {
             CoolingList.Children.Add(HudUi.FactRow(rail.Name, HudUi.Mono($"{volts.ToString("0.00", c)} V", rail.Within(volts) ? HudUi.Accent : HudUi.Crit)));
+        }
+
+        foreach (var row in CoolingList.Children.OfType<Grid>())
+        {
+            row.Padding = new Thickness(0, 4, 0, 4);
         }
 
         if (CoolingList.Children.Count == 0)

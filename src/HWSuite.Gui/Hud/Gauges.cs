@@ -136,7 +136,27 @@ public sealed partial class RingGauge : Grid
         };
     }
 
-    public double Diameter { get; set; } = 220;
+    private double _diameter = 220;
+
+    /// <summary>Size in pixels; changing it redraws the ring and its glow at once.</summary>
+    public double Diameter
+    {
+        get => _diameter;
+        set
+        {
+            if (Math.Abs(value - _diameter) < 1)
+            {
+                return;
+            }
+
+            _diameter = value;
+            if (IsLoaded)
+            {
+                Layout();
+                Glow.Attach(_glowHost, _lit, HudUi.Accent, 10, 0.9f);
+            }
+        }
+    }
 
     public void Set(double fraction, string caption, string value, string sub, double? secondary = null, bool warn = false)
     {

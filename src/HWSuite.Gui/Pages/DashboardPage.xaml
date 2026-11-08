@@ -5,8 +5,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:hud="using:HWSuite.Gui.Hud"
     NavigationCacheMode="Required">
-    <ScrollViewer>
-        <StackPanel Padding="28,6,28,28" Spacing="16">
+    <ScrollViewer x:Name="Scroller">
+        <StackPanel x:Name="Body" Padding="28,6,28,20" Spacing="14">
 
             <!-- Header: what machine, how long it has been up, overall state -->
             <Grid ColumnSpacing="16" Padding="0,0,0,14" BorderBrush="{ThemeResource HudAccentDimBrush}" BorderThickness="0,0,0,1">
