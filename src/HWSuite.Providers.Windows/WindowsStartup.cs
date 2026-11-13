@@ -24,6 +24,7 @@ public static class WindowsStartup
         ReadRun(entries, Registry.LocalMachine, Run32, StartupSource.MachineRun32);
         ReadFolder(entries, Environment.GetFolderPath(Environment.SpecialFolder.Startup), StartupSource.UserFolder);
         ReadFolder(entries, Environment.GetFolderPath(Environment.SpecialFolder.CommonStartup), StartupSource.CommonFolder);
+        ReadTasks(entries);
         return StartupRules.Sort(entries);
     }
 
@@ -31,6 +32,12 @@ public static class WindowsStartup
     public static void SetEnabled(StartupEntry entry, bool enabled)
     {
         ArgumentNullException.ThrowIfNull(entry);
+        if (entry.Source == StartupSource.Task)
+        {
+            SetTaskEnabled(entry.Name, enabled);
+            return;
+        }
+
         var (hive, sub) = ApprovedKey(entry.Source);
         try
         {
@@ -44,12 +51,90 @@ public static class WindowsStartup
         }
     }
 
+    /// <summary>Scheduled tasks (outside \Microsoft) that run at sign-in or at boot, read from their XML files.</summary>
+    private static void ReadTasks(List<StartupEntry> entries)
+    {
+        var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "System32", "Tasks");
+        if (!Directory.Exists(root))
+        {
+            return;
+        }
+
+        IEnumerable<string> files;
+        try
+        {
+            files = Directory.EnumerateFiles(root, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true }).ToList();
+        }
+        catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+        {
+            return;
+        }
+
+        foreach (var file in files)
+        {
+            var path = "\\" + Path.GetRelativePath(root, file);
+            if (path.StartsWith(@"\Microsoft\", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
+
+            string xml;
+            try
+            {
+                xml = File.ReadAllText(file);
+            }
+            catch (Exception ex) when (ex is UnauthorizedAccessException or IOException)
+            {
+                continue;
+            }
+
+            var task = StartupRules.ParseTask(xml);
+            if (!task.AtStartup || task.Command is null)
+            {
+                continue;
+            }
+
+            var command = string.IsNullOrEmpty(task.Arguments) ? task.Command : $"{task.Command} {task.Arguments}";
+            var exe = StartupRules.Executable(Environment.ExpandEnvironmentVariables(task.Command.Contains(' ', StringComparison.Ordinal) && !task.Command.StartsWith('"') ? $"\"{task.Command}\"" : task.Command));
+            var entry = Make(StartupSource.Task, path, command, exe) with { Enabled = task.Enabled };
+            if (entry.Description is null)
+            {
+                entry = entry with { Description = Path.GetFileName(path) };
+            }
+
+            entries.Add(entry);
+        }
+    }
+
+    private static void SetTaskEnabled(string path, bool enabled)
+    {
+        var info = new ProcessStartInfo("schtasks.exe")
+        {
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardError = true,
+            RedirectStandardOutput = true,
+        };
+        foreach (var arg in new[] { "/Change", "/TN", path, enabled ? "/ENABLE" : "/DISABLE" })
+        {
+            info.ArgumentList.Add(arg);
+        }
+
+        using var process = Process.Start(info) ?? throw new IOException("schtasks");
+        var error = process.StandardError.ReadToEnd();
+        process.WaitForExit(15000);
+        if (process.ExitCode != 0)
+        {
+            throw new UnauthorizedAccessException(string.IsNullOrWhiteSpace(error) ? $"schtasks {process.ExitCode}" : error.Trim());
+        }
+    }
+
     private static (RegistryKey Hive, string Sub) ApprovedKey(StartupSource source) => source switch
     {
         StartupSource.UserRun => (Registry.CurrentUser, "Run"),
         StartupSource.MachineRun => (Registry.LocalMachine, "Run"),
         StartupSource.MachineRun32 => (Registry.LocalMachine, "Run32"),
-        StartupSource.UserFolder => (Registry.CurrentUser, "StartupFolder"),
+        StartupSource.UserFolder or StartupSource.Task => (Registry.CurrentUser, "StartupFolder"),
         _ => (Registry.LocalMachine, "StartupFolder"),
     };
 

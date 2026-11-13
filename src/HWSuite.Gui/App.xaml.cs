@@ -109,6 +109,38 @@ public partial class App : Application
 
     public static string IconPath => Path.Combine(AppContext.BaseDirectory, "Assets", "HWSuite.ico");
 
+    /// <summary>Folder for the startup-impact measurement (next to the settings).</summary>
+    public static string DataFolder => Path.GetDirectoryName(DataLocation.SettingsPath) ?? AppContext.BaseDirectory;
+
+    /// <summary>
+    /// When HWSuite opens with Windows (first 10 minutes after boot), it measures the startup programs two
+    /// minutes after boot: that is the "impact" the Startup page shows for this boot.
+    /// </summary>
+    private static void ScheduleStartupImpact()
+    {
+        if (IsDemo || !OperatingSystem.IsWindows())
+        {
+            return;
+        }
+
+        var uptime = TimeSpan.FromMilliseconds(Environment.TickCount64);
+        if (uptime > TimeSpan.FromMinutes(10) || HWSuite.Providers.Windows.WindowsStartupImpact.LoadThisBoot(DataFolder) is not null)
+        {
+            return;
+        }
+
+        var wait = TimeSpan.FromMinutes(2) - uptime;
+        _ = Task.Run(async () =>
+        {
+            if (wait > TimeSpan.Zero)
+            {
+                await Task.Delay(wait).ConfigureAwait(false);
+            }
+
+            HWSuite.Providers.Windows.WindowsStartupImpact.SaveThisBoot(DataFolder);
+        });
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var commandLine = Environment.GetCommandLineArgs();
@@ -174,6 +206,7 @@ public partial class App : Application
         }
 
         Monitor.Start();
+        ScheduleStartupImpact();
         if (!IsDemo)
         {
             Snmp.EventRaised += (_, e) =>
