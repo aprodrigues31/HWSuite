@@ -150,7 +150,7 @@ public sealed partial class StartupPage : Page
         grid.Children.Add(name);
 
         var impact = new StackPanel { Spacing = 3, VerticalAlignment = VerticalAlignment.Center };
-        var level = entry.Enabled && entry.Sample is null && entry.Executable is not null ? null : entry.Impact;
+        var level = entry.Enabled && entry.Sample is null && entry.Executable is not null ? (StartupImpact?)null : entry.Impact;
         var badge = new Border
         {
             Padding = new Thickness(8, 2, 8, 2),
