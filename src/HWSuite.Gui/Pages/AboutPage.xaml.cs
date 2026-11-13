@@ -14,6 +14,7 @@ public sealed partial class AboutPage : Page
         CheckButton.Content = App.Text["app.update.check"];
         VersionTag.Text = $"// {BuildInfo.Current.Display} · MPL-2.0".ToUpper(App.Text.Culture);
         FontsText.Text = App.Text["about.fonts"];
+        AuthorText.Text = App.Text["about.author"];
     }
 
     /// <summary>Checks GitHub now; a newer release also opens the update bar with its download button.</summary>

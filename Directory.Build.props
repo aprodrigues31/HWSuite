@@ -17,9 +17,10 @@
     <AssemblyVersion>$(VersionPrefix).0</AssemblyVersion>
     <FileVersion>$(VersionPrefix).$(BuildNumber)</FileVersion>
     <InformationalVersion>$(VersionPrefix)+build.$(BuildNumber)</InformationalVersion>
-    <Authors>HWSuite contributors</Authors>
+    <Authors>Alexandre Rodrigues</Authors>
+    <Company>Alexandre Rodrigues</Company>
     <Product>HWSuite</Product>
-    <Copyright>HWSuite contributors</Copyright>
+    <Copyright>Copyright © 2026 Alexandre Rodrigues (aprodrigues31@gmail.com)</Copyright>
     <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/aprodrigues31/HWSuite</RepositoryUrl>
     <!-- Localized user-facing strings live in HWSuite.Core/Localization; CA1303 does not apply. -->

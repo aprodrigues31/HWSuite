@@ -28,6 +28,8 @@
                         <ProgressRing x:Name="Checking" IsActive="False" Width="20" Height="20" />
                     </StackPanel>
                     <TextBlock x:Name="UpdateText" TextWrapping="Wrap" Style="{StaticResource HudMonoStyle}" />
+                    <TextBlock x:Name="AuthorText" Style="{StaticResource HudMonoStyle}" FontSize="13" />
+                    <HyperlinkButton x:Name="MailLink" Padding="0" NavigateUri="mailto:aprodrigues31@gmail.com" Content="aprodrigues31@gmail.com" FontFamily="{StaticResource HudMonoFont}" />
                     <HyperlinkButton x:Name="RepoLink" Padding="0" NavigateUri="https://github.com/aprodrigues31/HWSuite" Content="github.com/aprodrigues31/HWSuite" FontFamily="{StaticResource HudMonoFont}" />
                 </StackPanel>
             </Grid>

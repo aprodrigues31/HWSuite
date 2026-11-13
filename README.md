@@ -137,6 +137,10 @@ Cada provedor implementa `IInventoryProvider` e só preenche o modelo comum; os 
 3. **Detalhe:** ✅ perfis de placa-mãe, SPD/XMP da memória e link PCIe (0.6.0); ✅ telemetria AMD pela ADL: link PCIe ao vivo e limites do driver (0.7.0). ✅ S.M.A.R.T. de SATA/USB com avaliação de saúde (0.8.0). ✅ baterias e nobreaks, ✅ AMD EXPO. A seguir: controlador de tensão (VRM).
 4. **Paridade:** ✅ banco de dados de GPUs e campos do GPU-Z (0.9.0), clocks da placa pelo driver AMD (0.10.0), detecção de GPU falsificada (0.11.0), backup da BIOS de vídeo das placas AMD (0.12.0), benchmark e stress test de processador e GPU com comparação (0.13.0). ✅ saúde da fonte pelas tensões e bomba do water cooler, ✅ NPU.
 
+## Autor
+
+Alexandre Rodrigues — [aprodrigues31@gmail.com](mailto:aprodrigues31@gmail.com)
+
 ## Licença
 
 [Mozilla Public License 2.0](LICENSE). HWSuite não usa código, dados nem marcas do CPU-Z, GPU-Z ou HWMonitor; eles servem apenas como referência de funcionalidade.
