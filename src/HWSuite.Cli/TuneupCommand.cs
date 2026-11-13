@@ -33,7 +33,7 @@ internal static class TuneupCommand
         void Log(string line) => Console.WriteLine("  " + line);
         var failed = false;
         var reboot = false;
-        foreach (var task in Enum.GetValues<TuneupTasks>().Where(t => t is not (TuneupTasks.None or TuneupTasks.Default) && tasks.HasFlag(t)))
+        foreach (var task in Enum.GetValues<TuneupTasks>().Where(t => t is not (TuneupTasks.None or TuneupTasks.Default) && tasks.HasFlag(t)).OrderBy(t => t == TuneupTasks.SystemHealth ? 0 : 1))
         {
             if (cancel.IsCancellationRequested)
             {
@@ -46,6 +46,7 @@ internal static class TuneupCommand
                 TuneupTasks.Optimize => WindowsTuneup.Optimize(options.OptimizeDrives, s, Log, cancel.Token),
                 TuneupTasks.WindowsUpdate => WindowsTuneup.WindowsUpdate(s, Log, cancel.Token),
                 TuneupTasks.StoreApps => WindowsTuneup.StoreApps(s, Log, cancel.Token),
+                TuneupTasks.SystemHealth => WindowsTuneup.SystemHealth(s, Log, cancel.Token),
                 _ => WindowsTuneup.DesktopApps(s, Log, cancel.Token),
             };
             Console.WriteLine((outcome.Succeeded ? "[OK] " : "[!]  ") + outcome.Summary);

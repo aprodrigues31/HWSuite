@@ -683,6 +683,24 @@ public sealed class Strings
         ["tune.wu.hint"] = "Searches, downloads and installs Windows updates (security, quality, Defender definitions). It can take a while and may ask for a restart.",
         ["tune.store"] = "Microsoft Store apps",
         ["tune.store.hint"] = "Asks the Store to update its apps and updates them through winget too.",
+        ["tune.health"] = "Windows installation health",
+        ["tune.health.hint"] = "Checks the Windows image (DISM) and the system files (SFC) and repairs what is broken, using Windows Update as the source. Can take 15 to 40 minutes.",
+        ["tune.health.scan"] = "Checking the Windows image (DISM ScanHealth)…",
+        ["tune.health.restore"] = "Problems found: repairing the Windows image (DISM RestoreHealth, needs the Internet)…",
+        ["tune.health.sfc"] = "Checking and repairing system files (SFC /scannow)…",
+        ["tune.health.image.Healthy"] = "Windows image: healthy",
+        ["tune.health.image.Repairable"] = "Windows image: damaged, can be repaired",
+        ["tune.health.image.NonRepairable"] = "Windows image: damaged and cannot be repaired automatically (an in-place reinstall of Windows is advised)",
+        ["tune.health.image.Unknown"] = "Windows image: could not be checked",
+        ["tune.health.imageFixed"] = "Windows image: repaired",
+        ["tune.health.imageNotFixed"] = "Windows image: repair failed (no Internet or Windows Update blocked?)",
+        ["tune.health.sfcOk"] = "System files: no integrity problems",
+        ["tune.health.sfcFixed"] = "System files: {0} repaired",
+        ["tune.health.sfcBroken"] = "System files: {0} could not be repaired (details in C:\\Windows\\Logs\\CBS\\CBS.log)",
+        ["tune.health.sfcUnknown"] = "System files: SFC did not finish",
+        ["tune.health.summaryOk"] = "Windows health: no problems found",
+        ["tune.health.summaryFixed"] = "Windows health: problems found and repaired",
+        ["tune.health.summaryBad"] = "Windows health: problems remain",
         ["tune.apps"] = "Installed programs (winget)",
         ["tune.apps.hint"] = "Updates installed programs that have a newer version in winget's catalog (browsers, 7-Zip, Adobe Reader...).",
         ["tune.run"] = "Run selected",
@@ -1369,12 +1387,12 @@ public sealed class Strings
                                             Reads a network device over SNMP: system, ports, traffic.
               hwsuite wifi [--duration 30]          Wi-Fi test: connection, channel health around, stability
                                             to the router and the Internet, and what to adjust.
-              hwsuite tuneup [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
+              hwsuite tuneup [--health] [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
                              [--empty-recycle-bin] [--cleanup-drives C,D] [--optimize-drives C,D]
                              [--drives C,D]
                                             Windows maintenance as administrator: disk cleanup, drive
                                             optimization (TRIM / defrag), Windows Update, Store apps,
-                                            programs through winget (no option = all but --apps).
+                                            programs through winget (no option = all but --apps and --health).
                                             Drives: cleanup = the Windows drive, optimization = every
                                             fixed drive, unless given (--drives sets both).
               hwsuite maintenance [options]
@@ -2114,6 +2132,24 @@ public sealed class Strings
         ["tune.wu.hint"] = "Procura, baixa e instala as atualizações do Windows (segurança, qualidade, definições do Defender). Pode demorar e pedir reinicialização.",
         ["tune.store"] = "Apps da Microsoft Store",
         ["tune.store.hint"] = "Pede à Loja para atualizar os apps dela e atualiza também pelo winget.",
+        ["tune.health"] = "Saúde da instalação do Windows",
+        ["tune.health.hint"] = "Verifica a imagem do Windows (DISM) e os arquivos do sistema (SFC) e corrige o que estiver danificado, usando o Windows Update como fonte. Pode levar de 15 a 40 minutos.",
+        ["tune.health.scan"] = "Verificando a imagem do Windows (DISM ScanHealth)…",
+        ["tune.health.restore"] = "Problemas encontrados: reparando a imagem do Windows (DISM RestoreHealth, precisa de Internet)…",
+        ["tune.health.sfc"] = "Verificando e corrigindo os arquivos do sistema (SFC /scannow)…",
+        ["tune.health.image.Healthy"] = "Imagem do Windows: íntegra",
+        ["tune.health.image.Repairable"] = "Imagem do Windows: danificada, pode ser reparada",
+        ["tune.health.image.NonRepairable"] = "Imagem do Windows: danificada e sem reparo automático (recomenda-se reinstalar o Windows por cima, mantendo arquivos e programas)",
+        ["tune.health.image.Unknown"] = "Imagem do Windows: não foi possível verificar",
+        ["tune.health.imageFixed"] = "Imagem do Windows: reparada",
+        ["tune.health.imageNotFixed"] = "Imagem do Windows: o reparo falhou (sem Internet ou Windows Update bloqueado?)",
+        ["tune.health.sfcOk"] = "Arquivos do sistema: nenhum problema de integridade",
+        ["tune.health.sfcFixed"] = "Arquivos do sistema: {0} corrigido(s)",
+        ["tune.health.sfcBroken"] = "Arquivos do sistema: {0} não puderam ser corrigidos (detalhes em C:\\Windows\\Logs\\CBS\\CBS.log)",
+        ["tune.health.sfcUnknown"] = "Arquivos do sistema: o SFC não terminou",
+        ["tune.health.summaryOk"] = "Saúde do Windows: nenhum problema encontrado",
+        ["tune.health.summaryFixed"] = "Saúde do Windows: problemas encontrados e corrigidos",
+        ["tune.health.summaryBad"] = "Saúde do Windows: ainda há problemas",
         ["tune.apps"] = "Programas instalados (winget)",
         ["tune.apps.hint"] = "Atualiza os programas instalados que têm versão nova no catálogo do winget (navegadores, 7-Zip, Adobe Reader...).",
         ["tune.run"] = "Executar selecionados",
@@ -2800,12 +2836,13 @@ public sealed class Strings
                                             Lê um equipamento de rede por SNMP: sistema, portas, tráfego.
               hwsuite wifi [--duration 30]          Teste de Wi-Fi: conexão, saúde dos canais ao redor,
                                             estabilidade até o roteador e a Internet, e o que ajustar.
-              hwsuite tuneup [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
+              hwsuite tuneup [--health] [--cleanup] [--optimize] [--windows-update] [--store] [--apps]
                              [--empty-recycle-bin] [--cleanup-drives C,D] [--optimize-drives C,D]
                              [--drives C,D]
                                             Manutenção do Windows como administrador: limpeza de disco,
                                             otimização das unidades (TRIM / desfragmentação), Windows Update,
-                                            apps da Loja, programas pelo winget (sem opção = tudo menos --apps).
+                                            apps da Loja, programas pelo winget, saúde do Windows com --health (DISM + SFC)
+                                            (sem opção = tudo menos --apps e --health).
                                             Unidades: limpeza = a do Windows, otimização = todas as fixas,
                                             se não forem informadas (--drives vale para as duas).
               hwsuite maintenance [opções]

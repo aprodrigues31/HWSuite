@@ -329,6 +329,7 @@ public sealed record CliOptions
                 "--cleanup" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Cleanup },
                 "--optimize" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Optimize },
                 "--windows-update" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.WindowsUpdate },
+                "--health" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.SystemHealth },
                 "--store" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.StoreApps },
                 "--apps" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.DesktopApps },
                 "--empty-recycle-bin" when options.Command == CliCommand.Tuneup => options with { EmptyRecycleBin = true },

@@ -484,6 +484,73 @@ public static partial class WindowsTuneup
 
     // ---- Processes ----------------------------------------------------------------------------------------------------
 
+    /// <summary>
+    /// Windows installation health: DISM checks the component store (PowerShell's Repair-WindowsImage, whose
+    /// result is a language-neutral state); when it is damaged, RestoreHealth repairs it from Windows Update; then
+    /// SFC /scannow checks and repairs the system files, and its result is read from CBS.log (always English).
+    /// </summary>
+    public static TuneupOutcome SystemHealth(Strings s, Action<string>? log = null, CancellationToken cancel = default)
+    {
+        ArgumentNullException.ThrowIfNull(s);
+        var details = new List<string>();
+        var powershell = Path.Combine(Environment.SystemDirectory, "WindowsPowerShell", "v1.0", "powershell.exe");
+        ImageHealth Image(string mode)
+        {
+            var (_, output) = Run(powershell, $"-NoProfile -NonInteractive -Command \"(Repair-WindowsImage -Online -{mode} -NoRestart).ImageHealthState\"", TimeSpan.FromHours(2), null, null, cancel);
+            return Tuneup.ParseImageHealth(output);
+        }
+
+        log?.Invoke(s["tune.health.scan"]);
+        var image = Image("ScanHealth");
+        details.Add(s[$"tune.health.image.{image}"]);
+        var imageOk = image == ImageHealth.Healthy;
+        var fixedSomething = false;
+        if (image == ImageHealth.Repairable && !cancel.IsCancellationRequested)
+        {
+            log?.Invoke(s["tune.health.restore"]);
+            var after = Image("RestoreHealth");
+            imageOk = after == ImageHealth.Healthy;
+            fixedSomething |= imageOk;
+            details.Add(imageOk ? s["tune.health.imageFixed"] : s["tune.health.imageNotFixed"]);
+        }
+
+        var sfcOk = false;
+        if (!cancel.IsCancellationRequested)
+        {
+            log?.Invoke(s["tune.health.sfc"]);
+            var cbs = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Logs", "CBS", "CBS.log");
+            var before = File.Exists(cbs) ? new FileInfo(cbs).Length : 0;
+            Run(Path.Combine(Environment.SystemDirectory, "sfc.exe"), "/scannow", TimeSpan.FromHours(2), Encoding.Unicode, null, cancel);
+            var result = Tuneup.ParseSfc(ReadFrom(cbs, before));
+            sfcOk = result.Completed && result.Unrepaired == 0;
+            fixedSomething |= result.Repaired > 0;
+            details.Add(!result.Completed ? s["tune.health.sfcUnknown"]
+                : result.Unrepaired > 0 ? s.Format("tune.health.sfcBroken", result.Unrepaired)
+                : result.Repaired > 0 ? s.Format("tune.health.sfcFixed", result.Repaired)
+                : s["tune.health.sfcOk"]);
+        }
+
+        var ok = imageOk && sfcOk;
+        var summary = !ok ? s["tune.health.summaryBad"] : fixedSomething ? s["tune.health.summaryFixed"] : s["tune.health.summaryOk"];
+        return new TuneupOutcome(TuneupTasks.SystemHealth, ok, summary, details) { RebootRequired = fixedSomething };
+    }
+
+    /// <summary>The text a log gained after <paramref name="offset"/> (CBS.log is shared with the servicing stack).</summary>
+    private static string ReadFrom(string path, long offset)
+    {
+        try
+        {
+            using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            stream.Seek(stream.Length >= offset ? offset : 0, SeekOrigin.Begin);
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return "";
+        }
+    }
+
     /// <summary>Runs a tool hidden, waits for it (or the timeout / cancellation) and returns its exit code and output.</summary>
     private static (int Code, string Output) Run(string file, string arguments, TimeSpan timeout, Encoding? encoding, Action<string>? line, CancellationToken cancel)
     {

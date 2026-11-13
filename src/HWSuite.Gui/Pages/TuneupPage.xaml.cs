@@ -34,6 +34,7 @@ public sealed partial class TuneupPage : Page
         StopButton.Content = s["tune.stop"];
         AdminBar.Message = s["tune.needsAdmin"];
 
+        Add(TuneupTasks.SystemHealth, "tune.health", "tune.health.hint", false);
         Add(TuneupTasks.Cleanup, "tune.cleanup", "tune.cleanup.hint", true, extra =>
         {
             _recycle = new CheckBox { Content = s["tune.recycle"] };
@@ -216,6 +217,7 @@ public sealed partial class TuneupPage : Page
                     TuneupTasks.Optimize => WindowsTuneup.Optimize(optimizeDrives, s, Log, token),
                     TuneupTasks.WindowsUpdate => WindowsTuneup.WindowsUpdate(s, Log, token),
                     TuneupTasks.StoreApps => WindowsTuneup.StoreApps(s, Log, token),
+                    TuneupTasks.SystemHealth => WindowsTuneup.SystemHealth(s, Log, token),
                     _ => WindowsTuneup.DesktopApps(s, Log, token),
                 }, CancellationToken.None);
                 reboot |= outcome.RebootRequired;

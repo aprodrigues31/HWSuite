@@ -21,6 +21,9 @@ public enum TuneupTasks
     /// <summary>Update installed programs through winget (desktop apps).</summary>
     DesktopApps = 16,
 
+    /// <summary>Check the Windows installation (DISM image health, then SFC) and repair what is broken.</summary>
+    SystemHealth = 32,
+
     Default = Cleanup | Optimize | WindowsUpdate | StoreApps,
 }
 
@@ -41,6 +44,18 @@ public sealed record TuneupOutcome(TuneupTasks Task, bool Succeeded, string Summ
 
 /// <summary>One Windows update found (and what happened to it).</summary>
 public sealed record WindowsUpdateItem(string Title, string? Kb, long? SizeBytes, string? Result);
+
+/// <summary>State of the Windows component store, as DISM reports it (ImageHealthState).</summary>
+public enum ImageHealth
+{
+    Unknown,
+    Healthy,
+    Repairable,
+    NonRepairable,
+}
+
+/// <summary>What System File Checker found, read from the CBS log lines it wrote (always in English).</summary>
+public sealed record SfcResult(bool Completed, int Repaired, int Unrepaired);
 
 /// <summary>Text helpers for the maintenance tasks (shared by the app and the command line).</summary>
 public static class Tuneup
@@ -161,4 +176,57 @@ public static class Tuneup
         5 => "Aborted",
         _ => code.ToString(System.Globalization.CultureInfo.InvariantCulture),
     };
+
+    /// <summary>DISM's ImageHealthState word ("Healthy", "Repairable", "NonRepairable") from PowerShell output.</summary>
+    public static ImageHealth ParseImageHealth(string? output)
+    {
+        var words = (output ?? "").Split(['\r', '\n', ' ', '\t'], StringSplitOptions.RemoveEmptyEntries);
+        foreach (var w in words.Reverse())
+        {
+            if (Enum.TryParse<ImageHealth>(w, ignoreCase: true, out var state) && state != ImageHealth.Unknown && !int.TryParse(w, out _))
+            {
+                return state;
+            }
+        }
+
+        return ImageHealth.Unknown;
+    }
+
+    /// <summary>
+    /// SFC's result from the part of CBS.log it wrote: "[SR] Repairing corrupted file" / "Repaired file" count as
+    /// repaired, "[SR] Cannot repair member file" as not repairable, "[SR] Verify complete" means it finished.
+    /// Files are counted once each.
+    /// </summary>
+    public static SfcResult ParseSfc(string cbsSegment)
+    {
+        var repaired = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var broken = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var completed = false;
+        foreach (var raw in (cbsSegment ?? "").Split('\n'))
+        {
+            var line = raw.Trim();
+            var sr = line.IndexOf("[SR]", StringComparison.Ordinal);
+            if (sr < 0)
+            {
+                continue;
+            }
+
+            var text = line[(sr + 4)..].Trim();
+            if (text.StartsWith("Verify complete", StringComparison.OrdinalIgnoreCase) || text.StartsWith("Repair complete", StringComparison.OrdinalIgnoreCase))
+            {
+                completed = true;
+            }
+            else if (text.StartsWith("Cannot repair member file", StringComparison.OrdinalIgnoreCase))
+            {
+                broken.Add(text);
+            }
+            else if (text.StartsWith("Repairing corrupted file", StringComparison.OrdinalIgnoreCase) || text.StartsWith("Repaired file", StringComparison.OrdinalIgnoreCase))
+            {
+                var name = text.Contains('\\', StringComparison.Ordinal) ? text[text.LastIndexOf('\\')..] : text;
+                repaired.Add(name.Trim(']', ' ', '"'));
+            }
+        }
+
+        return new SfcResult(completed, repaired.Count, broken.Count);
+    }
 }
