@@ -72,6 +72,7 @@ public sealed partial class MainWindow : Window
         Top(RailItem("network", "\uE701", s["rail.network"], s["net.title"]));
         Top(RailItem("devices", "\uE968", s["rail.devices"], s["snmp.title"]));
         Top(RailItem("tuneup", "\uE90F", s["rail.maintenance"], s["tune.title"]));
+        Top(RailItem("startup", "\uE7E8", s["rail.startup"], s["startup.title"]));
         Top(RailItem("report", "\uE9F9", s["rail.report"], s["mnt.report.title"]));
         Bottom(RailItem("settings", "\uE713", s["rail.settings"], s["app.nav.settings"]));
         Bottom(RailItem("about", "\uE946", s["rail.about"], s["app.nav.about"]));
@@ -208,6 +209,7 @@ public sealed partial class MainWindow : Window
             "report" => typeof(ReportPage),
             "history" => typeof(HistoryPage),
             "tuneup" => typeof(TuneupPage),
+            "startup" => typeof(StartupPage),
             "stability" => typeof(StabilityPage),
             "charts" => typeof(ChartsPage),
             "settings" => typeof(SettingsPage),

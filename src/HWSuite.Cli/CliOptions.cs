@@ -28,6 +28,7 @@ public enum CliCommand
     Tuneup,
     Wifi,
     Snmp,
+    Startup,
 }
 
 public enum DriverAction
@@ -57,7 +58,7 @@ public sealed record CliOptions
 
     public string? Language { get; init; }
 
-    /// <summary>snmp: its own arguments (host, credentials, --walk), read by <see cref="SnmpCommand"/>.</summary>
+    /// <summary>snmp and startup: their own arguments (host, credentials, --walk), read by <see cref="SnmpCommand"/>.</summary>
     public IReadOnlyList<string> SnmpArgs { get; init; } = [];
 
     public bool Watch { get; init; }
@@ -158,7 +159,8 @@ public sealed record CliOptions
         var i = 0;
 
         // "snmp" has its own arguments (host, credentials); --lang is still honored.
-        if (args.Count > 0 && args[0].Equals("snmp", StringComparison.OrdinalIgnoreCase))
+        var ownArgs = args.Count > 0 && (args[0].Equals("snmp", StringComparison.OrdinalIgnoreCase) || args[0].Equals("startup", StringComparison.OrdinalIgnoreCase));
+        if (ownArgs)
         {
             var rest = args.Skip(1).ToList();
             var lang = rest.FindIndex(a => a.Equals("--lang", StringComparison.OrdinalIgnoreCase));
@@ -169,7 +171,8 @@ public sealed record CliOptions
                 rest.RemoveRange(lang, 2);
             }
 
-            return options with { Command = CliCommand.Snmp, SnmpArgs = rest, Language = language };
+            var command = args[0].Equals("startup", StringComparison.OrdinalIgnoreCase) ? CliCommand.Startup : CliCommand.Snmp;
+            return options with { Command = command, SnmpArgs = rest, Language = language };
         }
 
         // The command is optional; plain "hwsuite" prints the text report to the console.
