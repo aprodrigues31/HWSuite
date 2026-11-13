@@ -336,7 +336,8 @@ jobs:
         if: always()
         with:
           name: hwsuite-gui-${{ steps.version.outputs.label }}-win-x64
-          path: artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip
+          # The single-file exe itself: GitHub already zips every artifact, so this downloads as one zip.
+          path: artifacts/portable/HWSuite.Gui.exe
           if-no-files-found: warn
 
       - uses: actions/upload-artifact@v5

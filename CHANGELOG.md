@@ -8,6 +8,17 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.27.0] - 2026-11-12
+
+### Adicionado
+- **Inicialização**: novo menu com os programas que iniciam com o Windows (registro, pastas Inicializar e tarefas agendadas no login/boot), com chave para habilitar ou desabilitar (como o Gerenciador de Tarefas, nada é apagado), editor, origem, aviso de arquivo inexistente e **impacto na inicialização** (regra do Gerenciador de Tarefas, medido 2 min após o boot quando o HWSuite inicia com o Windows), além do tempo do último boot medido pelo próprio Windows. Linha de comando: `hwsuite startup`.
+- **Manutenção · Saúde da instalação do Windows**: DISM (verificação e reparo da imagem) e SFC, com o resultado de cada parte. Linha de comando: `hwsuite tuneup --health`.
+- **Manutenção por área** (Windows, Discos, Aplicativos), barra de progresso com **tempo restante estimado** (aprende com as execuções no próprio PC), **manutenção agendada** (dias e horário, pelo Agendador de Tarefas, sem reiniciar o PC) e **Resultados** com o histórico de execuções.
+
+### Alterado
+- **Versão portátil em um único arquivo**: o pacote traz só o `HWSuite.Gui.exe`.
+- Autor: Alexandre Rodrigues (aprodrigues31@gmail.com) no executável, no instalador, na tela Sobre e no README.
+
 ## [0.26.1] - 2026-11-08
 
 ### Corrigido
@@ -349,7 +360,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.26.1...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.27.0
 [0.26.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.1
 [0.26.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.0
 [0.25.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.25.1
