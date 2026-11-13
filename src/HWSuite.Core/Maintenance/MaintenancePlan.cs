@@ -145,6 +145,9 @@ public static class MaintenancePlan
 
     // ---- Scheduled task ----------------------------------------------------------------------------------------
 
+    /// <summary>The app's own argument for a scheduled run without a window (portable copy without hwsuite.exe).</summary>
+    public const string AppArgument = "--run-maintenance";
+
     /// <summary>The command-line arguments of a scheduled run.</summary>
     public static string Arguments(MaintenanceSchedule schedule)
     {
@@ -176,7 +179,7 @@ public static class MaintenancePlan
     /// Task Scheduler XML: weekly on the chosen days at the chosen time, as this user with the highest rights while
     /// signed in (no password is stored), started late if the PC was off, wakes the PC, never on battery limits.
     /// </summary>
-    public static string TaskXml(MaintenanceSchedule schedule, string exe, string user, DateTime today, string description)
+    public static string TaskXml(MaintenanceSchedule schedule, string exe, string user, DateTime today, string description, string? arguments = null)
     {
         ArgumentNullException.ThrowIfNull(schedule);
         static string X(string v) => SecurityElement.Escape(v) ?? "";
@@ -194,7 +197,7 @@ public static class MaintenancePlan
         xml.Append("  <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>");
         xml.Append("<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><StartWhenAvailable>true</StartWhenAvailable><WakeToRun>true</WakeToRun>");
         xml.Append("<ExecutionTimeLimit>PT6H</ExecutionTimeLimit><Enabled>true</Enabled></Settings>\n");
-        xml.Append(CultureInfo.InvariantCulture, $"  <Actions Context=\"Author\"><Exec><Command>\"{X(exe)}\"</Command><Arguments>{X(Arguments(schedule))}</Arguments>");
+        xml.Append(CultureInfo.InvariantCulture, $"  <Actions Context=\"Author\"><Exec><Command>\"{X(exe)}\"</Command><Arguments>{X(arguments ?? Arguments(schedule))}</Arguments>");
         xml.Append(CultureInfo.InvariantCulture, $"<WorkingDirectory>{X(Path.GetDirectoryName(exe) ?? "")}</WorkingDirectory></Exec></Actions>\n");
         xml.Append("</Task>\n");
         return xml.ToString();

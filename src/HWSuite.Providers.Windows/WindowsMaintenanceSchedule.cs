@@ -24,17 +24,22 @@ public static class WindowsMaintenanceSchedule
     /// <summary>The command-line program next to the app (hwsuite.exe), or null when this copy does not have it.</summary>
     public static string? CliPath()
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "hwsuite.exe");
+        var path = Path.Combine(DataLocation.ExeFolder, "hwsuite.exe");
         return File.Exists(path) ? path : null;
     }
 
     /// <summary>Creates or replaces the scheduled task. Throws <see cref="InvalidOperationException"/> with the reason.</summary>
+    /// <remarks>
+    /// Runs hwsuite.exe when it is next to the app (installed copy); a portable copy that is just the app's .exe
+    /// schedules the app itself with "--run-maintenance" (it runs the tasks without opening a window).
+    /// </remarks>
     public static void Save(MaintenanceSchedule schedule, string description)
     {
         ArgumentNullException.ThrowIfNull(schedule);
-        var exe = CliPath() ?? throw new InvalidOperationException("hwsuite.exe");
+        var cli = CliPath();
+        var exe = cli ?? Environment.ProcessPath ?? throw new InvalidOperationException("HWSuite.Gui.exe");
         var user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-        var xml = MaintenancePlan.TaskXml(schedule, exe, user, DateTime.Today, description);
+        var xml = MaintenancePlan.TaskXml(schedule, exe, user, DateTime.Today, description, cli is null ? MaintenancePlan.AppArgument : null);
         var file = Path.Combine(Path.GetTempPath(), $"hwsuite-task-{Environment.ProcessId}.xml");
         File.WriteAllText(file, xml, Encoding.Unicode);
         try

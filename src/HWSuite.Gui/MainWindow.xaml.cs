@@ -1,4 +1,5 @@
 using HWSuite.Core;
+using HWSuite.Core.Settings;
 using HWSuite.Gui.Pages;
 using HWSuite.Gui.Services;
 using HWSuite.Providers.Windows;
@@ -295,7 +296,7 @@ public sealed partial class MainWindow : Window
     private bool _updating;
 
     /// <summary>Installed by the setup (or winget, which runs the same setup): its uninstaller sits next to the app.</summary>
-    private static bool IsInstalled => File.Exists(Path.Combine(AppContext.BaseDirectory, "unins000.exe"));
+    private static bool IsInstalled => File.Exists(Path.Combine(DataLocation.ExeFolder, "unins000.exe"));
 
     /// <summary>
     /// "HWSuite 0.20.0 is available" with "Update now". The update is always done by the app itself: an installed
@@ -340,7 +341,7 @@ public sealed partial class MainWindow : Window
         var folder = Path.Combine(Path.GetTempPath(), "HWSuite-update");
         try
         {
-            if (!IsInstalled && !Services.PortableUpdater.CanWrite(AppContext.BaseDirectory))
+            if (!IsInstalled && !Services.PortableUpdater.CanWrite(DataLocation.ExeFolder))
             {
                 throw new UnauthorizedAccessException(s["app.update.readOnly"]);
             }
@@ -363,7 +364,7 @@ public sealed partial class MainWindow : Window
             }
             else
             {
-                await Task.Run(() => Services.PortableUpdater.Apply(file, AppContext.BaseDirectory, "HWSuite.Gui.exe"));
+                await Task.Run(() => Services.PortableUpdater.Apply(file, DataLocation.ExeFolder, "HWSuite.Gui.exe"));
             }
 
             App.Quit();

@@ -12,7 +12,14 @@ public static class DataLocation
 {
     public const string PortableFolderName = "HWSuite";
 
-    private static readonly Lazy<(string Folder, bool Portable)> Resolved = new(() => Resolve(AppContext.BaseDirectory));
+    private static readonly Lazy<(string Folder, bool Portable)> Resolved = new(() => Resolve(ExeFolder));
+
+    /// <summary>
+    /// The folder of the executable itself. Not AppContext.BaseDirectory: a single-file app (the portable
+    /// HWSuite.Gui.exe) runs from a temporary extraction folder, while its data belongs next to the .exe.
+    /// </summary>
+    public static string ExeFolder =>
+        Environment.ProcessPath is { } exe && Path.GetDirectoryName(exe) is { Length: > 0 } dir ? dir + Path.DirectorySeparatorChar : AppContext.BaseDirectory;
 
     /// <summary>The data folder (created on first write by whoever writes).</summary>
     public static string Folder => Resolved.Value.Folder;
@@ -30,7 +37,7 @@ public static class DataLocation
     /// A path from the settings, made absolute. A portable copy stores paths inside its own folder relative to it
     /// ("HWSuite\Reports"), because a pen drive gets a different letter on every computer.
     /// </summary>
-    public static string? ResolvePath(string? path) => ResolvePath(path, AppContext.BaseDirectory);
+    public static string? ResolvePath(string? path) => ResolvePath(path, ExeFolder);
 
     public static string? ResolvePath(string? path, string baseFolder)
     {
@@ -39,7 +46,7 @@ public static class DataLocation
     }
 
     /// <summary>The form to save in the settings: relative when this is a portable copy and the path is inside it.</summary>
-    public static string StorePath(string path) => StorePath(path, IsPortable ? AppContext.BaseDirectory : null);
+    public static string StorePath(string path) => StorePath(path, IsPortable ? ExeFolder : null);
 
     public static string StorePath(string path, string? portableBase)
     {

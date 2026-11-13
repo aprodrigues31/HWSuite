@@ -509,12 +509,6 @@ public sealed partial class TuneupPage : Page
             {
                 if (on)
                 {
-                    if (WindowsMaintenanceSchedule.CliPath() is null)
-                    {
-                        _scheduleStatus!.Text = s["tune.schedule.noCli"];
-                        return;
-                    }
-
                     WindowsMaintenanceSchedule.Save(new MaintenanceSchedule(days, time, tasks, _recycle?.IsChecked == true), s["tune.schedule"]);
                 }
                 else

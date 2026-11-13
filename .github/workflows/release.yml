@@ -90,8 +90,13 @@ jobs:
           Start-Sleep -Seconds 15
           if ($app.HasExited) { throw "HWSuite.Gui exited early with code $($app.ExitCode)" }
           Stop-Process -Id $app.Id -Force
-          Copy-Item LICENSE, CHANGELOG.md gui/
-          Compress-Archive -Path gui/* -DestinationPath "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip"
+          # Portable package: one file, HWSuite.Gui.exe with everything inside (the installer keeps the folder build).
+          dotnet publish src/HWSuite.Gui -c Release -r win-x64 -p:Platform=x64 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o portable
+          $single = Start-Process -FilePath (Resolve-Path portable/HWSuite.Gui.exe) -PassThru
+          Start-Sleep -Seconds 40
+          if ($single.HasExited) { throw "The single-file app exited early with code $($single.ExitCode)" }
+          Stop-Process -Id $single.Id -Force
+          Compress-Archive -Path portable/HWSuite.Gui.exe -DestinationPath "hwsuite-gui-${{ steps.version.outputs.version }}-win-x64.zip"
 
       - name: Installer
         shell: pwsh

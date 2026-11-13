@@ -284,9 +284,19 @@ jobs:
             Write-Output "::notice title=Screenshots::published to the ci-screens branch"
           }
 
-      - name: Desktop app - package
+      - name: Desktop app - portable single file, package
         shell: pwsh
-        run: Compress-Archive -Path artifacts/gui/* -DestinationPath "artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip"
+        run: |
+          # The portable package is one file: HWSuite.Gui.exe with everything inside (extracted to %TEMP% on first start).
+          dotnet publish src/HWSuite.Gui -c Release -r win-x64 -p:Platform=x64 -p:PublishSingleFile=true -p:IncludeAllContentForSelfExtract=true -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true -o artifacts/portable
+          $files = Get-ChildItem artifacts/portable -File | Where-Object { $_.Extension -ne '.pdb' }
+          Write-Host ($files | ForEach-Object { "$($_.Name) $([math]::Round($_.Length / 1MB, 1)) MB" })
+          $exe = Resolve-Path artifacts/portable/HWSuite.Gui.exe
+          $app = Start-Process -FilePath $exe -ArgumentList '--demo' -PassThru
+          Start-Sleep -Seconds 40
+          if ($app.HasExited) { throw "The single-file app exited early with code $($app.ExitCode)" }
+          Stop-Process -Id $app.Id -Force
+          Compress-Archive -Path $exe -DestinationPath "artifacts/hwsuite-gui-${{ steps.version.outputs.label }}-win-x64.zip"
 
       - name: Installer - build and install/uninstall check
         timeout-minutes: 10

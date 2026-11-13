@@ -1,5 +1,6 @@
 using HWSuite.Core.Alerts;
 using HWSuite.Core.Localization;
+using HWSuite.Core.Maintenance;
 using HWSuite.Core.Sensors;
 using HWSuite.Core.Settings;
 using HWSuite.Gui.Services;
@@ -79,7 +80,7 @@ public partial class App : Application
         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, RelaunchArgument)
         {
             UseShellExecute = false,
-            WorkingDirectory = AppContext.BaseDirectory,
+            WorkingDirectory = DataLocation.ExeFolder,
         })?.Dispose();
         DriverInstalledThisSession = false; // coming straight back: a portable copy keeps the driver it installed
         Quit();
@@ -141,9 +142,58 @@ public partial class App : Application
         });
     }
 
+    /// <summary>
+    /// The scheduled maintenance, as "hwsuite tuneup --scheduled" does it: the tasks saved with the schedule, in
+    /// order, never a restart, the run kept in the history.
+    /// </summary>
+    private static void RunScheduledMaintenance()
+    {
+        if (!OperatingSystem.IsWindows() || !AccessStatus.Detect().IsElevated)
+        {
+            return;
+        }
+
+        var cfg = Settings.Current;
+        var started = DateTime.Now;
+        var outcomes = new List<TuneupOutcome>();
+        var reboot = false;
+        foreach (var task in MaintenancePlan.Order.Where(t => cfg.ScheduleTasks.HasFlag(t)))
+        {
+            var clock = System.Diagnostics.Stopwatch.StartNew();
+            try
+            {
+                var outcome = task switch
+                {
+                    TuneupTasks.SystemHealth => WindowsTuneup.SystemHealth(Text),
+                    TuneupTasks.Cleanup => WindowsTuneup.Cleanup(new CleanupOptions(cfg.ScheduleRecycleBin), Text),
+                    TuneupTasks.Optimize => WindowsTuneup.Optimize(null, Text),
+                    TuneupTasks.WindowsUpdate => WindowsTuneup.WindowsUpdate(Text),
+                    TuneupTasks.StoreApps => WindowsTuneup.StoreApps(Text),
+                    _ => WindowsTuneup.DesktopApps(Text),
+                };
+                outcomes.Add(outcome);
+                reboot |= outcome.RebootRequired;
+                WindowsMaintenanceSchedule.LearnTime(task, clock.Elapsed.TotalSeconds);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or System.Runtime.InteropServices.COMException)
+            {
+                outcomes.Add(new TuneupOutcome(task, false, ex.Message, []));
+            }
+        }
+
+        WindowsMaintenanceSchedule.Record(new MaintenanceRun(started, DateTime.Now, true, reboot || WindowsTuneup.RestartPending(), outcomes));
+    }
+
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var commandLine = Environment.GetCommandLineArgs();
+        if (commandLine.Contains(MaintenancePlan.AppArgument, StringComparer.OrdinalIgnoreCase))
+        {
+            // Scheduled maintenance of a portable copy (no hwsuite.exe next to it): no window, no tray icon.
+            _ = Task.Run(RunScheduledMaintenance).ContinueWith(_ => Exit(), TaskScheduler.FromCurrentSynchronizationContext());
+            return;
+        }
+
         var relaunched = commandLine.Contains(RelaunchArgument, StringComparer.OrdinalIgnoreCase);
 
         // "Always open as administrator": start again elevated (once: a relaunch never asks again, and a declined
