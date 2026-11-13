@@ -126,6 +126,9 @@ public sealed record CliOptions
     /// <summary>tuneup: the tasks to run (none given = the default set).</summary>
     public HWSuite.Core.Maintenance.TuneupTasks Tasks { get; init; }
 
+    /// <summary>tuneup: started by the scheduled task (no questions; the run goes into the history).</summary>
+    public bool Scheduled { get; init; }
+
     /// <summary>tuneup: empty the Recycle Bin during the cleanup.</summary>
     public bool EmptyRecycleBin { get; init; }
 
@@ -329,6 +332,7 @@ public sealed record CliOptions
                 "--cleanup" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Cleanup },
                 "--optimize" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.Optimize },
                 "--windows-update" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.WindowsUpdate },
+                "--scheduled" when options.Command == CliCommand.Tuneup => options with { Scheduled = true },
                 "--health" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.SystemHealth },
                 "--store" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.StoreApps },
                 "--apps" when options.Command == CliCommand.Tuneup => options with { Tasks = options.Tasks | HWSuite.Core.Maintenance.TuneupTasks.DesktopApps },

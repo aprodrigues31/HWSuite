@@ -39,6 +39,17 @@ public sealed record AppSettings
     /// </summary>
     public bool AlwaysRunAsAdmin { get; init; }
 
+    /// <summary>Scheduled maintenance: on, days of the week, time ("03:00"), tasks and Recycle Bin.</summary>
+    public bool ScheduleEnabled { get; init; }
+
+    public IReadOnlyList<DayOfWeek>? ScheduleDays { get; init; }
+
+    public string? ScheduleTime { get; init; }
+
+    public HWSuite.Core.Maintenance.TuneupTasks ScheduleTasks { get; init; }
+
+    public bool ScheduleRecycleBin { get; init; }
+
     /// <summary>Network devices watched over SNMP (router, switches...); secrets stored protected.</summary>
     public IReadOnlyList<HWSuite.Core.Snmp.SnmpDeviceConfig>? SnmpDevices { get; init; }
 

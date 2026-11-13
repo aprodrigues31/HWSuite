@@ -15,6 +15,12 @@
 
             <InfoBar x:Name="AdminBar" IsClosable="False" Severity="Warning" />
 
+            <!-- Areas, like the Sensors filters: only the maintenance of the chosen ones is shown and run -->
+            <StackPanel Spacing="6">
+                <StackPanel x:Name="Areas" Orientation="Horizontal" Spacing="8" />
+                <TextBlock x:Name="AreaHint" Style="{StaticResource HudMonoStyle}" FontSize="12" Foreground="{ThemeResource HudTagBrush}" />
+            </StackPanel>
+
             <!-- The tasks: blocks that re-flow with the window -->
             <hud:MasonryPanel x:Name="Tasks" MinColumnWidth="420" Spacing="16" />
 
@@ -24,11 +30,24 @@
                         <Button x:Name="RunButton" Style="{StaticResource HudAccentButtonStyle}" Click="RunButton_Click" />
                         <Button x:Name="StopButton" MinHeight="44" Click="StopButton_Click" IsEnabled="False" />
                     </StackPanel>
-                    <ProgressBar x:Name="Progress" IsIndeterminate="True" Visibility="Collapsed" />
+                    <ProgressBar x:Name="Progress" Minimum="0" Maximum="1" Height="8" Visibility="Collapsed" />
+                    <TextBlock x:Name="ProgressText" Style="{StaticResource HudMonoStyle}" FontSize="14" Foreground="{ThemeResource HudAccentBrush}" />
                     <TextBlock x:Name="StatusText" Style="{StaticResource HudMonoStyle}" FontSize="13" TextWrapping="Wrap" />
                     <StackPanel x:Name="Results" Spacing="8" />
                 </StackPanel>
             </hud:HudPanel>
+
+            <hud:MasonryPanel MinColumnWidth="460" Spacing="16">
+                <hud:HudPanel>
+                    <StackPanel x:Name="SchedulePanel" Spacing="10" />
+                </hud:HudPanel>
+                <hud:HudPanel>
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="HistoryTag" Style="{StaticResource HudTagStyle}" />
+                        <StackPanel x:Name="HistoryRows" Spacing="10" />
+                    </StackPanel>
+                </hud:HudPanel>
+            </hud:MasonryPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

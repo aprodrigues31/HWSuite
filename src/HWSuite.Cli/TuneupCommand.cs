@@ -33,13 +33,16 @@ internal static class TuneupCommand
         void Log(string line) => Console.WriteLine("  " + line);
         var failed = false;
         var reboot = false;
-        foreach (var task in Enum.GetValues<TuneupTasks>().Where(t => t is not (TuneupTasks.None or TuneupTasks.Default) && tasks.HasFlag(t)).OrderBy(t => t == TuneupTasks.SystemHealth ? 0 : 1))
+        var started = DateTime.Now;
+        var outcomes = new List<TuneupOutcome>();
+        foreach (var task in MaintenancePlan.Order.Where(t => tasks.HasFlag(t)))
         {
             if (cancel.IsCancellationRequested)
             {
                 break;
             }
 
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             var outcome = task switch
             {
                 TuneupTasks.Cleanup => WindowsTuneup.Cleanup(cleanup, s, Log, cancel.Token),
@@ -49,6 +52,12 @@ internal static class TuneupCommand
                 TuneupTasks.SystemHealth => WindowsTuneup.SystemHealth(s, Log, cancel.Token),
                 _ => WindowsTuneup.DesktopApps(s, Log, cancel.Token),
             };
+            outcomes.Add(outcome);
+            if (!cancel.IsCancellationRequested)
+            {
+                WindowsMaintenanceSchedule.LearnTime(task, clock.Elapsed.TotalSeconds);
+            }
+
             Console.WriteLine((outcome.Succeeded ? "[OK] " : "[!]  ") + outcome.Summary);
             foreach (var detail in outcome.Details)
             {
@@ -59,7 +68,14 @@ internal static class TuneupCommand
             reboot |= outcome.RebootRequired;
         }
 
-        if (reboot || WindowsTuneup.RestartPending())
+        var restartPending = reboot || WindowsTuneup.RestartPending();
+        WindowsMaintenanceSchedule.Record(new MaintenanceRun(started, DateTime.Now, options.Scheduled, restartPending, outcomes));
+        if (restartPending && options.Scheduled)
+        {
+            // A scheduled run never restarts the computer and never waits for an answer.
+            Console.WriteLine(s["tune.restart.pending"]);
+        }
+        else if (restartPending)
         {
             // Restarting is the technician's call: asked here, never done on its own.
             Console.WriteLine(s["tune.rebootNow"]);

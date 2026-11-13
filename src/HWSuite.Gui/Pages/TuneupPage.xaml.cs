@@ -4,6 +4,7 @@ using HWSuite.Gui.Hud;
 using HWSuite.Providers.Windows;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 
 namespace HWSuite.Gui.Pages;
 
@@ -15,6 +16,20 @@ namespace HWSuite.Gui.Pages;
 public sealed partial class TuneupPage : Page
 {
     private readonly Dictionary<TuneupTasks, CheckBox> _tasks = [];
+    private readonly Dictionary<TuneupTasks, HudPanel> _cards = [];
+    private readonly Dictionary<TuneupArea, ToggleButton> _areaButtons = [];
+    private ToggleButton? _allAreas;
+    private IReadOnlyList<DiskBenchmarkDrive> _drives = [];
+    private readonly DispatcherTimer _tick = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly System.Diagnostics.Stopwatch _taskClock = new();
+    private readonly System.Diagnostics.Stopwatch _runClock = new();
+    private List<double> _estimates = [];
+    private List<TuneupTasks> _running = [];
+    private int _current;
+    private ToggleSwitch? _scheduleOn;
+    private readonly Dictionary<DayOfWeek, CheckBox> _days = [];
+    private TimePicker? _time;
+    private TextBlock? _scheduleStatus;
     private CheckBox? _recycle;
     private CheckBox? _previous;
     private readonly StackPanel _cleanupDrives = new() { Spacing = 2 };
@@ -52,9 +67,14 @@ public sealed partial class TuneupPage : Page
         Add(TuneupTasks.WindowsUpdate, "tune.wu", "tune.wu.hint", true);
         Add(TuneupTasks.StoreApps, "tune.store", "tune.store.hint", true);
         Add(TuneupTasks.DesktopApps, "tune.apps", "tune.apps.hint", false);
+        BuildAreas();
+        BuildSchedule();
+        HistoryTag.Text = ("// " + s["tune.history"]).ToUpper(c);
+        _tick.Tick += (_, _) => ShowProgress();
 
         Loaded += (_, _) =>
         {
+            RenderHistory();
             var admin = App.Monitor.Access.IsElevated;
             AdminBar.IsOpen = !admin && !App.IsDemo;
             RunButton.IsEnabled = admin || App.IsDemo;
@@ -95,6 +115,7 @@ public sealed partial class TuneupPage : Page
             drives = [];
         }
 
+        _drives = drives;
         var system = App.IsDemo ? "C:" : WindowsTuneup.SystemDrive;
         _cleanupDrives.Children.Clear();
         _optimizeDrives.Children.Clear();
@@ -149,14 +170,16 @@ public sealed partial class TuneupPage : Page
             content.Children.Add(more);
         }
 
-        Tasks.Children.Add(new HudPanel { Content = content });
+        var card = new HudPanel { Content = content };
+        Tasks.Children.Add(card);
         _tasks[task] = box;
+        _cards[task] = card;
     }
 
     private async void RunButton_Click(object sender, RoutedEventArgs e)
     {
         var s = App.Text;
-        var chosen = _tasks.Where(t => t.Value.IsChecked == true).Select(t => t.Key).ToList();
+        var chosen = Selected();
         if (chosen.Count == 0 || App.IsDemo)
         {
             return;
@@ -196,6 +219,9 @@ public sealed partial class TuneupPage : Page
         StopButton.IsEnabled = true;
         Progress.Visibility = Visibility.Visible;
         Results.Children.Clear();
+        StartProgress(chosen, optimizeDrives);
+        var started = DateTime.Now;
+        var outcomes = new List<TuneupOutcome>();
         var options = new CleanupOptions(_recycle?.IsChecked == true, _previous?.IsChecked == true, cleanupDrives);
         void Log(string text) => DispatcherQueue.TryEnqueue(() => StatusText.Text = text);
         var reboot = false;
@@ -204,12 +230,17 @@ public sealed partial class TuneupPage : Page
         using var blocker = new Services.ShutdownBlocker(s["tune.blockReason"]);
         try
         {
-            foreach (var task in chosen)
+            for (var i = 0; i < chosen.Count; i++)
             {
+                var task = chosen[i];
                 if (token.IsCancellationRequested)
                 {
                     break;
                 }
+
+                _current = i;
+                _taskClock.Restart();
+                ShowProgress();
 
                 var outcome = await Task.Run(() => task switch
                 {
@@ -221,19 +252,33 @@ public sealed partial class TuneupPage : Page
                     _ => WindowsTuneup.DesktopApps(s, Log, token),
                 }, CancellationToken.None);
                 reboot |= outcome.RebootRequired;
+                outcomes.Add(outcome);
+                if (!token.IsCancellationRequested)
+                {
+                    var seconds = _taskClock.Elapsed.TotalSeconds;
+                    _ = Task.Run(() => WindowsMaintenanceSchedule.LearnTime(task, seconds));
+                }
+
                 App.ServicesDone.Add(outcome.Summary);
                 Results.Children.Add(ResultBlock(outcome));
             }
 
             StatusText.Text = s["tune.done"];
+            _tick.Stop();
             Progress.Visibility = Visibility.Collapsed;
-            if (reboot || blocker.RestartWasAsked || await Task.Run(WindowsTuneup.RestartPending))
+            ProgressText.Text = s.Format("tune.progressDone", MaintenancePlan.Duration(_runClock.Elapsed.TotalSeconds, s.Culture).TrimStart('~', ' '));
+            var pending = reboot || blocker.RestartWasAsked || await Task.Run(WindowsTuneup.RestartPending);
+            var run = new MaintenanceRun(started, DateTime.Now, false, pending, outcomes);
+            await Task.Run(() => WindowsMaintenanceSchedule.Record(run));
+            RenderHistory();
+            if (pending)
             {
                 await AskRestartAsync(blocker);
             }
         }
         finally
         {
+            _tick.Stop();
             Progress.Visibility = Visibility.Collapsed;
             RunButton.IsEnabled = true;
             StopButton.IsEnabled = false;
@@ -288,4 +333,270 @@ public sealed partial class TuneupPage : Page
 
         return block;
     }
+
+    // ---- Areas ---------------------------------------------------------------------------------------------------
+
+    private void BuildAreas()
+    {
+        var s = App.Text;
+        AreaHint.Text = s["tune.areaHint"];
+        _allAreas = Chip(s["tune.area.All"]);
+        _allAreas.IsChecked = true;
+        _allAreas.Click += (_, _) =>
+        {
+            _allAreas.IsChecked = true;
+            foreach (var b in _areaButtons.Values)
+            {
+                b.IsChecked = false;
+            }
+
+            ApplyAreas();
+        };
+        Areas.Children.Add(_allAreas);
+        foreach (var area in Enum.GetValues<TuneupArea>())
+        {
+            var chip = Chip(s[$"tune.area.{area}"]);
+            chip.Click += (_, _) =>
+            {
+                _allAreas!.IsChecked = !_areaButtons.Values.Any(b => b.IsChecked == true);
+                ApplyAreas();
+            };
+            _areaButtons[area] = chip;
+            Areas.Children.Add(chip);
+        }
+    }
+
+    private static ToggleButton Chip(string label) => new()
+    {
+        Content = label.ToUpper(App.Text.Culture),
+        FontFamily = HudUi.Font("HudMonoFont"),
+        FontSize = 12,
+        CharacterSpacing = 80,
+        Padding = new Thickness(14, 7, 14, 7),
+    };
+
+    private bool Shown(TuneupTasks task) =>
+        _allAreas?.IsChecked != false || (_areaButtons.TryGetValue(MaintenancePlan.Area(task), out var b) && b.IsChecked == true);
+
+    private void ApplyAreas()
+    {
+        foreach (var (task, card) in _cards)
+        {
+            card.Visibility = Shown(task) ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        Tasks.Reflow();
+    }
+
+    /// <summary>Ticked tasks of the areas shown, in the order they run.</summary>
+    private List<TuneupTasks> Selected() =>
+        [.. MaintenancePlan.Order.Where(t => _tasks.TryGetValue(t, out var box) && box.IsChecked == true && Shown(t))];
+
+    // ---- Progress and time left ------------------------------------------------------------------------------------
+
+    private void StartProgress(List<TuneupTasks> chosen, List<string> optimizeDrives)
+    {
+        var learned = App.IsDemo || !OperatingSystem.IsWindows() ? new Dictionary<TuneupTasks, double>() : WindowsMaintenanceSchedule.Times();
+        var picked = _drives.Where(d => optimizeDrives.Contains(d.Letter, StringComparer.OrdinalIgnoreCase)).ToList();
+        var hdd = picked.Count(d => string.Equals(d.Media, "HDD", StringComparison.OrdinalIgnoreCase));
+        _running = chosen;
+        _estimates = [.. chosen.Select(t => t != TuneupTasks.Optimize && learned.TryGetValue(t, out var sec) ? sec : MaintenancePlan.DefaultSeconds(t, Math.Max(1, picked.Count - hdd), hdd))];
+        _current = 0;
+        _runClock.Restart();
+        _taskClock.Restart();
+        Progress.Value = 0;
+        _tick.Start();
+        ShowProgress();
+    }
+
+    private void ShowProgress()
+    {
+        if (_running.Count == 0)
+        {
+            return;
+        }
+
+        var s = App.Text;
+        var elapsed = _taskClock.Elapsed.TotalSeconds;
+        Progress.Value = MaintenancePlan.Fraction(_estimates, _current, elapsed);
+        var task = _running[Math.Min(_current, _running.Count - 1)];
+        var title = _tasks.TryGetValue(task, out var box) ? box.Content as string ?? task.ToString() : task.ToString();
+        ProgressText.Text = s.Format("tune.progress", _current + 1, _running.Count, title, MaintenancePlan.Duration(MaintenancePlan.Remaining(_estimates, _current, elapsed), s.Culture));
+    }
+
+    // ---- Schedule --------------------------------------------------------------------------------------------------
+
+    private void BuildSchedule()
+    {
+        var s = App.Text;
+        var c = s.Culture;
+        var cfg = App.Settings.Current;
+        SchedulePanel.Children.Add(new TextBlock { Text = ("// " + s["tune.schedule"]).ToUpper(c), Style = HudUi.Style("HudTagStyle") });
+        SchedulePanel.Children.Add(new TextBlock { Text = s["tune.schedule.hint"], TextWrapping = TextWrapping.Wrap, Foreground = HudUi.TextDim, FontSize = 13 });
+        _scheduleOn = new ToggleSwitch { Header = s["tune.schedule.on"], IsOn = cfg.ScheduleEnabled };
+        SchedulePanel.Children.Add(_scheduleOn);
+
+        SchedulePanel.Children.Add(new TextBlock { Text = s["tune.schedule.days"].ToUpper(c), Style = HudUi.Style("HudTagStyle") });
+        var days = new WrapPanel { Spacing = 6, LineSpacing = 4 };
+        var chosen = cfg.ScheduleDays ?? [DayOfWeek.Sunday];
+        var first = c.DateTimeFormat.FirstDayOfWeek;
+        for (var i = 0; i < 7; i++)
+        {
+            var day = (DayOfWeek)(((int)first + i) % 7);
+            var box = new CheckBox { Content = c.DateTimeFormat.GetAbbreviatedDayName(day), IsChecked = chosen.Contains(day), MinWidth = 70 };
+            _days[day] = box;
+            days.Children.Add(box);
+        }
+
+        SchedulePanel.Children.Add(days);
+        var time = TimeOnly.TryParse(cfg.ScheduleTime, System.Globalization.CultureInfo.InvariantCulture, out var t) ? t : new TimeOnly(3, 0);
+        _time = new TimePicker { Header = s["tune.schedule.time"], Time = time.ToTimeSpan(), ClockIdentifier = "24HourClock", MinuteIncrement = 5 };
+        SchedulePanel.Children.Add(_time);
+        var save = new Button { Content = s["tune.schedule.save"], Style = HudUi.Style("HudAccentButtonStyle") };
+        save.Click += (_, _) => SaveSchedule();
+        SchedulePanel.Children.Add(save);
+        _scheduleStatus = new TextBlock { TextWrapping = TextWrapping.Wrap, Style = HudUi.Style("HudMonoStyle"), FontSize = 13 };
+        SchedulePanel.Children.Add(_scheduleStatus);
+        SchedulePanel.Children.Add(new TextBlock { Text = s["tune.schedule.note"], TextWrapping = TextWrapping.Wrap, Foreground = HudUi.Tag, FontSize = 12 });
+        ShowSchedule();
+    }
+
+    private MaintenanceSchedule? CurrentSchedule()
+    {
+        var cfg = App.Settings.Current;
+        if (!cfg.ScheduleEnabled || cfg.ScheduleDays is not { Count: > 0 } days)
+        {
+            return null;
+        }
+
+        var time = TimeOnly.TryParse(cfg.ScheduleTime, System.Globalization.CultureInfo.InvariantCulture, out var t) ? t : new TimeOnly(3, 0);
+        return new MaintenanceSchedule(days, time, cfg.ScheduleTasks, cfg.ScheduleRecycleBin);
+    }
+
+    private void ShowSchedule(string? message = null)
+    {
+        var s = App.Text;
+        var schedule = CurrentSchedule();
+        var text = schedule is null
+            ? s["tune.schedule.off"]
+            : s.Format("tune.schedule.saved", schedule.Next(DateTime.Now)?.ToString("f", s.Culture) ?? "—") + "\n"
+              + s.Format("tune.schedule.tasks", string.Join(", ", MaintenancePlan.Order.Where(x => schedule.Tasks.HasFlag(x)).Select(x => _tasks.TryGetValue(x, out var b) ? b.Content as string : x.ToString())));
+        _scheduleStatus!.Text = message is null ? text : message + "\n" + text;
+    }
+
+    private void SaveSchedule()
+    {
+        var s = App.Text;
+        var on = _scheduleOn!.IsOn;
+        var days = _days.Where(d => d.Value.IsChecked == true).Select(d => d.Key).ToList();
+        var tasks = Selected().Aggregate(TuneupTasks.None, (a, b) => a | b);
+        var time = TimeOnly.FromTimeSpan(_time!.Time);
+        if (on && days.Count == 0)
+        {
+            _scheduleStatus!.Text = s["tune.schedule.noDays"];
+            return;
+        }
+
+        if (on && tasks == TuneupTasks.None)
+        {
+            _scheduleStatus!.Text = s["tune.schedule.noTasks"];
+            return;
+        }
+
+        try
+        {
+            if (!App.IsDemo && OperatingSystem.IsWindows())
+            {
+                if (on)
+                {
+                    if (WindowsMaintenanceSchedule.CliPath() is null)
+                    {
+                        _scheduleStatus!.Text = s["tune.schedule.noCli"];
+                        return;
+                    }
+
+                    WindowsMaintenanceSchedule.Save(new MaintenanceSchedule(days, time, tasks, _recycle?.IsChecked == true), s["tune.schedule"]);
+                }
+                else
+                {
+                    WindowsMaintenanceSchedule.Delete();
+                }
+            }
+
+            App.Settings.Update(x => x with
+            {
+                ScheduleEnabled = on,
+                ScheduleDays = days,
+                ScheduleTime = time.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture),
+                ScheduleTasks = tasks,
+                ScheduleRecycleBin = _recycle?.IsChecked == true,
+            });
+            ShowSchedule(on ? null : s["tune.schedule.removed"]);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or IOException or UnauthorizedAccessException)
+        {
+            _scheduleStatus!.Text = s.Format("tune.schedule.failed", ex.Message);
+        }
+    }
+
+    // ---- Results ---------------------------------------------------------------------------------------------------
+
+    private void RenderHistory()
+    {
+        var s = App.Text;
+        var c = s.Culture;
+        var runs = App.IsDemo || !OperatingSystem.IsWindows() ? DemoHistory() : WindowsMaintenanceSchedule.History();
+        HistoryRows.Children.Clear();
+        if (runs.Count == 0)
+        {
+            HistoryRows.Children.Add(new TextBlock { Text = s["tune.history.none"], Foreground = HudUi.TextDim, FontSize = 13 });
+            return;
+        }
+
+        foreach (var run in runs.Take(10))
+        {
+            var block = new StackPanel { Spacing = 3, Padding = new Thickness(0, 0, 0, 8), BorderBrush = HudUi.Brush("HudAccentFaintBrush"), BorderThickness = new Thickness(0, 0, 0, 1) };
+            var state = run.Succeeded ? s["tune.history.ok"] : s["tune.history.problems"];
+            if (run.RebootPending)
+            {
+                state += " · " + s["tune.history.reboot"];
+            }
+
+            block.Children.Add(new TextBlock
+            {
+                Text = s.Format("tune.history.took", run.Start.ToString("g", c), run.Scheduled ? s["tune.history.scheduled"] : s["tune.history.manual"], MaintenancePlan.Duration((run.End - run.Start).TotalSeconds, c).TrimStart('~', ' ')) + " — " + state,
+                FontSize = 14,
+                FontWeight = Microsoft.UI.Text.FontWeights.SemiBold,
+                Foreground = run.Succeeded ? HudUi.Text : HudUi.Warn,
+                TextWrapping = TextWrapping.Wrap,
+            });
+            foreach (var o in run.Outcomes)
+            {
+                block.Children.Add(new TextBlock
+                {
+                    Text = (o.Succeeded ? "✓ " : "✗ ") + o.Summary,
+                    FontSize = 13,
+                    Foreground = o.Succeeded ? HudUi.TextDim : HudUi.Warn,
+                    TextWrapping = TextWrapping.Wrap,
+                });
+            }
+
+            HistoryRows.Children.Add(block);
+        }
+    }
+
+    private static IReadOnlyList<MaintenanceRun> DemoHistory() =>
+    [
+        new(DateTime.Today.AddHours(3), DateTime.Today.AddHours(3).AddMinutes(38), true, true,
+        [
+            new(TuneupTasks.SystemHealth, true, "Saúde do Windows: problemas encontrados e corrigidos", []),
+            new(TuneupTasks.Cleanup, true, "Limpeza de disco: 3,2 GB liberados", []),
+            new(TuneupTasks.WindowsUpdate, true, "Windows Update: 2 atualizações instaladas", []),
+        ]),
+        new(DateTime.Today.AddDays(-3).AddHours(21), DateTime.Today.AddDays(-3).AddHours(21).AddMinutes(9), false, false,
+        [
+            new(TuneupTasks.Cleanup, true, "Limpeza de disco: 1,1 GB liberado", []),
+            new(TuneupTasks.Optimize, false, "Otimização: 1 de 2 unidades", []),
+        ]),
+    ];
 }
