@@ -48,6 +48,13 @@ public static class WindowsMaintenanceSchedule
     private const int CreateOrUpdate = 6;
     private const int InteractiveToken = 3;
 
+    /// <summary>
+    /// A failure from the Task Scheduler. Through "dynamic", COM errors arrive mapped to .NET exceptions (a missing
+    /// folder is FileNotFoundException / DirectoryNotFoundException, not COMException).
+    /// </summary>
+    private static bool Com(Exception ex) =>
+        ex is System.Runtime.InteropServices.COMException or IOException or UnauthorizedAccessException or ArgumentException;
+
     private static dynamic Service()
     {
         var type = Type.GetTypeFromProgID("Schedule.Service") ?? throw new InvalidOperationException("Task Scheduler (Schedule.Service)");
@@ -62,11 +69,11 @@ public static class WindowsMaintenanceSchedule
         {
             return service.GetFolder(@"\HWSuite");
         }
-        catch (System.Runtime.InteropServices.COMException) when (create)
+        catch (Exception ex) when (create && Com(ex))
         {
             return service.GetFolder(@"\").CreateFolder("HWSuite");
         }
-        catch (System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (Com(ex))
         {
             return null;
         }
@@ -113,13 +120,13 @@ public static class WindowsMaintenanceSchedule
                 folder.RegisterTaskDefinition("Maintenance", task, CreateOrUpdate, null, null, InteractiveToken, null);
                 DeleteIn(service.GetFolder(@"\"), RootName);
             }
-            catch (System.Runtime.InteropServices.COMException)
+            catch (Exception ex) when (Com(ex))
             {
                 step = "register (root folder)";
                 service.GetFolder(@"\").RegisterTaskDefinition(RootName, task, CreateOrUpdate, null, null, InteractiveToken, null);
             }
         }
-        catch (System.Runtime.InteropServices.COMException ex)
+        catch (Exception ex) when (Com(ex))
         {
             throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8}, {step})", ex);
         }
@@ -131,7 +138,7 @@ public static class WindowsMaintenanceSchedule
         {
             folder?.DeleteTask(name, 0);
         }
-        catch (System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (Com(ex))
         {
             // not there
         }
@@ -145,7 +152,7 @@ public static class WindowsMaintenanceSchedule
             DeleteIn(TaskFolder(service, create: false), "Maintenance");
             DeleteIn(service.GetFolder(@"\"), RootName);
         }
-        catch (System.Runtime.InteropServices.COMException ex)
+        catch (Exception ex) when (Com(ex))
         {
             throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8})", ex);
         }
@@ -166,7 +173,7 @@ public static class WindowsMaintenanceSchedule
                         return true;
                     }
                 }
-                catch (System.Runtime.InteropServices.COMException)
+                catch (Exception ex) when (Com(ex))
                 {
                     // try the next place
                 }
@@ -174,7 +181,7 @@ public static class WindowsMaintenanceSchedule
 
             return false;
         }
-        catch (System.Runtime.InteropServices.COMException)
+        catch (Exception ex) when (Com(ex))
         {
             return false;
         }
