@@ -1,6 +1,4 @@
-using System.Diagnostics;
 using System.Runtime.Versioning;
-using System.Text;
 using HWSuite.Core.Maintenance;
 using HWSuite.Core.Settings;
 
@@ -40,23 +38,66 @@ public static class WindowsMaintenanceSchedule
         var exe = cli ?? Environment.ProcessPath ?? throw new InvalidOperationException("HWSuite.Gui.exe");
         var user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
         var xml = MaintenancePlan.TaskXml(schedule, exe, user, DateTime.Today, description, cli is null ? MaintenancePlan.AppArgument : null);
-        var file = Path.Combine(Path.GetTempPath(), $"hwsuite-task-{Environment.ProcessId}.xml");
-        File.WriteAllText(file, xml, Encoding.Unicode);
+        Register(xml);
+    }
+
+    // Task Scheduler through its COM API (Schedule.Service): the \HWSuite folder is created when missing and errors
+    // come back as exceptions with proper text. (schtasks.exe /XML failed on some PCs with "path not found".)
+    private const int CreateOrUpdate = 6;
+    private const int InteractiveToken = 3;
+
+    private static dynamic Service()
+    {
+        var type = Type.GetTypeFromProgID("Schedule.Service") ?? throw new InvalidOperationException("Task Scheduler (Schedule.Service)");
+        dynamic service = Activator.CreateInstance(type) ?? throw new InvalidOperationException("Task Scheduler (Schedule.Service)");
+        service.Connect();
+        return service;
+    }
+
+    private static dynamic? TaskFolder(dynamic service, bool create)
+    {
         try
         {
-            Schtasks("/Create", "/TN", TaskName, "/XML", file, "/F");
+            return service.GetFolder(@"\HWSuite");
         }
-        finally
+        catch (System.Runtime.InteropServices.COMException) when (create)
         {
-            File.Delete(file);
+            return service.GetFolder(@"\").CreateFolder("HWSuite");
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            return null;
+        }
+    }
+
+    private static void Register(string xml)
+    {
+        try
+        {
+            var service = Service();
+            var folder = TaskFolder(service, create: true)!;
+            folder.RegisterTask("Maintenance", xml, CreateOrUpdate, null, null, InteractiveToken, null);
+        }
+        catch (System.Runtime.InteropServices.COMException ex)
+        {
+            throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8})", ex);
         }
     }
 
     public static void Delete()
     {
-        if (Exists())
+        try
         {
-            Schtasks("/Delete", "/TN", TaskName, "/F");
+            var folder = TaskFolder(Service(), create: false);
+            folder?.DeleteTask("Maintenance", 0);
+        }
+        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002)
+        {
+            // not there: nothing to delete
+        }
+        catch (System.Runtime.InteropServices.COMException ex)
+        {
+            throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8})", ex);
         }
     }
 
@@ -64,40 +105,19 @@ public static class WindowsMaintenanceSchedule
     {
         try
         {
-            return Schtasks(false, "/Query", "/TN", TaskName) == 0;
+            var folder = TaskFolder(Service(), create: false);
+            if (folder is null)
+            {
+                return false;
+            }
+
+            folder.GetTask("Maintenance");
+            return true;
         }
-        catch (InvalidOperationException)
+        catch (System.Runtime.InteropServices.COMException)
         {
             return false;
         }
-    }
-
-    private static void Schtasks(params string[] args) => Schtasks(true, args);
-
-    private static int Schtasks(bool throwOnError, params string[] args)
-    {
-        var info = new ProcessStartInfo("schtasks.exe")
-        {
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-        };
-        foreach (var a in args)
-        {
-            info.ArgumentList.Add(a);
-        }
-
-        using var process = Process.Start(info) ?? throw new InvalidOperationException("schtasks");
-        process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        process.WaitForExit(20000);
-        if (process.ExitCode != 0 && throwOnError)
-        {
-            throw new InvalidOperationException(string.IsNullOrWhiteSpace(error) ? $"schtasks {process.ExitCode}" : error.Trim());
-        }
-
-        return process.ExitCode;
     }
 
     // ---- History and durations ---------------------------------------------------------------------------------
