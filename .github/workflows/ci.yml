@@ -171,6 +171,17 @@ jobs:
           if ($out -notlike "hwsuite ${{ steps.version.outputs.version }} (build $env:BuildNumber*") { throw "Unexpected version: $out" }
           (Get-Item artifacts/publish/hwsuite.exe).VersionInfo | Format-List FileVersion, ProductVersion
 
+      - name: Scheduled maintenance on the runner (Task Scheduler)
+        shell: pwsh
+        run: |
+          $exe = 'artifacts/publish/hwsuite.exe'
+          & $exe schedule set mon,wed 03:00 --cleanup --optimize; if ($LASTEXITCODE -ne 0) { throw "schedule set failed" }
+          $status = & $exe schedule status; Write-Host $status
+          if ($status -ne 'scheduled') { throw "the task was not created" }
+          schtasks /Query /TN "\HWSuite\Maintenance" /V /FO LIST | Select-String 'TaskName|Task To Run|Days|Start Time|Run As User|Logon Mode'
+          & $exe schedule remove; if ($LASTEXITCODE -ne 0) { throw "schedule remove failed" }
+          if ((& $exe schedule status) -ne 'not scheduled') { throw "the task was not removed" }
+
       - name: Desktop app (WinUI 3) - publish
         run: dotnet publish src/HWSuite.Gui -c Release -r win-x64 -p:Platform=x64 -o artifacts/gui
 

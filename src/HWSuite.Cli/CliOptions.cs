@@ -29,6 +29,7 @@ public enum CliCommand
     Wifi,
     Snmp,
     Startup,
+    Schedule,
 }
 
 public enum DriverAction
@@ -162,7 +163,7 @@ public sealed record CliOptions
         var i = 0;
 
         // "snmp" has its own arguments (host, credentials); --lang is still honored.
-        var ownArgs = args.Count > 0 && (args[0].Equals("snmp", StringComparison.OrdinalIgnoreCase) || args[0].Equals("startup", StringComparison.OrdinalIgnoreCase));
+        var ownArgs = args.Count > 0 && (args[0].Equals("snmp", StringComparison.OrdinalIgnoreCase) || args[0].Equals("startup", StringComparison.OrdinalIgnoreCase) || args[0].Equals("schedule", StringComparison.OrdinalIgnoreCase));
         if (ownArgs)
         {
             var rest = args.Skip(1).ToList();
@@ -174,7 +175,7 @@ public sealed record CliOptions
                 rest.RemoveRange(lang, 2);
             }
 
-            var command = args[0].Equals("startup", StringComparison.OrdinalIgnoreCase) ? CliCommand.Startup : CliCommand.Snmp;
+            var command = args[0].ToLowerInvariant() switch { "startup" => CliCommand.Startup, "schedule" => CliCommand.Schedule, _ => CliCommand.Snmp };
             return options with { Command = command, SnmpArgs = rest, Language = language };
         }
 

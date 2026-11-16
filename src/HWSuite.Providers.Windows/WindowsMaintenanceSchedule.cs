@@ -36,10 +36,12 @@ public static class WindowsMaintenanceSchedule
         ArgumentNullException.ThrowIfNull(schedule);
         var cli = CliPath();
         var exe = cli ?? Environment.ProcessPath ?? throw new InvalidOperationException("HWSuite.Gui.exe");
-        var user = System.Security.Principal.WindowsIdentity.GetCurrent().Name;
-        var xml = MaintenancePlan.TaskXml(schedule, exe, user, DateTime.Today, description, cli is null ? MaintenancePlan.AppArgument : null);
-        Register(xml);
+        var args = cli is null ? MaintenancePlan.AppArgument : MaintenancePlan.Arguments(schedule);
+        Register(schedule, exe, args, description);
     }
+
+    /// <summary>Name of the task in the root folder, used when the \HWSuite folder cannot be used.</summary>
+    private const string RootName = "HWSuite Maintenance";
 
     // Task Scheduler through its COM API (Schedule.Service): the \HWSuite folder is created when missing and errors
     // come back as exceptions with proper text. (schtasks.exe /XML failed on some PCs with "path not found".)
@@ -70,17 +72,68 @@ public static class WindowsMaintenanceSchedule
         }
     }
 
-    private static void Register(string xml)
+    /// <summary>
+    /// Builds the task with the Task Scheduler object model (no XML): weekly on the chosen days, as the signed-in
+    /// user with the highest rights (no password), starts late when missed, wakes the PC, 6 h limit. Goes into the
+    /// \HWSuite folder; if Windows refuses that folder, into the root as "HWSuite Maintenance". The error names
+    /// the step that failed.
+    /// </summary>
+    private static void Register(MaintenanceSchedule schedule, string exe, string args, string description)
     {
+        var step = "connect";
         try
         {
             var service = Service();
-            var folder = TaskFolder(service, create: true)!;
-            folder.RegisterTask("Maintenance", xml, CreateOrUpdate, null, null, InteractiveToken, null);
+            step = "definition";
+            dynamic task = service.NewTask(0);
+            task.RegistrationInfo.Author = "HWSuite";
+            task.RegistrationInfo.Description = description;
+            task.Principal.LogonType = InteractiveToken;
+            task.Principal.RunLevel = 1; // highest
+            task.Settings.StartWhenAvailable = true;
+            task.Settings.WakeToRun = true;
+            task.Settings.DisallowStartIfOnBatteries = false;
+            task.Settings.StopIfGoingOnBatteries = false;
+            task.Settings.ExecutionTimeLimit = "PT6H";
+            task.Settings.MultipleInstances = 2; // ignore a new start while one runs
+            step = "trigger";
+            dynamic trigger = task.Triggers.Create(3); // weekly
+            trigger.StartBoundary = (DateTime.Today + schedule.Time.ToTimeSpan()).ToString("yyyy-MM-dd'T'HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+            trigger.DaysOfWeek = (short)schedule.Days.Distinct().Sum(d => 1 << (int)d); // Sunday = 1 … Saturday = 64
+            trigger.WeeksInterval = (short)1;
+            step = "action";
+            dynamic action = task.Actions.Create(0); // run a program
+            action.Path = exe;
+            action.Arguments = args;
+            action.WorkingDirectory = Path.GetDirectoryName(exe) ?? "";
+            step = "register";
+            try
+            {
+                var folder = TaskFolder(service, create: true)!;
+                folder.RegisterTaskDefinition("Maintenance", task, CreateOrUpdate, null, null, InteractiveToken, null);
+                DeleteIn(service.GetFolder(@"\"), RootName);
+            }
+            catch (System.Runtime.InteropServices.COMException)
+            {
+                step = "register (root folder)";
+                service.GetFolder(@"\").RegisterTaskDefinition(RootName, task, CreateOrUpdate, null, null, InteractiveToken, null);
+            }
         }
         catch (System.Runtime.InteropServices.COMException ex)
         {
-            throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8})", ex);
+            throw new InvalidOperationException($"{ex.Message} (0x{ex.HResult:X8}, {step})", ex);
+        }
+    }
+
+    private static void DeleteIn(dynamic? folder, string name)
+    {
+        try
+        {
+            folder?.DeleteTask(name, 0);
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            // not there
         }
     }
 
@@ -88,12 +141,9 @@ public static class WindowsMaintenanceSchedule
     {
         try
         {
-            var folder = TaskFolder(Service(), create: false);
-            folder?.DeleteTask("Maintenance", 0);
-        }
-        catch (System.Runtime.InteropServices.COMException ex) when ((uint)ex.HResult == 0x80070002)
-        {
-            // not there: nothing to delete
+            var service = Service();
+            DeleteIn(TaskFolder(service, create: false), "Maintenance");
+            DeleteIn(service.GetFolder(@"\"), RootName);
         }
         catch (System.Runtime.InteropServices.COMException ex)
         {
@@ -105,14 +155,24 @@ public static class WindowsMaintenanceSchedule
     {
         try
         {
-            var folder = TaskFolder(Service(), create: false);
-            if (folder is null)
+            var service = Service();
+            foreach (var (folder, name) in new (dynamic?, string)[] { (TaskFolder(service, create: false), "Maintenance"), (service.GetFolder(@"\"), RootName) })
             {
-                return false;
+                try
+                {
+                    if (folder is not null)
+                    {
+                        folder.GetTask(name);
+                        return true;
+                    }
+                }
+                catch (System.Runtime.InteropServices.COMException)
+                {
+                    // try the next place
+                }
             }
 
-            folder.GetTask("Maintenance");
-            return true;
+            return false;
         }
         catch (System.Runtime.InteropServices.COMException)
         {

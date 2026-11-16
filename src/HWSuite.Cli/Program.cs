@@ -49,5 +49,6 @@ return options.Command switch
     CliCommand.Wifi => WifiCommand.Run(options, s),
     CliCommand.Snmp => SnmpCommand.Run(options, s),
     CliCommand.Startup => StartupCommand.Run(options, s),
+    CliCommand.Schedule => ScheduleCommand.Run(options),
     _ => ReportCommand.Run(options, s),
 };
