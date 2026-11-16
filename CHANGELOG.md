@@ -8,6 +8,14 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 
 ## [Não lançado]
 
+## [0.27.1] - 2026-11-15
+
+### Corrigido
+- Manutenção agendada: "O sistema não pode encontrar o caminho especificado" ao salvar. A pasta HWSuite do Agendador de Tarefas agora é criada na primeira vez, e a tarefa é montada pela interface do Agendador (sem XML).
+
+### Adicionado
+- Linha de comando: `hwsuite schedule set DIAS HH:MM [tarefas] | status | remove`.
+
 ## [0.27.0] - 2026-11-12
 
 ### Adicionado
@@ -360,7 +368,8 @@ o número do build é a execução do GitHub Actions que o gerou e o commit é o
 - Linha de comando `hwsuite` com relatórios TXT, HTML e JSON em português e inglês, e `--redact`.
 - Testes xUnit e CI no GitHub Actions (Windows) com relatório de exemplo e `hwsuite.exe` autocontido.
 
-[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.27.0...HEAD
+[Não lançado]: https://github.com/aprodrigues31/HWSuite/compare/v0.27.1...HEAD
+[0.27.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.27.1
 [0.27.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.27.0
 [0.26.1]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.1
 [0.26.0]: https://github.com/aprodrigues31/HWSuite/releases/tag/v0.26.0
